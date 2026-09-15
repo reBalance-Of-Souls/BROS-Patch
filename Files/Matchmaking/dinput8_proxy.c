@@ -1952,9 +1952,53 @@ static DWORD WINAPI worker(LPVOID u)
     else log_line("REAWAKEN: DISABLED at build time -- Reawakenings use their stock "
                   "triggers (build with -DENABLE_REAWAKEN_BATTLE=1 for the "
                   "Reawakening Battle game mode's loader)");
-    for (int i=0;i<600;i++){ int r=try_install(); if(r==1)return 0; if(r<0)return 0; Sleep(500); }
-    log_line("ERROR: steam_api64/matchmaking never appeared -- is this the game process?");
-    return 0;
+    /* Wait for steam_api64 as long as it takes.
+
+       This used to poll 600 times at 500 ms -- five minutes -- and then give up
+       for good. The game does not load steam_api64 until the title screen is
+       left, so a session left sitting at "Press Start" longer than that had
+       nothing still looking when it finally appeared, and the matchmaking patch
+       never installed.
+
+       The consequence is the one the issuer tagging exists to prevent: the
+       player lands in the DEFAULT matchmaking pool and meets unpatched clients,
+       with a single ERROR line as the only sign.
+
+       try_install()'s three answers are unchanged -- 1 installed, negative means
+       this is not the game process and giving up is right, 0 means keep
+       waiting. Only the cap is gone.
+
+       500 ms while a normal start is in progress, 2 s afterwards: the fast poll
+       is there to hook a real launch promptly, and a session that has idled past
+       five minutes has nothing to be prompt about. */
+    {
+        ULONGLONG t0 = GetTickCount64();
+        int said = 0;
+
+        for (;;) {
+            int r = try_install();
+            if (r == 1) {
+                ULONGLONG secs = (GetTickCount64() - t0) / 1000;
+                if (secs >= 300)
+                    log_line("MATCH: steam_api64 appeared after %llu s -- the old "
+                             "five-minute cap would have abandoned this session, "
+                             "leaving the player in the default pool.",
+                             (unsigned long long)secs);
+                return 0;
+            }
+            if (r < 0)
+                return 0;              /* not the game process; give up is correct */
+
+            if (!said && GetTickCount64() - t0 >= 300000) {
+                said = 1;
+                log_line("MATCH: steam_api64 still absent after five minutes -- "
+                         "STILL WAITING. The game loads it when the title screen "
+                         "is left, so idling there is normal and no longer ends "
+                         "the attempt.");
+            }
+            Sleep(GetTickCount64() - t0 < 300000 ? 500 : 2000);
+        }
+    }
 }
 
 BOOL WINAPI DllMain(HINSTANCE h, DWORD reason, LPVOID res)
