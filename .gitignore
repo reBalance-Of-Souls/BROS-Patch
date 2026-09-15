@@ -3,3 +3,10 @@ adminConfig.json
 BalanceLeadTools/DevToken.txt
 EXE_MODDING_GUIDE_for_devs.md
 BalanceLeadTools/GitHubToken.txt
+
+# The two-client online test rig. Dev-only tooling, and it carries machine
+# layout -- an absolute interpreter path and the Sandboxie box name -- which has
+# no business in a public repository. Both stay local; the runbook that explains
+# them is DataChakka/guides/Nilsix researches/SELF_HOSTED_ONLINE_TEST_RIG.md
+BalanceLeadTools/rig_up.ps1
+BalanceLeadTools/Rig Up.bat
