@@ -2,14 +2,22 @@
 rem =====================================================================
 rem  Rebuild dinput8.dll from dinput8_proxy.c
 rem
-rem  The shipped DLL is a Mingw-w64 build (its .rdata carries the
-rem  "Mingw-w64 runtime failure:" string and it has a .buildid section),
-rem  so use the same toolchain -- an MSVC build would still work but would
-rem  change the binary's shape for no reason.
+rem  ⚠ THE SHIPPED DLL IS A ZIG BUILD, not Mingw-w64, whatever this file
+rem  used to say. Verified 2026-09-15: rebuilding the then-current source with
 rem
-rem  Get the toolchain from https://www.msys2.org  then, in an MSYS2 shell:
-rem      pacman -S mingw-w64-x86_64-gcc
-rem  or install w64devkit and put its bin/ on PATH.
+rem      python -m ziglang cc -target x86_64-windows-gnu -O2 -fms-extensions rem             -Wno-date-time -DNDEBUG -shared -o dinput8.dll dinput8_proxy.c
+rem
+rem  reproduces the shipped dinput8.dll with a BYTE-IDENTICAL .text -- only the
+rem  PE timestamp (7 bytes of header), the debug directory in .rdata and
+rem  .buildid differ. That is the check to run before trusting any rebuild.
+rem
+rem  pip install ziglang  gets the compiler. Mingw-w64 is NOT required and was
+rem  never what built this; the block below is kept for anyone who has it.
+rem
+rem  ⚠ REBUILD GameModes\RoomMatchBoot\dinput8.dll TOO, from this same source
+rem  with -DENABLE_BOOT_ROOMMATCH=1. It shadows this one when the room-match
+rem  shortcut is used, so leaving it stale ships the fix to everyone EXCEPT the
+rem  people using that shortcut.
 rem
 rem  Run this from this folder. Output lands here, next to the source, and
 rem  the installer copies it to the game dir from "Files\Matchmaking".
