@@ -1,0 +1,4 @@
+Test de push manuel
+Cree le 2026-09-16
+Branche: chore/remove-archives
+A supprimer avant le merge de la PR #19.
