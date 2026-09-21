@@ -525,6 +525,68 @@ try:
         except Exception as e:
             print(f"[matchmaking] could not install dinput8.dll: {e}")
             return
+
+        # ---- PLUGINS --------------------------------------------------------
+        # dinput8.dll is the MASTER: character code lives in its own DLL under
+        # <game>/ReBalanceOfSouls/ rather than being compiled in. That standard
+        # exists because a build was once committed over the shared loader with a
+        # flag that compiled one character's whole system out -- the gauge, the
+        # counter and the forced Reawakening were absent for a full playtest with
+        # nothing anywhere saying so. The failure mode of a missing plugin is
+        # ABSENCE, so everything here is loud.
+        #
+        # MIRRORED, not merged: a plugin left over from an older install would
+        # keep patching the exe next to the one that replaced it.
+        try:
+            plug_src = os.path.join(BASE_DIR, "Files", "Matchmaking", "Plugins")
+            plug_dst = os.path.join(target_path, "ReBalanceOfSouls")
+            want = sorted(f for f in os.listdir(plug_src)
+                          if f.lower().endswith(".dll")) if os.path.isdir(plug_src) else []
+
+            # Ask the DLL we just installed what it can do, rather than matching
+            # its bytes against a recipe -- a hash stops being true the moment
+            # anyone rebuilds.
+            with open(os.path.join(target_path, "dinput8.dll"), "rb") as _f:
+                can_host = b"BROS_PLUGIN_HOST_ABI=" in _f.read()
+
+            # A GameMode ships its own prebuilt loader and those predate the
+            # plugin host. Do not refuse the launch over it: say plainly which
+            # characters will not load, and clear the folder so nothing stale
+            # patches the exe beside it.
+            if want and not can_host:
+                print("[plugins] this loader has no plugin host, so these will NOT "
+                      "be loaded: " + ", ".join(want))
+                print("[plugins]   in game that reads as 'this character is not there'.")
+                want = []
+
+            if want:
+                os.makedirs(plug_dst, exist_ok=True)
+            if os.path.isdir(plug_dst):
+                for stale in os.listdir(plug_dst):
+                    if stale.lower().endswith(".dll") and stale not in want:
+                        try:
+                            os.remove(os.path.join(plug_dst, stale))
+                            print(f"[plugins] removed stale {stale}")
+                        except Exception as _e:
+                            print(f"[plugins] could not remove stale {stale}: {_e} -- "
+                                  f"two builds may now patch the exe at once")
+            import hashlib as _hl2
+            for f in want:
+                s_p = os.path.join(plug_src, f)
+                d_p = os.path.join(plug_dst, f)
+                shutil.copy(s_p, d_p)
+                w = _hl2.sha256(open(s_p, "rb").read()).hexdigest()
+                g = _hl2.sha256(open(d_p, "rb").read()).hexdigest() if os.path.exists(d_p) else ""
+                if w != g:
+                    raise SystemExit("\n!! %s did NOT install -- the game was NOT started.\n   built  %s\n   on disk %s\n   Windows locks a loaded DLL: close the game completely and run this again.\n" % (f, w[:16], g[:16] or "MISSING"))
+                print(f"[plugins] installed {f}")
+            if want:
+                print(f"[plugins] {len(want)} plugin(s) in ReBalanceOfSouls/ -- the loader"
+                      f" reports them in patch_ranked.log under BROS/plugins")
+        except SystemExit:
+            raise
+        except Exception as e:
+            print(f"[plugins] could not install plugins: {e}")
         # Match pool is derived AUTOMATICALLY from the current GitHub build
         # (the commit SHA from get_snapshot()) plus the selected game version.
         # crc32 turns the SHA (hex letters + digits) into a number. Every push
