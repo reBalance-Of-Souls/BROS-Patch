@@ -15,3 +15,28 @@ BrosCommunityEditionFiles/bgm.bnk filter=lfs diff=lfs merge=lfs -text
 *.bat    text eol=crlf
 
 *.dll binary
+
+# ---------------------------------------------------------------------------
+# Game payload is bytes, not text
+#
+# Anything a version copies into the game folder must reach it exactly as Steam
+# shipped it. Measured 2026-09-21 against a clean install of build 21095206:
+# the "*.csv text eol=lf" rule above had stripped the CRLF from every
+# Script/ObjectConfig/*.csv, and each launch injected the stripped copies into
+# the game. None of them was intentionally modified. The original bytes are not
+# recoverable from history; they were restored from the clean install.
+#
+# -text disables end-of-line conversion while still allowing a textual diff.
+# ---------------------------------------------------------------------------
+GameVersions/**/Script/**    -text
+GameVersions/**/Motion/**    -text
+GameVersions/**/00HIGH/**    -text
+GameVersions/**/01MIDDLE/**  -text
+GameVersions/**/02LOW/**     -text
+GameVersions/**/Demo/**      -text
+GameVersions/**/Overlay/**   -text
+GameModes/**/Script/**       -text
+GameModes/**/Motion/**       -text
+Reworks/**/Script/**         -text
+Reworks/**/Motion/**         -text
+Files/Stock/**               -text

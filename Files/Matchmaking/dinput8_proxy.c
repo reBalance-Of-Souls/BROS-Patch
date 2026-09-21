@@ -87,6 +87,17 @@
 #define ENABLE_REAWAKEN_BATTLE     0   /* the Reawakeners start Reawakened */
 #endif
 
+/* Yhwach reaches the Reawakening on his NINTH Kaiser, not his eighth, and he
+   opens EVERY mode on level 1 -- Training included. Both are balance fixes,
+   not modes: they change no netcode and shift no matchmaking pool, so they
+   ship ON. See PART 17 and PART 18. */
+#ifndef ENABLE_YHWACH_REAWAKEN_9
+#define ENABLE_YHWACH_REAWAKEN_9   1   /* Reawakening wants 9 Kaiser, not 8 */
+#endif
+#ifndef ENABLE_YHWACH_START_LEVEL
+#define ENABLE_YHWACH_START_LEVEL  1   /* level 1 at the bell in every mode  */
+#endif
+
 /* ---------- shared helpers ------------------------------------------- */
 static void exe_dir_path(const char* name, char* out, size_t n)
 {
@@ -1904,6 +1915,306 @@ static void patch_uires_guard(void)
              " site already handles, instead of reading [NULL+4]", UIRES_GUARD_RVA);
 }
 
+/* ================= PART 17: Yhwach Reawakens on the NINTH Kaiser =====
+ *  THE BUG: Yhwach Awakens with EIGHT Kaiser on the gauge and comes out
+ *  Reawakened. He is meant to reach the Reawakening on the ninth.
+ *
+ *  THE GATE. Two sites, both private to this character by an explicit chara-id
+ *  test, both comparing the Kaiser level (`fighter+0x1A40`) against the image's
+ *  8.0f at 0x1414C0414 while he is still in the base form:
+ *
+ *      0x482B62  cmp    [rdi+0xC00],0x34       ; chara id 52 = Yhwach
+ *      0x482B6F  movss  xmm0,[rdi+0x1A40]      ; the Kaiser level
+ *      0x482B77  comiss xmm0,[8.0f]
+ *      0x482B7E  jb     <ordinary Awakening>
+ *                ...builds "READY_URA_TRANSFORM", then plays `ct_revolut`
+ *
+ *      0x4A5ED7  cmp    [r14+0xC00],0x34       ; the same test on the routing
+ *      0x4A5EE5  movss  xmm0,[r14+0x1A40]      ; side, which picks
+ *      0x4A5EEE  comiss xmm0,[8.0f]            ; `revolut_start`
+ *      0x4A5EF5  jb     <ordinary Awakening>
+ *
+ *  So `ura_transform_mothod = 3` is "Kaiser >= 8" in the binary. The fix
+ *  repoints both displacements at the 9.0f four bytes further on
+ *  (0x1414C041C): two disp32 fields, eight bytes of exe, nothing else touched.
+ *
+ *  ⚠ BOTH OR NEITHER. Moving one alone leaves the other able to Reawaken him
+ *  on eight.
+ *
+ *  ⚠ The `-0.5` AddUniqueVal pair on `1_normal_ct_ct_evolve` in
+ *  `pl052.tadjpkg` is correct and still needed -- it cancels the `+1` the
+ *  Awakening grants, which is a separate mechanic from this gate. Do not
+ *  remove it with this change.
+ *
+ *  ★ It took two wrong fixes to find these two sites, and the way out is the
+ *  part worth keeping: the first attempt moved the 9.0f inside Yhwach's
+ *  per-frame handler 0x516340 to 10.0 and changed NOTHING in game, because
+ *  that handler's auto-Reawakening is a different path from the one a player's
+ *  Awakening takes. What ended it was a probe on the transform routine logging
+ *  the RETURN ADDRESS: it named the caller (the `Revolut` action component at
+ *  0x3A6E10) and showed the level at 8.000 with its mirror +0x1A34 also 8.000,
+ *  so there was no transient and `ct_ct_evolve` had never played. When a fix
+ *  changes nothing in game, instrument rather than re-reason.
+ *
+ *  Confirmed in game 2026-09-21. DataChakka: guides/Nilsix researches/
+ *  Yhwach Kaiser Level/BROS_YHWACH_KAISER_LEVEL.md §8.
+ * ==================================================================== */
+#define YRW_SITES      2
+#define YRW_OLD_CONST  0x14C0414u  /* the 8.0f the two gates read today    */
+#define YRW_NEW_CONST  0x14C041Cu  /* the 9.0f, four bytes further on      */
+
+/* Each gate: the `comiss xmm?,[rip+disp32]` and the guard in front of it, so a
+   moved function is refused instead of silently mis-patched. */
+static const struct {
+    unsigned       insn_rva;
+    unsigned       disp_rva;
+    unsigned       next_rva;
+    unsigned       sig_rva;
+    unsigned char  sig[24];
+    unsigned       sig_len;
+} g_yrw[YRW_SITES] = {
+    { 0x482B77u, 0x482B7Au, 0x482B7Eu, 0x482B62u,
+      { 0x83,0xBF,0x00,0x0C,0x00,0x00,0x34,            /* cmp [rdi+0xC00],0x34   */
+        0x0F,0x85,0x1D,0x01,0x00,0x00,                 /* jne                    */
+        0xF3,0x0F,0x10,0x87,0x40,0x1A,0x00,0x00 }, 21  /* movss xmm0,[rdi+0x1A40]*/
+    },
+    { 0x4A5EEEu, 0x4A5EF1u, 0x4A5EF5u, 0x4A5ED7u,
+      { 0x41,0x83,0xBE,0x00,0x0C,0x00,0x00,0x34,       /* cmp [r14+0xC00],0x34   */
+        0x0F,0x85,0xB0,0x00,0x00,0x00,                 /* jne                    */
+        0xF3,0x41,0x0F,0x10,0x86,0x40,0x1A,0x00,0x00 }, 23
+    }
+};
+
+static void patch_yhwach_reawaken(void)
+{
+    static const unsigned char comiss[3] = { 0x0F, 0x2F, 0x05 };
+    unsigned char* mod = (unsigned char*)GetModuleHandleA(NULL);
+    float old_c, new_c;
+    unsigned done = 0, already = 0;
+    int i;
+
+    if (!mod) return;
+
+    /* Verify both ends of the move once: the constant we leave and the one we
+       take. A displacement landing on the wrong float is a silent balance
+       change, and this is the only place that can catch it. */
+    memcpy(&old_c, mod + YRW_OLD_CONST, sizeof(old_c));
+    memcpy(&new_c, mod + YRW_NEW_CONST, sizeof(new_c));
+    if (!(old_c == 8.0f && new_c == 9.0f)) {
+        log_line("YHWACH_REAW: the float pool reads %.4f / %.4f where 8.0 / 9.0"
+                 " are expected -- skipped, nothing written", old_c, new_c);
+        return;
+    }
+
+    for (i = 0; i < YRW_SITES; i++) {
+        unsigned char* site = mod + g_yrw[i].insn_rva;
+        unsigned int   disp, want;
+        DWORD old;
+
+        memcpy(&disp, mod + g_yrw[i].disp_rva, sizeof(disp));
+        want = YRW_NEW_CONST - g_yrw[i].next_rva;
+
+        if (memcmp(site, comiss, sizeof(comiss)) != 0 ||
+            memcmp(mod + g_yrw[i].sig_rva, g_yrw[i].sig, g_yrw[i].sig_len) != 0) {
+            if (disp == want) { already++; continue; }
+            log_line("YHWACH_REAW: exe+0x%X is not the shipped gate (game updated?)"
+                     " -- skipped, nothing written at this site", g_yrw[i].insn_rva);
+            continue;
+        }
+        if (disp == want) { already++; continue; }
+        if (disp != YRW_OLD_CONST - g_yrw[i].next_rva) {
+            log_line("YHWACH_REAW: exe+0x%X already points somewhere else (disp"
+                     " 0x%08X) -- skipped, nothing written at this site",
+                     g_yrw[i].insn_rva, disp);
+            continue;
+        }
+        if (!VirtualProtect(mod + g_yrw[i].disp_rva, 4, PAGE_EXECUTE_READWRITE, &old)) {
+            log_line("YHWACH_REAW: VirtualProtect failed at RVA 0x%X", g_yrw[i].disp_rva);
+            continue;
+        }
+        memcpy(mod + g_yrw[i].disp_rva, &want, sizeof(want));
+        VirtualProtect(mod + g_yrw[i].disp_rva, 4, old, &old);
+        FlushInstructionCache(GetCurrentProcess(), site, 16);
+        done++;
+    }
+
+    if (done == YRW_SITES || done + already == YRW_SITES)
+        log_line("YHWACH_REAW: Reawakening gate 8.0 -> 9.0 at exe+0x%X and exe+0x%X"
+                 " (%u written, %u already right). Eight Kaiser now gives the"
+                 " ordinary Awakening; the Reawakening wants nine.",
+                 g_yrw[0].insn_rva, g_yrw[1].insn_rva, done, already);
+    else
+        log_line("YHWACH_REAW: \u26a0 only %u of %u gates moved to 9.0 -- Yhwach can"
+                 " still reach the Reawakening on eight through the site that did"
+                 " not take. Read the lines above.", done + already, YRW_SITES);
+}
+
+/* ================= PART 18: Yhwach's level 1 in EVERY mode ===========
+ *  THE BUG: Yhwach opens a Versus or online match on Kaiser level 1 and a
+ *  TRAINING match on level 0.
+ *
+ *  WHY. The grant is data -- an `AddUniqueVal` with `is_val_set = 1` on
+ *  `1_normal_ct_ct_start`, the only component that action carries in
+ *  `pl052.tadjpkg`. `ct_start` is the battle-intro action, and Training does
+ *  not play it. Nothing else touches the level at the opening bell, so in
+ *  Training it stays where the engine left it: zero.
+ *
+ *  ★ THE FIX IS A FLOOR, NOT A GRANT, and that is what makes it safe in every
+ *  mode without knowing anything about match or round boundaries: while Yhwach
+ *  is in a battle, a Kaiser level of exactly +0.0 is the bug state and nothing
+ *  else. `ct_start` assigns 1, the SP grants only add, and the `-0.5` pair on
+ *  `ct_ct_evolve` nets zero -- so the counter never legitimately reads 0 once a
+ *  match is running. Raising 0 to 1 every frame therefore costs nothing where
+ *  the data already works, and fixes the mode where it never ran. It is also
+ *  idempotent with the record, which assigns rather than adds.
+ *
+ *  ⚠ The one thing that COULD read 0 deliberately is a combo node carrying
+ *  `unique_combo = 10`, which 0x140518430 evaluates as "level <= 0". No node in
+ *  `pl052.tcmbpkg` uses 10 -- checked, the file uses 2..8 only. Re-check that
+ *  before anyone adds one.
+ *
+ *  WHERE. 0x140516340 is Yhwach's per-frame unique handler -- the function that
+ *  pushes his HUD level through `ActionCharaUniqueUI_Pl52::SetLevel`, which
+ *  PART 16 established "runs every frame for Yhwach and nobody else". The hook
+ *  sits on the first instruction after its own null check, where `rdx` is the
+ *  fighter:
+ *
+ *      0x516390  cmp  byte [rdx+0x9A8],0
+ *      0x516397  je   0x5163B2
+ *      ...
+ *      0x5163B2  movups xmm0,[rdx+0x1A10]   <- stolen, re-executed LAST so the
+ *      0x5163B9  movaps [rbp+0x90],xmm0        block copy sees the new level
+ *
+ *  THE STUB saves rax around its own use and restores it, which is safe here
+ *  because this is mid-function and rsp is already framed -- unlike the
+ *  transform entry PART 16 hooks, where a push would frame the callee off a
+ *  captured rsp. Flags are not live at the site: it is a branch TARGET.
+ *
+ *  ⚠ The first attempt hooked 0x460A4E, a store in the unique-block reset at
+ *  0x460840. Right idea, unproven site: `[rdi+0xC00]` is only READ there, so
+ *  nothing established that the chara id was populated, and a match played with
+ *  it armed left the gauge on 0. Its watcher then polled for 100 s from DLL
+ *  init -- a window that expired during the menu walk, so its negative result
+ *  meant nothing at all. A counter is only evidence if its window covered the
+ *  event; hence the two separate counters below.
+ *
+ *  Confirmed in game 2026-09-21. DataChakka: guides/Nilsix researches/
+ *  Yhwach Kaiser Level/BROS_YHWACH_KAISER_LEVEL.md §9.
+ * ==================================================================== */
+#define YSL_RVA        0x5163B2u   /* movups xmm0,[rdx+0x1A10] -- 7 bytes  */
+#define YSL_STOLEN     7
+#define YSL_CHARA      0x34
+#define YSL_HITS       0x80        /* dword: times the floor was applied   */
+#define YSL_SEEN       0x84        /* dword: times the site ran for pl052  */
+
+static unsigned char* g_ysl_cave = NULL;
+
+static DWORD WINAPI ysl_watch(LPVOID u)
+{
+    int said = 0, saw = 0, i;
+    (void)u;
+    /* 40 minutes: a menu walk, character select and a match all have to fit
+       inside the window. */
+    for (i = 0; i < 2400 && g_ysl_cave; i++) {
+        int h = *(volatile int*)(g_ysl_cave + YSL_HITS);
+        int v = *(volatile int*)(g_ysl_cave + YSL_SEEN);
+        if (v > 0 && !saw) {
+            log_line("YHWACH_LV1: the site is running for pl052 (%d frames). The"
+                     " floor is armed and will raise any Kaiser level of 0 to 1.", v);
+            saw = 1;
+        }
+        if (h > 0 && !said) {
+            log_line("YHWACH_LV1: floor applied -- Yhwach's Kaiser level was 0 and is"
+                     " now 1 (%d time(s)). Training opens where Versus does.", h);
+            said = 1;
+        }
+        Sleep(1000);
+    }
+    if (g_ysl_cave && !saw)
+        log_line("YHWACH_LV1: \u26a0 exe+0x%X never ran for pl052. Either no Yhwach was"
+                 " in a match, or this is not his per-frame handler after all.", YSL_RVA);
+    return 0;
+}
+
+static void patch_yhwach_start_level(void)
+{
+    /* movups xmm0, xmmword ptr [rdx + 0x1a10] */
+    static const unsigned char sig[YSL_STOLEN] =
+        { 0x0F, 0x10, 0x82, 0x10, 0x1A, 0x00, 0x00 };
+    unsigned char* mod = (unsigned char*)GetModuleHandleA(NULL);
+    unsigned char* site;
+    unsigned char* stub;
+    unsigned char  b[128];
+    int n = 0, i, jchara, jlevel;
+    long long rel;
+    DWORD old;
+
+    if (!mod) return;
+    site = mod + YSL_RVA;
+    if (memcmp(site, sig, sizeof(sig)) != 0) {
+        log_line("YHWACH_LV1: exe+0x%X is not the shipped `movups xmm0,[rdx+0x1A10]`"
+                 " (game updated?) -- skipped, nothing written", YSL_RVA);
+        return;
+    }
+    stub = (unsigned char*)gauge_alloc_near(site, 0x100);
+    if (!stub) { log_line("YHWACH_LV1: no trampoline within +/-2GB -- skipped"); return; }
+    memset(stub, 0, 0x100);
+
+#define D32(o, at) do { int _d = (int)((o) - (at)); memcpy(b + n, &_d, 4); n += 4; } while (0)
+
+    b[n++] = 0x50;                                            /* push rax           */
+    b[n++] = 0x8B; b[n++] = 0x82;                             /* mov eax,[rdx+0xC00]*/
+    { unsigned int dd = 0xC00u; memcpy(b + n, &dd, 4); n += 4; }
+    b[n++] = 0x83; b[n++] = 0xF8; b[n++] = YSL_CHARA;         /* cmp eax,0x34       */
+    b[n++] = 0x75; jchara = n++;                              /* jne .skip          */
+
+    b[n++] = 0xF0; b[n++] = 0xFF; b[n++] = 0x05;
+    D32(YSL_SEEN, n + 4);                                     /* lock inc [rip+seen]*/
+
+    b[n++] = 0x83; b[n++] = 0xBA;                             /* cmp [rdx+0x1A40],0 */
+    { unsigned int dd = 0x1A40u; memcpy(b + n, &dd, 4); n += 4; }
+    b[n++] = 0x00;
+    b[n++] = 0x75; jlevel = n++;                              /* jne .skip          */
+
+    b[n++] = 0xC7; b[n++] = 0x82;                             /* mov [rdx+0x1A40],  */
+    { unsigned int dd = 0x1A40u; memcpy(b + n, &dd, 4); n += 4; }
+    { unsigned int one = 0x3F800000u; memcpy(b + n, &one, 4); n += 4; }   /* 1.0f   */
+
+    b[n++] = 0xF0; b[n++] = 0xFF; b[n++] = 0x05;
+    D32(YSL_HITS, n + 4);                                     /* lock inc [rip+hits]*/
+
+    b[jlevel] = (unsigned char)(n - (jlevel + 1));            /* .skip:             */
+    b[jchara] = (unsigned char)(n - (jchara + 1));
+    b[n++] = 0x58;                                            /* pop rax            */
+    memcpy(b + n, sig, sizeof(sig)); n += (int)sizeof(sig);   /* the stolen read    */
+    rel = (long long)(site + YSL_STOLEN) - (long long)(stub + n + 5);
+    b[n++] = 0xE9; memcpy(b + n, &rel, 4); n += 4;
+
+#undef D32
+
+    if (n > YSL_HITS) { log_line("YHWACH_LV1: stub overruns its data (%d) -- skipped", n); return; }
+    memcpy(stub, b, (size_t)n);
+    FlushInstructionCache(GetCurrentProcess(), stub, 0x100);
+
+    rel = (long long)stub - (long long)(site + 5);
+    if (!VirtualProtect(site, YSL_STOLEN, PAGE_EXECUTE_READWRITE, &old)) {
+        log_line("YHWACH_LV1: VirtualProtect failed at RVA 0x%X", YSL_RVA);
+        return;
+    }
+    site[0] = 0xE9; memcpy(site + 1, &rel, 4);
+    for (i = 5; i < YSL_STOLEN; i++) site[i] = 0x90;
+    VirtualProtect(site, YSL_STOLEN, old, &old);
+    FlushInstructionCache(GetCurrentProcess(), site, YSL_STOLEN);
+
+    g_ysl_cave = stub;
+    CreateThread(NULL, 0, ysl_watch, NULL, 0, NULL);
+    log_line("YHWACH_LV1: installed at exe+0x%X -- a FLOOR on Yhwach's Kaiser level:"
+             " a level of exactly 0 becomes 1, every frame, chara-gated. `ct_start`"
+             " assigns the same 1.0, so Versus and online are unchanged; Training"
+             " stops opening on zero. Cave %p, stub %d bytes.",
+             YSL_RVA, (void*)stub, n);
+}
+
 static DWORD WINAPI worker(LPVOID u)
 {
     (void)u;
@@ -1948,6 +2259,12 @@ static DWORD WINAPI worker(LPVOID u)
     else log_line("BOOTTRAIN: DISABLED at build time -- boot goes to the title "
                   "screen (build with -DENABLE_BOOT_TRAINING=1 or "
                   "-DENABLE_BOOT_ROOMMATCH=1 for those loaders)");
+    if (ENABLE_YHWACH_REAWAKEN_9) patch_yhwach_reawaken();
+    else log_line("YHWACH_REAW: DISABLED at build time -- Yhwach still Reawakens "
+                  "off his EIGHTH Kaiser (build with -DENABLE_YHWACH_REAWAKEN_9=1)");
+    if (ENABLE_YHWACH_START_LEVEL) patch_yhwach_start_level();
+    else log_line("YHWACH_LV1: DISABLED at build time -- Yhwach still opens Training "
+                  "on Kaiser level 0 (build with -DENABLE_YHWACH_START_LEVEL=1)");
     if (ENABLE_REAWAKEN_BATTLE) patch_reawaken_battle();
     else log_line("REAWAKEN: DISABLED at build time -- Reawakenings use their stock "
                   "triggers (build with -DENABLE_REAWAKEN_BATTLE=1 for the "
