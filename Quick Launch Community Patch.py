@@ -99,6 +99,49 @@ def setup_matchmaking(target_path, gameVersion):
     except Exception as e:
         print(f"[matchmaking] could not install dinput8.dll: {e}")
         return
+
+    # ---- PLUGINS ------------------------------------------------------------
+    # Mirrored: whatever is in Files/Matchmaking/Plugins goes to
+    # <game>/ReBalanceOfSouls, and anything else there is removed. This update
+    # ships NO plugin, so the job here is to clear a stale one -- a character DLL
+    # left by an older install keeps patching the exe beside the loader that
+    # replaced it, and the failure reads as a crash with no cause.
+    try:
+        plug_src = os.path.join(BASE_DIR, "Files", "Matchmaking", "Plugins")
+        plug_dst = os.path.join(target_path, "ReBalanceOfSouls")
+        want = sorted(f for f in os.listdir(plug_src)
+                      if f.lower().endswith(".dll")) if os.path.isdir(plug_src) else []
+        with open(os.path.join(target_path, "dinput8.dll"), "rb") as _f:
+            can_host = b"BROS_PLUGIN_HOST_ABI=" in _f.read()
+        if want and not can_host:
+            print("[plugins] this loader has no plugin host, so these will NOT be "
+                  "loaded: " + ", ".join(want))
+            want = []
+        if want:
+            os.makedirs(plug_dst, exist_ok=True)
+        if os.path.isdir(plug_dst):
+            for stale in os.listdir(plug_dst):
+                if stale.lower().endswith(".dll") and stale not in want:
+                    try:
+                        os.remove(os.path.join(plug_dst, stale))
+                        print(f"[plugins] removed stale {stale}")
+                    except Exception as _e:
+                        print(f"[plugins] could not remove stale {stale}: {_e}")
+        import hashlib as _hl2
+        for f in want:
+            s_p = os.path.join(plug_src, f); d_p = os.path.join(plug_dst, f)
+            shutil.copy(s_p, d_p)
+            w = _hl2.sha256(open(s_p, "rb").read()).hexdigest()
+            g = _hl2.sha256(open(d_p, "rb").read()).hexdigest() if os.path.exists(d_p) else ""
+            if w != g:
+                raise SystemExit("\n!! %s did NOT install -- the game was NOT started." % f)
+            print(f"[plugins] installed {f}")
+        if want:
+            print(f"[plugins] {len(want)} plugin(s) in ReBalanceOfSouls/")
+    except SystemExit:
+        raise
+    except Exception as e:
+        print(f"[plugins] could not install plugins: {e}")
     build = get_snapshot() or "unknown"
     seed = f"{build}|{gameVersion}"
     code = 100000 + (zlib.crc32(seed.encode("utf-8")) % 800000)

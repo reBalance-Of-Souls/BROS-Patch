@@ -33,10 +33,12 @@ if game_path == "":
 # skipping the title screen and the menu walk. It is a launch shortcut, not a
 # game mode -- there is no Script/ and no matchmaking pool tag, because it
 # changes no simulation: it only repoints the command the logo flow hands off
-# to. The loader is GameModes/TrainingBoot/dinput8.dll, built from the one
-# canonical source with -DENABLE_BOOT_TRAINING=1, so it is the normal loader
-# plus that one patch and never drifts from it.
+# to. It installs the SHIPPED loader, Files/Matchmaking/dinput8.dll, and asks
+# it for this destination through BROS_BOOT_MODE -- so it is the normal loader,
+# always, and cannot drift from it.
 gameMode = "TrainingBoot"
+# What this launcher asks the loader for, through BROS_BOOT_MODE.
+BOOT_MODE = "training"
 reworks = ["OFF"]
 
 
@@ -100,20 +102,65 @@ def injectPerformanceFiles(folderName, lowspecmodornot):
 
 
 def setup_matchmaking(target_path, gameVersion):
-    # A boot shortcut ships its OWN loader: the same source built with that
-    # shortcut's flag, so it carries every patch the normal loader carries.
-    # It wins over the normal one when the folder has a dinput8.dll.
+    # This launcher is the Community Patch launcher plus a boot shortcut, so it
+    # installs the SAME loader the normal launcher does. It used to prefer
+    # GameModes/<mode>/dinput8.dll, and because that frozen binary SHADOWS the
+    # shipped one, anything added to Files/Matchmaking/dinput8.dll never reached
+    # a player who launched through here. That is exactly how the held backstep
+    # shipped in the patch and was still reported as "does not work in game":
+    # the mode loaders had been built before it and nobody rebuilt them.
+    # The boot shortcut now travels as BROS_BOOT_MODE (see launch_patched) and
+    # the loader reads it at startup, so one dll serves every shortcut and
+    # cannot go stale.
     src = os.path.join(BASE_DIR, "Files", "Matchmaking", "dinput8.dll")
-    if gameMode != "DEFAULT":
-        modeDll = os.path.join(BASE_DIR, "GameModes", f"{gameMode}", "dinput8.dll")
-        if os.path.exists(modeDll):
-            src = modeDll
-            print(f"[matchmaking] {gameMode} ships its own loader")
     try:
         shutil.copy(src, os.path.join(target_path, "dinput8.dll"))
     except Exception as e:
         print(f"[matchmaking] could not install dinput8.dll: {e}")
         return
+
+    # ---- PLUGINS ------------------------------------------------------------
+    # Mirrored: whatever is in Files/Matchmaking/Plugins goes to
+    # <game>/ReBalanceOfSouls, and anything else there is removed. This update
+    # ships NO plugin, so the job here is to clear a stale one -- a character DLL
+    # left by an older install keeps patching the exe beside the loader that
+    # replaced it, and the failure reads as a crash with no cause.
+    try:
+        plug_src = os.path.join(BASE_DIR, "Files", "Matchmaking", "Plugins")
+        plug_dst = os.path.join(target_path, "ReBalanceOfSouls")
+        want = sorted(f for f in os.listdir(plug_src)
+                      if f.lower().endswith(".dll")) if os.path.isdir(plug_src) else []
+        with open(os.path.join(target_path, "dinput8.dll"), "rb") as _f:
+            can_host = b"BROS_PLUGIN_HOST_ABI=" in _f.read()
+        if want and not can_host:
+            print("[plugins] this loader has no plugin host, so these will NOT be "
+                  "loaded: " + ", ".join(want))
+            want = []
+        if want:
+            os.makedirs(plug_dst, exist_ok=True)
+        if os.path.isdir(plug_dst):
+            for stale in os.listdir(plug_dst):
+                if stale.lower().endswith(".dll") and stale not in want:
+                    try:
+                        os.remove(os.path.join(plug_dst, stale))
+                        print(f"[plugins] removed stale {stale}")
+                    except Exception as _e:
+                        print(f"[plugins] could not remove stale {stale}: {_e}")
+        import hashlib as _hl2
+        for f in want:
+            s_p = os.path.join(plug_src, f); d_p = os.path.join(plug_dst, f)
+            shutil.copy(s_p, d_p)
+            w = _hl2.sha256(open(s_p, "rb").read()).hexdigest()
+            g = _hl2.sha256(open(d_p, "rb").read()).hexdigest() if os.path.exists(d_p) else ""
+            if w != g:
+                raise SystemExit("\n!! %s did NOT install -- the game was NOT started." % f)
+            print(f"[plugins] installed {f}")
+        if want:
+            print(f"[plugins] {len(want)} plugin(s) in ReBalanceOfSouls/")
+    except SystemExit:
+        raise
+    except Exception as e:
+        print(f"[plugins] could not install plugins: {e}")
     build = get_snapshot() or "unknown"
     seed = f"{build}|{gameVersion}"
     code = 100000 + (zlib.crc32(seed.encode("utf-8")) % 800000)
@@ -141,7 +188,10 @@ def launch_patched(target_path):
     exe = os.path.join(target_path, "BLEACH_Rebirth_of_Souls.exe")
     try:
         if platform.system() == "Windows":
-            subprocess.Popen([exe], cwd=target_path)
+            # The boot shortcut is a request to the loader, not a separate build.
+            env = dict(os.environ)
+            env["BROS_BOOT_MODE"] = BOOT_MODE
+            subprocess.Popen([exe], cwd=target_path, env=env)
         else:
             open_file("steam://rungameid/1689620")
     except Exception as e:
