@@ -529,7 +529,8 @@ try:
         # ---- PLUGINS ------------------------------------------------------------
         # Mirrored: whatever is in Files/Matchmaking/Plugins goes to
         # <game>/ReBalanceOfSouls, and anything else there is removed. This update
-        # ships NO plugin, so the job here is to clear a stale one -- a character DLL
+        # ships ONE plugin, gfx_native_scale.dll (its source and a README sit beside
+        # it), and clearing stale ones still matters -- a character DLL
         # left by an older install keeps patching the exe beside the loader that
         # replaced it, and the failure reads as a crash with no cause.
         try:
@@ -560,14 +561,57 @@ try:
                 w = _hl2.sha256(open(s_p, "rb").read()).hexdigest()
                 g = _hl2.sha256(open(d_p, "rb").read()).hexdigest() if os.path.exists(d_p) else ""
                 if w != g:
-                    raise SystemExit("\n!! %s did NOT install -- the game was NOT started." % f)
+                    # The copy is not the file we shipped: an antivirus cleaned it
+                    # mid-write, the disk filled, the write was cut short. Remove
+                    # it -- the loader survives a half-written DLL (it logs that
+                    # the file would not load and carries on), but a plugin we
+                    # cannot vouch for is worth nothing -- and start without it.
+                    # A plugin is an add-on; the game is fine.
+                    # This used to 'raise SystemExit', which is NOT an Exception,
+                    # so neither handler below caught it: tkinter re-raised it, the
+                    # launcher window vanished, and the one line explaining why
+                    # went to a console that is hidden at startup.
+                    # Only claim it is gone if the remove actually worked -- the
+                    # file can be held open by the same antivirus that broke it.
+                    try:
+                        os.remove(d_p)
+                        binned = True
+                    except Exception:
+                        binned = False
+                    if binned:
+                        print(f"[plugins] {f} did NOT install -- removed, starting without it")
+                        detail = (f"{f} did not install correctly, so it was removed and "
+                                  "is NOT active.")
+                    else:
+                        print(f"[plugins] {f} did NOT install and the bad copy could not be removed")
+                        detail = (f"{f} did not install correctly and the bad copy could not "
+                                  "be removed, so please delete it yourself from the "
+                                  "ReBalanceOfSouls folder next to the game.")
+                    messagebox.showerror(
+                        "Plugin not installed",
+                        detail + "\n\nThe game still starts without it. An antivirus scanning "
+                        "your game folder is the usual cause -- allow the folder, then "
+                        "launch again."
+                    )
+                    continue
                 print(f"[plugins] installed {f}")
             if want:
                 print(f"[plugins] {len(want)} plugin(s) in ReBalanceOfSouls/")
-        except SystemExit:
-            raise
         except Exception as e:
+            # This branch, not the sha256 check above, is where an antivirus hit
+            # usually lands: the copy itself raises because the source in the
+            # launcher folder was quarantined or the write into the game folder
+            # was denied. print() alone is invisible (the console is hidden at
+            # startup), so say it out loud -- then fall through and launch, same
+            # as before. A plugin is an add-on.
             print(f"[plugins] could not install plugins: {e}")
+            messagebox.showerror(
+                "Plugins not installed",
+                f"The optional plugins could not be installed:\n\n{e}\n\n"
+                "The game still starts, just without them. An antivirus scanning "
+                "the launcher folder or your game folder is the usual cause -- "
+                "allow both, then launch again."
+            )
         # Match pool is derived AUTOMATICALLY from the current GitHub build
         # (the commit SHA from get_snapshot()) plus the selected game version.
         # crc32 turns the SHA (hex letters + digits) into a number. Every push
