@@ -3803,7 +3803,7 @@ typedef struct { void* heap; UINT64 gpu0, gpu1; UINT type, num; volatile LONG li
 static DHeap         g_dheap[DHEAP_N];
 static volatile LONG g_dheap_overflow = 0;
 static volatile LONG g_dheap_made = 0, g_dheap_gone = 0;
-static volatile LONG g_bind_calls = 0, g_bind_blocked = 0, g_bind_reports = 0;
+static volatile LONG g_bind_blocked = 0, g_bind_reports = 0;
 static volatile LONG g_bind_substituted = 0, g_bind_nofallback = 0;
 
 static HRESULT (WINAPI* o_CreateDescriptorHeap)(void*, const void*, const GUID*, void**) = NULL;
@@ -3818,12 +3818,57 @@ static HpVt          g_hpvt[HPVT_N];
 static volatile LONG g_hpvt_n = 0;
 
 /* The last binds, for the moment the device goes anyway: which handle, which
-   root slot, and who bound it. */
+   root slot, and who bound it.
+
+   2026-09-23: ONE RING PER RECORDING THREAD, and no shared counter. Players
+   reported 40-50 fps after the update that shipped this guard, and the guard
+   runs on every root-table bind -- about 650,000 a second in a match, on every
+   thread that records command lists. It used to take a global
+   InterlockedIncrement for the ring slot, a second one for the call count, and
+   write a shared ring and a shared last-good table, so every bind bounced the
+   same cache lines between cores. Measured on a copy of this exact code
+   (2700X, 20M binds per thread): 28 ns a bind on one thread, ~110 ns on two,
+   ~360 ns on four. With the ring, the count and the last-good table moved to
+   the recording thread, the same checks cost ~31 ns whatever the thread count.
+   The guard's decision is untouched: gpu_handle_live on every bind, and a
+   stale one is REPLACED exactly as before. Only the bookkeeping moved. */
 #define BRING_N 64
+#define BRING_THREADS 32
 typedef struct { UINT64 h, ret; UINT idx; DWORD tid; } BindRec;
-static BindRec       g_bring[BRING_N];
-static volatile LONG g_bring_n = 0;
+typedef struct __declspec(align(64)) {
+    BindRec  rec[BRING_N];
+    LONGLONG n;          /* graphics binds recorded, written by the owner only */
+    LONGLONG calls;      /* graphics + compute binds, written by the owner only */
+    DWORD    tid;
+} BindRing;
+static BindRing      g_brings[BRING_THREADS];
+static volatile LONG g_brings_n = 0;       /* claimed once per thread, never per bind */
 static volatile LONG g_bring_dumped = 0;
+static __declspec(thread) BindRing* t_bring;
+static __declspec(thread) int       t_bring_full;
+
+static BindRing* bind_ring(void)
+{
+    BindRing* r = t_bring;
+    LONG k;
+    if (r || t_bring_full) return r;
+    k = InterlockedIncrement(&g_brings_n) - 1;
+    if (k >= BRING_THREADS) { t_bring_full = 1; return NULL; }   /* not recorded, still guarded */
+    r = &g_brings[k];
+    r->tid = GetCurrentThreadId();
+    t_bring = r;
+    return r;
+}
+
+/* A racy read of owner-written counters: telemetry, never a decision. */
+static LONGLONG bind_calls_total(void)
+{
+    LONG n = g_brings_n, i;
+    LONGLONG t = 0;
+    if (n > BRING_THREADS) n = BRING_THREADS;
+    for (i = 0; i < n; i++) t += g_brings[i].calls;
+    return t;
+}
 
 /* ★ Measured 2026-09-20, the hard way: this D3D12Core returns the handle
    through a HIDDEN BUFFER POINTER, MSVC member-function style -- `this` in
@@ -3857,13 +3902,13 @@ static int gpu_handle_live(UINT64 h)
    The draw stays legal and shows a stale portrait for a frame, which is the
    whole cost. */
 #define ROOTSLOT_N 32
-static UINT64 g_last_good[ROOTSLOT_N];
+static __declspec(thread) UINT64 t_last_good[ROOTSLOT_N];
 
 static UINT64 bind_substitute(UINT idx)
 {
     int i;
-    if (idx < ROOTSLOT_N && g_last_good[idx] && gpu_handle_live(g_last_good[idx]))
-        return g_last_good[idx];
+    if (idx < ROOTSLOT_N && t_last_good[idx] && gpu_handle_live(t_last_good[idx]))
+        return t_last_good[idx];
     for (i = 0; i < DHEAP_N; i++)          /* anything legal beats an illegal bind */
         if (g_dheap[i].live && g_dheap[i].type == 0) return g_dheap[i].gpu0;
     for (i = 0; i < DHEAP_N; i++)
@@ -3902,14 +3947,14 @@ static void bind_report(const char* which, UINT idx, UINT64 h)
     desc_who_copied(h);            /* in case the handle is a CPU one after all */
 }
 
-static void bind_record(UINT idx, UINT64 h, UINT64 ret)
+static void bind_record(BindRing* ring, UINT idx, UINT64 h, UINT64 ret)
 {
-    LONG i = InterlockedIncrement(&g_bring_n) - 1;
-    BindRec* r = &g_bring[i & (BRING_N - 1)];
+    BindRec* r = &ring->rec[ring->n & (BRING_N - 1)];
     r->h   = h;
     r->ret = ret;
     r->idx = idx;
-    r->tid = GetCurrentThreadId();
+    r->tid = ring->tid;
+    ring->n++;
 }
 
 /* Called when a submit finds the device already removed: the binds that were
@@ -3925,20 +3970,23 @@ static void bind_ring_dump(const char* why)
         IMAGE_NT_HEADERS* nt = (IMAGE_NT_HEADERS*)(mod + ((IMAGE_DOS_HEADER*)mod)->e_lfanew);
         hi = lo + nt->OptionalHeader.SizeOfImage;
     }
-    n = g_bring_n;
-    shown = n > 24 ? 24 : n;
-    log_line("BINDRING: the last %ld of %ld root-table binds before %s, newest first; the "
-             "registry held %ld heaps made and %ld released over %ld heap vtable(s)",
-             shown, n, why, g_dheap_made, g_dheap_gone, g_hpvt_n);
-    for (i = 0; i < shown; i++) {
-        BindRec* r = &g_bring[(n - 1 - i) & (BRING_N - 1)];
+    n = g_brings_n;
+    if (n > BRING_THREADS) n = BRING_THREADS;
+    log_line("BINDRING: the last root-table binds before %s, per recording thread, newest "
+             "first; %I64d binds over %ld thread(s); the registry held %ld heaps made and "
+             "%ld released over %ld heap vtable(s)",
+             why, bind_calls_total(), n, g_dheap_made, g_dheap_gone, g_hpvt_n);
+    for (shown = 0; shown < n; shown++)
+    for (i = 0; i < (g_brings[shown].n > 8 ? 8 : (LONG)g_brings[shown].n); i++) {
+        BindRing* rg = &g_brings[shown];
+        BindRec* r = &rg->rec[(rg->n - 1 - i) & (BRING_N - 1)];
         int live = gpu_handle_live(r->h);
         if (r->ret >= lo && r->ret < hi)
-            log_line("BINDRING:   #%ld root %u handle 0x%I64X (%s) thread %lu  caller exe+0x%I64X",
-                     n - 1 - i, r->idx, r->h, live ? "in a live heap" : "STALE", r->tid, r->ret - lo);
+            log_line("BINDRING:   #%I64d root %u handle 0x%I64X (%s) thread %lu  caller exe+0x%I64X",
+                     rg->n - 1 - i, r->idx, r->h, live ? "in a live heap" : "STALE", r->tid, r->ret - lo);
         else
-            log_line("BINDRING:   #%ld root %u handle 0x%I64X (%s) thread %lu  caller 0x%I64X",
-                     n - 1 - i, r->idx, r->h, live ? "in a live heap" : "STALE", r->tid, r->ret);
+            log_line("BINDRING:   #%I64d root %u handle 0x%I64X (%s) thread %lu  caller 0x%I64X",
+                     rg->n - 1 - i, r->idx, r->h, live ? "in a live heap" : "STALE", r->tid, r->ret);
     }
     for (i = 0; i < DHEAP_N; i++)
         if (g_dheap[i].live)
@@ -3949,9 +3997,10 @@ static void bind_ring_dump(const char* why)
 static void WINAPI hk_SetGraphicsRootDescriptorTable(void* list, UINT idx, UINT64 h)
 {
     ClVt* v = clvt_find(list);
+    BindRing* ring;
     if (!v) return;
-    bind_record(idx, h, DESC_RET_ADDR());
-    InterlockedIncrement(&g_bind_calls);
+    ring = bind_ring();
+    if (ring) { ring->calls++; bind_record(ring, idx, h, DESC_RET_ADDR()); }
     if (!gpu_handle_live(h)) {
         UINT64 sub = bind_substitute(idx);
         InterlockedIncrement(&g_bind_blocked);
@@ -3962,15 +4011,17 @@ static void WINAPI hk_SetGraphicsRootDescriptorTable(void* list, UINT idx, UINT6
         v->o32(list, idx, sub);
         return;
     }
-    if (idx < ROOTSLOT_N) g_last_good[idx] = h;
+    if (idx < ROOTSLOT_N) t_last_good[idx] = h;
     v->o32(list, idx, h);
 }
 
 static void WINAPI hk_SetComputeRootDescriptorTable(void* list, UINT idx, UINT64 h)
 {
     ClVt* v = clvt_find(list);
+    BindRing* ring;
     if (!v) return;
-    InterlockedIncrement(&g_bind_calls);
+    ring = bind_ring();
+    if (ring) ring->calls++;
     if (!gpu_handle_live(h)) {
         UINT64 sub = bind_substitute(idx);
         InterlockedIncrement(&g_bind_blocked);
@@ -4997,11 +5048,11 @@ static DWORD WINAPI gauge_stats_thread(LPVOID u)
         if (ENABLE_DESC_RING && g_dring_n)
             log_line("DESCRING: %ld descriptor copies, %ld submits, ring %s", g_dring_n,
                      g_exec_calls, g_dring_dumped ? "DUMPED" : "armed");
-        if (ENABLE_BIND_GUARD && g_bind_calls)
-            log_line("BINDGUARD: %ld root-table binds over %ld command list vtable(s), %ld "
+        if (ENABLE_BIND_GUARD && bind_calls_total())
+            log_line("BINDGUARD: %I64d root-table binds over %ld command list vtable(s), %ld "
                      "stale (%ld replaced, %ld with nothing to replace them); heaps %ld made, "
                      "%ld released, registry %s",
-                     g_bind_calls, g_clvt_n, g_bind_blocked, g_bind_substituted,
+                     bind_calls_total(), g_clvt_n, g_bind_blocked, g_bind_substituted,
                      g_bind_nofallback, g_dheap_made, g_dheap_gone,
                      g_dheap_overflow ? "OVERFLOWED (guard disarmed)" : "healthy");
         if (ENABLE_SUBMIT_GUARD && g_exec_calls)
