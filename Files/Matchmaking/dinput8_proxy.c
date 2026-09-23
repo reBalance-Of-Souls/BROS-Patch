@@ -141,6 +141,22 @@
                                        fine, so the return-address stub is the difference.
                                        Not re-armed until it is understood. */
 #define ENABLE_DRED                1   /* ask D3D12 why the device was removed */
+/* ENABLE_DRED_BREADCRUMBS: whether DRED's auto-breadcrumbs are forced on before the
+   device is created. DEFAULT 0 since 2026-09-23 -- it was the second half of the fps
+   regression players reported after BROS-Patch 9395f64. With breadcrumbs on, the
+   D3D12 runtime records every GPU command and writes a marker after each one, and a
+   match here issues hundreds of thousands a second. Measured on the two-client rig in
+   a room match, the loader with the stall sampler already off (fps / frames > 33 ms
+   over ~100 s): host 53.5 / 192 with breadcrumbs, 58.2 / 71 without; box 51.1 / 271
+   with, 57.6 / 74 without -- at or above the pre-patch build on every measure.
+   ENABLE_DRED itself stays on: the D3D12CreateDevice hook it installs is also what
+   hands the device to BINDGUARD/BARRIERGUARD/SUBMITGUARD, and the removal REASON is
+   still reported. What is lost is the breadcrumb trail of WHICH command the GPU was
+   on when the device went. Build with -DENABLE_DRED_BREADCRUMBS=1 to investigate a
+   device removal. */
+#ifndef ENABLE_DRED_BREADCRUMBS
+#define ENABLE_DRED_BREADCRUMBS    0
+#endif
 
 /* ---- CRE build only: Zangetsu's own gauge ---------------------------- */
 #ifndef ENABLE_PL005_GAUGE
@@ -4443,7 +4459,10 @@ static HRESULT WINAPI hk_D3D12CreateDevice(void* adapter, int minLevel,
     if (InterlockedCompareExchange(&once, 1, 0) == 0) {
         if (!(file_exists("patch_d3d12_debug.txt") && d3d12_agility_factory())) {
             d3d12_debug_enable();      /* must precede device creation */
-            dred_enable_before_device();
+            if (ENABLE_DRED_BREADCRUMBS) dred_enable_before_device();
+            else log_line("DRED: auto-breadcrumbs OFF at build time -- the device-removal "
+                          "reason is still reported, the command trail is not (build with "
+                          "-DENABLE_DRED_BREADCRUMBS=1 to investigate a removal)");
         }
         if (ENABLE_RS_VOLATILE) rs_hook_serializer();
         else log_line("RSVOLATILE: DISABLED at build time -- root signatures keep their "
