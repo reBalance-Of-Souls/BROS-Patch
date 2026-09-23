@@ -190,8 +190,8 @@ def setup_matchmaking(target_path, gameVersion):
 
     # ---- PLUGINS ------------------------------------------------------------
     # Mirrored: whatever is in Files/Matchmaking/Plugins goes to
-    # <game>/ReBalanceOfSouls, and anything else there is removed. This update
-    # ships NO plugin, so the job here is to clear a stale one -- a character DLL
+    # <game>/ReBalanceOfSouls, and anything else there is removed. Clearing a
+    # plugin this version does not ship matters as much as installing one -- a DLL
     # left by an older install keeps patching the exe beside the loader that
     # replaced it, and the failure reads as a crash with no cause.
     try:

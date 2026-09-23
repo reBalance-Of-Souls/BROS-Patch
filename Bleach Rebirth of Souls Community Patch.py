@@ -309,6 +309,9 @@ try:
 
     window.config(background=bgcolor)
     gameMode = "DEFAULT"
+    # The Quick Launch shortcut of the launch in progress, spelled the way the
+    # loader reads it ("training", "roommatch"), or None. See launch().
+    bootMode = None
 
     # ── Fonts ────────────────────────────────────────────────────────────────
     FONT_TITLE    = ("Segoe UI", 18, "bold")
@@ -595,8 +598,8 @@ try:
 
         # ---- PLUGINS ------------------------------------------------------------
         # Mirrored: whatever is in Files/Matchmaking/Plugins goes to
-        # <game>/ReBalanceOfSouls, and anything else there is removed. This update
-        # ships NO plugin, so the job here is to clear a stale one -- a character DLL
+        # <game>/ReBalanceOfSouls, and anything else there is removed. Clearing a
+        # plugin this version does not ship matters as much as installing one -- a DLL
         # left by an older install keeps patching the exe beside the loader that
         # replaced it, and the failure reads as a crash with no cause.
         try:
@@ -673,7 +676,11 @@ try:
                 print(f"Error launching patched game: {e}")
             return
         try:
-            subprocess.Popen([exe], cwd=target_path)
+            env = None
+            if bootMode:                   # a Quick Launch: tell the loader where to open
+                env = dict(os.environ)
+                env["BROS_BOOT_MODE"] = bootMode
+            subprocess.Popen([exe], cwd=target_path, env=env)
         except OSError as e:
             if getattr(e, "winerror", None) == 740:
                 # exe's manifest requires elevation — Popen/CreateProcess can't
@@ -689,22 +696,27 @@ try:
 
     def launch(gameVersion, boot_mode=None):
         """boot_mode is a Quick Launch shortcut: "TrainingBoot" or "RoomMatchBoot".
-        It is not a game mode -- it changes no simulation, it only repoints the
-        command the logo flow hands off to, so the game opens on the screen you
-        wanted instead of the title screen. It travels the same way the
-        standalone Quick Launch scripts at the repo root send it: as the game
-        mode for this one launch, so setup_matchmaking() installs
-        GameModes/<mode>/dinput8.dll (the normal loader plus that one boot
-        patch). Restored in the finally below, otherwise the shortcut would
-        stick to the next normal launch and to the Game Modes page labels."""
-        global gameMode
-        _saved_mode = gameMode
-        if boot_mode:
-            gameMode = boot_mode
+
+        A Quick Launch must install EXACTLY what a normal launch installs -- the
+        same version, game mode, reworks, Team Battle table, plugins and loader --
+        and only open on another screen. So the shortcut is no longer turned into
+        a game mode. It used to be, and setup_matchmaking() then installed
+        GameModes/<mode>/dinput8.dll: a loader frozen before the 2026-09-22
+        update, with no plugin host, no three-player room, no room-match crash
+        guards, and a matchmaking pool 4003 away from the normal loader's, so a
+        player who used these buttons could never find one who launched
+        normally (measured 2026-09-24: code 805088 -> pool 805088 on the frozen
+        loader, code 407699 -> pool 411702 on the normal one).
+
+        It now travels as BROS_BOOT_MODE, which the normal loader reads at
+        startup -- the way the standalone Quick Launch scripts at the repo root
+        have sent it since they were fixed for the same reason."""
+        global bootMode
+        bootMode = {"TrainingBoot": "training", "RoomMatchBoot": "roommatch"}.get(boot_mode)
         try:
             _launch_impl(gameVersion)
         finally:
-            gameMode = _saved_mode
+            bootMode = None
 
     def _launch_impl(gameVersion):
         pulling_from_git()
