@@ -801,8 +801,18 @@ static volatile LONG    g_room3_reach_caller = 0;
 static volatile LONG    g_room3_reach_callers = 0;
 static ULONGLONG        g_room3_sm_tick   = 0;     /* when it was last driven              */
 static void*            g_room3_stw_this  = 0;
+/* ROOM3_HWBP: the hardware watch in room3_log_drivegate -- room3_bp_arm_thread puts a
+   DR0 data breakpoint on every thread of the process. DEFAULT 0, as in the development
+   loader since 2026-09-21: BRoS Studio hunts with DR0-DR3 (the addresses in studio.txt,
+   e.g. exe+0x8C5BE0), this took DR0 from under it, and nothing clicked in the Studio
+   reached the game. It is a diagnostic -- room3_bp_handler only tallies and resumes --
+   so the spectator loses nothing. Measured on players' builds 2026-09-23: it armed
+   eight times, all before the fight, each time suspending every thread of the game to
+   set DR0, and fired ~3 times a second -- no frame cost worth measuring, but a
+   debug-register diagnostic has no place in a player build. Build with
+   -DROOM3_HWBP=1 to measure again, without the Studio. */
 #ifndef ROOM3_HWBP
-#define ROOM3_HWBP 1
+#define ROOM3_HWBP 0
 #endif
 /* ⚠ DEFAULT 0, AND THE 1 WAS MEASURED WRONG. Forcing the branch at exe+0x8A0D29 does make
    the object tick again -- and the tick then dies at exe+0x6ACD04 reading [rcx+0x390] with
