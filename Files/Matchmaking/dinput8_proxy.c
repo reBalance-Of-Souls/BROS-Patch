@@ -806,6 +806,19 @@ static void*            g_room3_stw_this  = 0;
 #ifndef ROOM3_FORCE_BATTLE_BIT
 #define ROOM3_FORCE_BATTLE_BIT 1
 #endif
+/* ROOM3_RIP_SAMPLER: PART 27's stall sampler (room3_rip_sample). Ten times a second it
+   snapshots every thread on the machine and suspends each thread of the game in turn
+   to read its RIP -- the main thread, NetworkUpdateThread and Steam's own networking
+   threads included. DEFAULT 0, as in the development loader since 2026-09-21
+   (1cb622a): nothing in the spectator feature reads what it collects (g_rip_* feeds
+   room3_rip_log and nothing else), and it shipped to players in 9395f64 only because
+   that build was made from a tree two commits behind. Measured 2026-09-23 on the
+   public build: the thread running it held ~40% of a core in the room match menu.
+   The p2p session watch in the same thread keeps running. Build with
+   -DROOM3_RIP_SAMPLER=1 to bring the ROOM3/rip lines back. */
+#ifndef ROOM3_RIP_SAMPLER
+#define ROOM3_RIP_SAMPLER 0
+#endif
 #ifndef ROOM3_NO_THROTTLE
 #define ROOM3_NO_THROTTLE 0
 #endif
@@ -1196,7 +1209,10 @@ static DWORD WINAPI room3_p2p_watch(LPVOID unused)
 
     for (;;) {
         int k;
-        for (k = 0; k < 20; k++) { room3_rip_sample(); Sleep(100); }  /* 2 s of sampling */
+        for (k = 0; k < 20; k++) {                     /* 2 s between session checks */
+            if (ROOM3_RIP_SAMPLER) room3_rip_sample();
+            Sleep(100);
+        }
         if (!net) {
             net = getnet();
             if (!net) continue;
