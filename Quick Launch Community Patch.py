@@ -68,6 +68,73 @@ def open_file(path):
         subprocess.run(["xdg-open", path])
 
 
+# ---------------------------------------------------------------------------
+# Hand the game back from a development launch
+#
+# The development launchers install loose overlay files -- Byakuya's gauge UI
+# among them -- record every one in launcher_patch_state.json, and put the
+# stock copy back from _launcher_vanilla_backup the next time a version that
+# does not want them is installed. This patch ships no Overlay, and its
+# launchers never ran that revert, so switching from a development launch to
+# this one left the development files in the game. Stock Pl22 code then read a
+# UI scene built for the gauge, got a NULL element, and crashed at
+# exe+0x22A547 on the switch to the evolved form -- an online evo, or the
+# training "awakening" option. Measured 2026-09-22 and again 2026-09-23.
+#
+# So this is the revert half, under the same rules as the development side:
+# restore what has a stock backup, delete only the roster switches (their mere
+# presence changes the select grid), and LEAVE anything else -- a leftover file
+# is recoverable, a deleted stock file is not. What is left stays listed in the
+# state file, so the next launcher that wants the path does not back up our
+# file as if it were stock.
+# ---------------------------------------------------------------------------
+_OVERLAY_ALWAYS_REMOVE = ("bros_roster_v12.txt", "bros_roster_v13.txt")
+
+
+def revert_foreign_overlay(game_path, gameVersion):
+    state_path = os.path.join(game_path, "launcher_patch_state.json")
+    try:
+        with open(state_path, "r") as f:
+            state = json.load(f)
+    except Exception:
+        return 0                       # no state file: nothing was ever overlaid
+    prev = list(state.get("overlay", []))
+    if not prev:
+        return 0
+    backup_root = os.path.join(game_path, "_launcher_vanilla_backup")
+    restored, left = 0, []
+    for rel in prev:
+        dst = os.path.join(game_path, *rel.split("/"))
+        bak = os.path.join(backup_root, *rel.split("/"))
+        try:
+            if os.path.exists(bak):
+                shutil.copy2(bak, dst)
+                os.remove(bak)
+                restored += 1
+            elif os.path.exists(dst) and rel in _OVERLAY_ALWAYS_REMOVE:
+                os.remove(dst)
+                restored += 1
+            elif os.path.exists(dst):
+                left.append(rel)
+        except Exception as e:
+            # Keep it listed: dropping a path whose revert failed would let the
+            # next launcher capture the development file as the stock backup.
+            print(f"[overlay] could not revert {rel}: {e}")
+            left.append(rel)
+    state["overlay"] = sorted(left)
+    state["version"] = gameVersion
+    try:
+        with open(state_path, "w") as f:
+            json.dump(state, f, indent=1)
+    except Exception as e:
+        print(f"[overlay] could not write patch state: {e}")
+    msg = f"[overlay] {restored} file(s) left by a previous launch put back to stock"
+    if left:
+        msg += f", {len(left)} left in place (no stock backup recorded)"
+    print(msg)
+    return restored
+
+
 def injectFolder(files, folderName, fullFolder=True):
     folder_src = os.path.join(BASE_DIR, "GameVersions", f"{files}", f"{folderName}")
     folder_dst = os.path.join(game_path, f"{folderName}")
@@ -180,6 +247,7 @@ def launch(gameVersion):
     if not os.path.exists(os.path.join(BASE_DIR,"GameModes","TeamBattle","TokenOpen.txt")):
         config["TEAM_BATTLE"] = "OFF"
     try:
+        revert_foreign_overlay(game_path, gameVersion)
         injectFolder(gameVersion, "Script")
         injectFolder(gameVersion, "Motion")
         injectFolder(gameVersion, "00HIGH", False)
