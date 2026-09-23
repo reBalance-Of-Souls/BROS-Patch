@@ -669,6 +669,16 @@ try:
         format error) -- it only runs through Steam/Proton -- so launch it via
         Steam's app URL instead. Steam must be running for online play."""
         exe = os.path.join(target_path, "BLEACH_Rebirth_of_Souls.exe")
+        # The Quick Launch shortcut rides in BROS_BOOT_MODE, set on THIS process's
+        # environment rather than only on the Popen call: the elevated fallback
+        # below goes through ShellExecuteW, which has no env parameter and hands
+        # the child a copy of ours. Cleared when there is no shortcut, so a quick
+        # launch can never leak into the next normal one. Same contract as the
+        # development launcher.
+        if bootMode:
+            os.environ["BROS_BOOT_MODE"] = bootMode
+        else:
+            os.environ.pop("BROS_BOOT_MODE", None)
         if platform.system() != "Windows":
             try:
                 open_file("steam://rungameid/1689620")
@@ -676,11 +686,7 @@ try:
                 print(f"Error launching patched game: {e}")
             return
         try:
-            env = None
-            if bootMode:                   # a Quick Launch: tell the loader where to open
-                env = dict(os.environ)
-                env["BROS_BOOT_MODE"] = bootMode
-            subprocess.Popen([exe], cwd=target_path, env=env)
+            subprocess.Popen([exe], cwd=target_path)
         except OSError as e:
             if getattr(e, "winerror", None) == 740:
                 # exe's manifest requires elevation — Popen/CreateProcess can't
