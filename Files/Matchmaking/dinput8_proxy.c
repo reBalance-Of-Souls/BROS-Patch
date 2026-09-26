@@ -3759,6 +3759,7 @@ static volatile LONG g_bar_calls = 0, g_bar_dropped = 0, g_bar_empty = 0;
 #define CLVT_N 24
 typedef struct {
     void** vt;
+    int type;                                       /* ID3D12CommandList::GetType */
     HRESULT (WINAPI* o9)(void*);                    /* Close */
     HRESULT (WINAPI* o10)(void*, void*, void*);     /* Reset */
     void (WINAPI* o26)(void*, UINT, const void*);   /* ResourceBarrier */
@@ -3779,12 +3780,68 @@ static ClVt* clvt_find(void* list)
     return NULL;
 }
 
+/* ★★ 2026-09-26, measured on a player's PC (Windows 11 26H1, RTX 5070 Ti): the
+   hooks are reached through tables we NEVER patched. There, every command list
+   gets its own vtable built at run time in the heap -- slots 0-11 copied from
+   D3D12Core's table for that list type, slots 12-14 and 30+ pointed straight at
+   nvwgf2umx.dll -- and a table copied AFTER we patched the static one carries our
+   hk_Close / hk_Reset (and whatever else we wrote) along with it. clvt_find then
+   has no entry for it, and every hook used to answer that with "unreachable":
+   Close and Reset returned without closing or resetting, barriers were thrown
+   away, and the driver died on the state that left (nvwgf2umx+0x340609, 9 s in).
+   The shipped build did worse: it registered such a copy as one more table, so
+   its "originals" for slots 9/10 were our own hooks -- hk_Close called hk_Close
+   until the stack ran out, 2 s in, in ntdll, with a crash report of 0 bytes.
+   So an unknown table is resolved to the patched table of the SAME list type --
+   the table it was copied from, whose originals are the functions the copy was
+   meant to hold (DIRECT and COPY lists share the same Close/Reset there) -- and
+   remembered, so the lookup runs once per table, not once per call. */
+#define CLVT_ALIAS_N 256
+static void* volatile g_clvt_alias_vt[CLVT_ALIAS_N];
+static ClVt* volatile g_clvt_alias_e[CLVT_ALIAS_N];
+static volatile LONG  g_clvt_alias_n = 0;
+
+static ClVt* clvt_resolve(void* list)
+{
+    void** vt = *(void***)list;
+    ClVt* e = clvt_find(list);
+    LONG n, i;
+    int type;
+    if (e) return e;
+    n = g_clvt_alias_n;
+    if (n > CLVT_ALIAS_N) n = CLVT_ALIAS_N;
+    for (i = 0; i < n; i++)
+        if (g_clvt_alias_vt[i] == (void*)vt && g_clvt_alias_e[i]) return g_clvt_alias_e[i];
+    type = ((int (WINAPI*)(void*))vt[8])(list);           /* GetType: D3D12Core's own, in every copy */
+    n = g_clvt_n;
+    if (n > CLVT_N) n = CLVT_N;
+    for (i = 0; i < n && !e; i++)
+        if (g_clvt[i].vt && g_clvt[i].type == type) e = &g_clvt[i];
+    for (i = 0; i < n && !e; i++)
+        if (g_clvt[i].vt) e = &g_clvt[i];
+    if (!e) return NULL;
+    i = InterlockedIncrement(&g_clvt_alias_n) - 1;
+    if (i < CLVT_ALIAS_N) {
+        g_clvt_alias_e[i] = e;
+        g_clvt_alias_vt[i] = (void*)vt;       /* written last: a reader sees a finished pair */
+        if (i < 4)
+            log_line("BINDGUARD: run-time command list table %p (type %d) reaches our hooks -- a "
+                     "copy of patched table %p (type %d); its Close/Reset/barriers now go to that "
+                     "table's originals instead of being dropped", (void*)vt, type, (void*)e->vt,
+                     e->type);
+        else if (i == CLVT_ALIAS_N - 1)
+            log_line("BINDGUARD: %d run-time command list tables mapped -- later ones are resolved "
+                     "on every call (correct, just slower)", CLVT_ALIAS_N);
+    }
+    return e;
+}
+
 static void WINAPI hk_ResourceBarrier(void* list, UINT num, const void* bars)
 {
     BarrierRaw keep[16];
-    ClVt* v = clvt_find(list);
+    ClVt* v = clvt_resolve(list);
     UINT i, k = 0;
-    if (!v) return;                    /* unreachable: only patched vtables get here */
+    if (!v) return;                    /* no graphics table was ever patched */
     InterlockedIncrement(&g_bar_calls);
     if (!num || !bars) { InterlockedIncrement(&g_bar_empty); return; }
     if (num > 16) { v->o26(list, num, bars); return; }
@@ -4038,7 +4095,7 @@ static void bind_ring_dump(const char* why)
 
 static void WINAPI hk_SetGraphicsRootDescriptorTable(void* list, UINT idx, UINT64 h)
 {
-    ClVt* v = clvt_find(list);
+    ClVt* v = clvt_resolve(list);
     BindRing* ring;
     if (!v) return;
     ring = bind_ring();
@@ -4059,7 +4116,7 @@ static void WINAPI hk_SetGraphicsRootDescriptorTable(void* list, UINT idx, UINT6
 
 static void WINAPI hk_SetComputeRootDescriptorTable(void* list, UINT idx, UINT64 h)
 {
-    ClVt* v = clvt_find(list);
+    ClVt* v = clvt_resolve(list);
     BindRing* ring;
     if (!v) return;
     ring = bind_ring();
@@ -4228,7 +4285,7 @@ static void clst_set(void* list, LONG closed)
 
 static HRESULT WINAPI hk_Close(void* list)
 {
-    ClVt* v = clvt_find(list);
+    ClVt* v = clvt_resolve(list);
     HRESULT hr;
     if (!v) return 0;
     hr = v->o9(list);
@@ -4240,7 +4297,7 @@ static volatile LONG g_reset_calls = 0, g_reset_failed = 0, g_reset_reports = 0;
 
 static HRESULT WINAPI hk_Reset(void* list, void* alloc, void* pso)
 {
-    ClVt* v = clvt_find(list);
+    ClVt* v = clvt_resolve(list);
     HRESULT hr;
     if (!v) return 0;
     InterlockedIncrement(&g_reset_calls);
@@ -4256,18 +4313,135 @@ static HRESULT WINAPI hk_Reset(void* list, void* alloc, void* pso)
     return hr;
 }
 
+/* ============ 2026-09-26: ONLY A GRAPHICS LIST, ONLY A MODULE'S TABLE ===========
+ *  A player's game died 2.3 s into every launch -- AV inside ntdll, every
+ *  crashlogs\ report 0 bytes -- and ran fine with this DLL removed. In all 20
+ *  captured sessions the log stops 1-5 ms after a FOURTH "command list vtable
+ *  ... patched" whose address is in the HEAP, not in D3D12Core.dll like #1-#3
+ *  (Windows 11 26H1 build 28000, RTX 5070 Ti). clvt_hook wrote slots 9, 10, 26,
+ *  31 and 32 into it as if every list were an ID3D12GraphicsCommandList. A list
+ *  that is not one -- video decode/process/encode, types 4-6, whose tables end
+ *  before slot 31 -- or a table some layer built at run time is not ours to
+ *  write: past its end the writes land in the next heap block, and the heap's
+ *  own code is what faults, which is also why the crash handler (it needs the
+ *  heap) could not write a single byte.
+ *  So a list is only patched when GetType() says graphics (0-3) AND its vtable
+ *  lies inside a loaded module. Anything else is left exactly as it is, and
+ *  described once in the log: type, table, where its methods live, and who
+ *  handed it to us -- so the next report names the owner. */
+#define CLVT_SKIP_N 256                              /* one run-time table PER LIST there */
+static volatile LONG g_clvt_skipped = 0;
+static void* volatile g_clvt_skipvt[CLVT_SKIP_N];   /* also the fast path: a list is
+                                                       submitted every frame, and the
+                                                       module lookup takes the loader lock */
+
+static int clvt_readable(const void* p, SIZE_T n)
+{
+    const unsigned char* a = (const unsigned char*)p;
+    while (n) {
+        MEMORY_BASIC_INFORMATION mbi;
+        SIZE_T avail;
+        if (!VirtualQuery(a, &mbi, sizeof mbi) || mbi.State != MEM_COMMIT ||
+            (mbi.Protect & (PAGE_NOACCESS | PAGE_GUARD)) ||
+            !(mbi.Protect & (PAGE_READONLY | PAGE_READWRITE | PAGE_WRITECOPY | PAGE_EXECUTE_READ |
+                             PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_WRITECOPY)))
+            return 0;
+        avail = (SIZE_T)((const unsigned char*)mbi.BaseAddress + mbi.RegionSize - a);
+        if (avail >= n) return 1;
+        a += avail;
+        n -= avail;
+    }
+    return 1;
+}
+
+/* "D3D12Core.dll+0x1234", or "no module". */
+static const char* clvt_where(const void* a, char* buf, int n)
+{
+    HMODULE m = NULL;
+    char path[MAX_PATH];
+    const char* base;
+    if (!a || !GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+                                  GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, (LPCSTR)a, &m) || !m ||
+        !GetModuleFileNameA(m, path, sizeof path)) {
+        lstrcpynA(buf, "no module", n);
+        return buf;
+    }
+    base = strrchr(path, '\\');
+    base = base ? base + 1 : path;
+    wsprintfA(buf, "%.40s+0x%X", base, (unsigned)((const unsigned char*)a - (const unsigned char*)m));
+    return buf;
+}
+
+static void clvt_skip_report(void* list, void** vt, int type, UINT64 from)
+{
+    static const char* const tn[] = { "DIRECT", "BUNDLE", "COMPUTE", "COPY",
+                                      "VIDEO_DECODE", "VIDEO_PROCESS", "VIDEO_ENCODE" };
+    char w1[64], w2[64], line[900];
+    LONG n, i;
+    int used;
+    n = InterlockedIncrement(&g_clvt_skipped) - 1;
+    if (n < CLVT_SKIP_N) g_clvt_skipvt[n] = (void*)vt;
+    if (n >= 4) return;                                  /* the first 4 are described */
+    log_line("BINDGUARD: command list %p left UNPATCHED -- type %d (%s), vtable %p in %s, "
+             "handed over from %s. Writing slots 9/10/26/31/32 into a table that is not a "
+             "module's graphics-list vtable is what corrupted the heap on 2026-09-26.",
+             list, type, (type >= 0 && type <= 6) ? tn[type] : "unknown", (void*)vt,
+             clvt_where(vt, w1, sizeof w1), clvt_where((void*)(SIZE_T)from, w2, sizeof w2));
+    /* where the table's entries point, until they stop looking like code */
+    used = wsprintfA(line, "BINDGUARD:   its slots:");
+    for (i = 0; i < 40; i++) {
+        void* f;
+        if (!clvt_readable(&vt[i], sizeof(void*))) {
+            used += wsprintfA(line + used, " [%ld]unreadable", i);
+            break;
+        }
+        f = vt[i];
+        used += wsprintfA(line + used, " [%ld]%s", i, clvt_where(f, w1, sizeof w1));
+        if (used > (int)sizeof(line) - 80) {
+            log_line("%s", line);
+            used = wsprintfA(line, "BINDGUARD:   its slots (cont.):");
+        }
+    }
+    log_line("%s", line);
+}
+
 /* Slot 26 is ResourceBarrier, 31 SetComputeRootDescriptorTable, 32
-   SetGraphicsRootDescriptorTable. Every command list this process shows us has
-   its vtable patched, once each -- see the note on CLVT_N for why one was not
-   enough. */
-static void clvt_hook(void* list)
+   SetGraphicsRootDescriptorTable. Every GRAPHICS command list this process shows
+   us has its vtable patched, once each -- see the note on CLVT_N for why one was
+   not enough, and the block above for why only those. */
+static void clvt_hook(void* list, UINT64 from)
 {
     void** vt;
     ClVt* e;
     LONG slot;
     DWORD old;
+    int type = -1;
+    char w[64];
+    LONG i, ns;
     if (!list || clvt_find(list)) return;
     vt = *(void***)list;
+    ns = g_clvt_skipped;
+    if (ns > CLVT_SKIP_N) ns = CLVT_SKIP_N;
+    for (i = 0; i < ns; i++) if (g_clvt_skipvt[i] == (void*)vt) return;   /* judged already */
+    if (clvt_readable(vt, 33 * sizeof(void*))) {
+        /* A copy of a table we already patched carries our hooks: registering it would
+           make hk_Close its own "original" (the 2026-09-26 stack overflow). It needs
+           nothing -- clvt_resolve already routes its calls. Checked before the module
+           lookup because it is free and the loader lock is not. */
+        if (vt[9] == (void*)&hk_Close || vt[10] == (void*)&hk_Reset ||
+            vt[26] == (void*)&hk_ResourceBarrier ||
+            vt[31] == (void*)&hk_SetComputeRootDescriptorTable ||
+            vt[32] == (void*)&hk_SetGraphicsRootDescriptorTable) {
+            i = InterlockedIncrement(&g_clvt_skipped) - 1;
+            if (i < CLVT_SKIP_N) g_clvt_skipvt[i] = (void*)vt;
+            return;
+        }
+        type = ((int (WINAPI*)(void*))vt[8])(list);       /* ID3D12CommandList::GetType */
+    }
+    if (type < 0 || type > 3 || !strcmp(clvt_where(vt, w, sizeof w), "no module")) {
+        clvt_skip_report(list, vt, type, from);
+        return;
+    }
     slot = InterlockedIncrement(&g_clvt_n) - 1;
     if (slot >= CLVT_N) {
         g_clvt_n = CLVT_N;
@@ -4277,6 +4451,7 @@ static void clvt_hook(void* list)
         return;
     }
     e = &g_clvt[slot];
+    e->type = type;
     e->o9  = (HRESULT (WINAPI*)(void*))vt[9];
     e->o10 = (HRESULT (WINAPI*)(void*, void*, void*))vt[10];
     e->o26 = (void (WINAPI*)(void*, UINT, const void*))vt[26];
@@ -4299,7 +4474,8 @@ static void clvt_hook(void* list)
     VirtualProtect(&vt[9], sizeof(void*) * 24, old, &old);
     e->vt = vt;                  /* written last: a reader only sees a finished entry */
     log_line("BINDGUARD: command list vtable %p patched (#%ld) -- a table handle that is in no "
-             "live heap is dropped instead of being handed to the driver", (void*)vt, slot + 1);
+             "live heap is dropped instead of being handed to the driver [type %d, %s]",
+             (void*)vt, slot + 1, type, w);
 }
 
 static void WINAPI hk_ExecuteCommandLists(void* queue, UINT n, void* const* lists)
@@ -4307,14 +4483,19 @@ static void WINAPI hk_ExecuteCommandLists(void* queue, UINT n, void* const* list
     InterlockedIncrement(&g_exec_calls);
     if ((ENABLE_BIND_GUARD || ENABLE_BARRIER_GUARD || ENABLE_SUBMIT_GUARD) && lists) {
         UINT li;
-        for (li = 0; li < n; li++) clvt_hook(lists[li]);
+        for (li = 0; li < n; li++) clvt_hook(lists[li], DESC_RET_ADDR());
     }
     if (ENABLE_SUBMIT_GUARD && lists && n && n <= 32) {
         void* keep[32];
         UINT li, k = 0;
         for (li = 0; li < n; li++) {
             ClState* st = clst_find(lists[li]);
-            if (st && !st->closed) {
+            /* ★ 2026-09-26: "not closed" is only known for a list whose Close goes
+               through hk_Close. A run-time table that holds the runtime's own Close
+               (the swapchain's list, created by dxgi) closes without telling us, and
+               used to be dropped from EVERY submit as "still recording". Not knowing
+               is not a reason to drop somebody's rendering: it passes. */
+            if (st && !st->closed && (*(void***)lists[li])[9] == (void*)&hk_Close) {
                 /* ★★ 2026-09-20, measured: refusing the submit alone leaves a BLACK
                    SCREEN. A command list that was never closed cannot be Reset, so
                    the game's next frame fails to start recording, records nothing,
@@ -4324,7 +4505,7 @@ static void WINAPI hk_ExecuteCommandLists(void* queue, UINT n, void* const* list
                    frame it held is still dropped, because what it contains is what
                    the exception abandoned halfway, but Reset succeeds next frame
                    and the game draws again. */
-                ClVt* v = clvt_find(lists[li]);
+                ClVt* v = clvt_resolve(lists[li]);
                 HRESULT chr = v ? v->o9(lists[li]) : (HRESULT)-1;
                 if (chr >= 0) { st->closed = 1; InterlockedIncrement(&g_submit_closed); }
                 else InterlockedIncrement(&g_submit_closefail);
@@ -4370,7 +4551,7 @@ static HRESULT WINAPI hk_CreateCommandList(void* dev, UINT node, UINT type, void
 {
     HRESULT hr = o_CreateCommandList(dev, node, type, alloc, pso, riid, ppv);
     if (hr >= 0 && ppv && *ppv) {
-        clvt_hook(*ppv);
+        clvt_hook(*ppv, DESC_RET_ADDR());
         if (ENABLE_SUBMIT_GUARD) clst_set(*ppv, 0);   /* created open, still recording */
     }
     return hr;
