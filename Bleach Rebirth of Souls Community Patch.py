@@ -1028,6 +1028,11 @@ try:
     gameVersionsPath = os.path.join(BASE_DIR,"GameVersions")
     for folder in os.listdir(gameVersionsPath):
         gameVersionsList.append(folder)
+    # The Community Patch is the build everyone plays: list it first and
+    # preselect it, instead of vanilla.
+    if COMMUNITY_VERSION in gameVersionsList:
+        gameVersionsList.remove(COMMUNITY_VERSION)
+        gameVersionsList.insert(0, COMMUNITY_VERSION)
 
     # Themed combobox (dark, matches the rest of the UI) -- 'clam' is the only
     # built-in ttk theme that lets us restyle field/background colours on Windows.
@@ -1272,7 +1277,8 @@ try:
         font=FONT_COMBO,
         style="Bros.TCombobox"
     )
-    brosVersionList.set("Choose a game version")
+    brosVersionList.set(COMMUNITY_VERSION if COMMUNITY_VERSION in gameVersionsList
+                        else "Choose a game version")
     launchButton = mkbutton(playInner, "Launch the game", preLauncher, kind="primary", icon="▶",
                              tooltip="Launch the game using the version selected in the dropdown above.")
     brosVersionList.pack(pady=(0,paddingYvalue+3), fill=X)
