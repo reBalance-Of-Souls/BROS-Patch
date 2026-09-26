@@ -14735,6 +14735,49 @@ static void patch_throwtech_probe(void)
 #define BOOTTR_JUMP_ROOM_RVA     0x14A0848u  /* "JUMP_RoomMatchMenu"              */
 #define BOOTTR_ONLINE_SEL_RVA    0x1CDF2E8u  /* 0 rank, 1 room match, 2 free      */
 #define BOOTTR_ONLINE_SEL_ROOM   1
+#define BOOTTR_MENU_CURSOR_RVA   0x7D8850u   /* main menu: remember (tab, entry)  */
+
+/* ---- BACK after a boot shortcut must land on that screen's tab ----------
+   (2026-09-27) With the jump alone, BACK from the room-match menu opened the
+   main menu on its first tab, Story, where the game's own path opens Online.
+
+   The flow graph makes that BACK a plain pop (state RoomMatch: BACK_ONLINE_MENU
+   and BACK_MAIN_MENU are both kind 4, no target), so what the main menu shows
+   afterwards is only its own memory: a std::map<int,int> at 0x141CF4220, key 0
+   = the tab, key <tab id> = the entry inside it. 0x1407D8850(tab, entry) is
+   what fills it from two names -- it clears the map, then looks both names up
+   (CRC32) in the menu table a static initialiser (0x140057C60) builds before
+   WinMain, so it is valid at logo time. Both retail ways into the room-match
+   menu call it right after their jump, with these same two names:
+       0x1407E6847  the online check's JUMP_RoomMatchMenu      -> 0x1407E68C6
+       0x14089E956  the "Battle_RoomMatch" launch activity     -> 0x14089E9BF
+   The boot jump skipped it, so the map stayed empty and the menu fell back to
+   tab 0.
+
+   The Training boot had the same hole (user report, same day): BACK from its
+   character select also opened Story. Every scene that hands control back to
+   the main menu names the cursor first, and Training's own pair is
+   ("Offline", "Training") -- STrainingAction's way back to the main menu
+   (0x1406EC4A0 -> 0x1406EC4FF). SVersusAction does the same with
+   ("Offline", "Versus") before its MOVE_TITLE (0x1407033DA). So both boot
+   modes now name their tab and entry right after their jump.
+
+   Both arguments are by-value MSVC std::string, which the CALLEE destroys
+   (0x14008BF50 on each before it returns): a 16-byte inline buffer, size at
+   +0x10, capacity at +0x18, capacity 15 = inline. Both names fit inline, so
+   nothing is allocated and the destructor frees nothing. */
+typedef struct { char buf[16]; unsigned long long size, cap; } boottr_str_t;
+
+static void boottr_str(boottr_str_t* s, const char* t)
+{
+    size_t n = strlen(t);                    /* < 16 for every name used here */
+    memset(s, 0, sizeof(*s));
+    memcpy(s->buf, t, n);
+    s->size = n;
+    s->cap  = 15;
+}
+
+static int g_boottr_cursor_ok;               /* 0x7D8850's prologue matched   */
 
 /* ---- the boot destination is chosen at RUN TIME -------------------------
    It used to be a compile-time #if, which forced one frozen DLL per boot
@@ -14853,6 +14896,22 @@ static void boottr_handoff(void* flow, void* cmd)
     }
     }
     ((void (*)(void*, void*))(mod + BOOTTR_DISPATCH_RVA))(flow, cmd);
+
+    /* After the jump, as the retail callers do (see BOOTTR_MENU_CURSOR_RVA). */
+    if (g_boottr_cursor_ok) {
+        static int   told = 0;
+        const char*  t = g_boot_room ? "Online"    : "Offline";
+        const char*  e = g_boot_room ? "RoomMatch" : "Training";
+        boottr_str_t tab, entry;
+        boottr_str(&tab,   t);
+        boottr_str(&entry, e);
+        ((void (*)(void*, void*))(mod + BOOTTR_MENU_CURSOR_RVA))(&tab, &entry);
+        if (!told) { told = 1;
+            log_line("BOOTTRAIN: main-menu cursor set to %s > %s through RVA 0x%X "
+                     "after the jump, as the game's own way into that screen does "
+                     "-- BACK now opens the main menu on the %s tab",
+                     t, e, BOOTTR_MENU_CURSOR_RVA, t); }
+    }
 }
 
 
@@ -14902,6 +14961,19 @@ static void patch_boot_training(void)
     disp32  = (int)rel;
     g_boottr_mod = mod;
     disp64  = (unsigned long long)(void*)&boottr_handoff;
+
+    {   /* the main-menu cursor call each boot jump is followed by */
+        static const unsigned char cur[19] = {
+            0x48,0x89,0x5C,0x24,0x18,            /* mov [rsp+0x18],rbx       */
+            0x55, 0x56, 0x57, 0x41,0x56, 0x41,0x57, /* push rbp,rsi,rdi,r14,r15 */
+            0x48,0x81,0xEC,0x90,0x00,0x00,0x00   /* sub rsp,0x90             */
+        };
+        g_boottr_cursor_ok = !memcmp(mod + BOOTTR_MENU_CURSOR_RVA, cur, sizeof(cur));
+        if (!g_boottr_cursor_ok)
+            log_line("BOOTTRAIN: the main-menu cursor function at RVA 0x%X is not as "
+                     "expected (game updated?) -- the boot shortcut still works, but "
+                     "BACK will open the main menu on Story", BOOTTR_MENU_CURSOR_RVA);
+    }
 
     if (!VirtualProtect(p, sizeof(orig), PAGE_EXECUTE_READWRITE, &old)) {
         log_line("BOOTTRAIN: VirtualProtect failed at RVA 0x%X", BOOTTR_WINDOW_RVA);
