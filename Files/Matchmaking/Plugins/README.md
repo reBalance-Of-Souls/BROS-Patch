@@ -182,3 +182,110 @@ store. If you retarget the nominal (say to 1.25), you must move
 edit, or a target whose operand differs above its low byte, fails to compile.
 Do not "fix" that by deleting the assert — write all four operand bytes under
 the existing claim instead, which already covers them.
+
+---
+
+## kbhoho.dll — inputs that behave the same as Type A, on a Custom scheme and on keyboard
+
+| | |
+|---|---|
+| size | 192,000 bytes |
+| sha256 | `0e11639d03e2139c9d7c0ef34977e0a22eef389a2678d31055074a3401e7a2e6` |
+| md5 | `db963dffa383a3f5a3eae2d8969d5613` |
+| built from | dev environment commit `360daed` (source), shipped there as `f91d230` |
+| exports | `BrosPluginInit` — nothing else |
+| imports | `kernel32` (`CreateThread`, `Sleep`, critical sections, `VirtualProtect`, `VirtualQuery`, `TlsGetValue`, `GetLastError`, `CloseHandle`) plus the UCRT forwarders; no file, registry, network, `LoadLibrary` or `GetProcAddress` imports |
+| source | `kbhoho_plugin.c`, beside this file |
+
+### What it fixes
+
+**1. Custom control schemes: an SP-trigger combo can fire the wrong move.** In a
+Custom scheme, the button of an SP-trigger combo can also carry an attack. The game
+emits that attack every frame the button is held, whether or not the trigger is down.
+The two reported cases are both vanilla, with Signature Move on A, Kikon Move on B,
+Hohō = trigger + A and SP2 = trigger + B:
+
+- hold guard and input the Hohō: **SP2 comes out**. Signature + trigger is SP2 in the
+  combo tables, and the game does not allow the Hohō while guarding.
+- Hakugeki → yellow Reverse → SP2: **a Hakugeki comes out**. The game does not accept the
+  dedicated SP command during a Reverse, so the Kikon Move on B wins.
+
+Type A never has either overlap. The plugin makes a Custom scheme resolve like Type A:
+while the trigger and a combo's button are both held, that button counts as the attack
+Type A puts on it, and as nothing else. The rule stays on until that button is released:
+
+| combo | counts as |
+|---|---|
+| SP1 | Flash Attack |
+| SP2 | Signature Move |
+| Reverse | Quick Attack |
+| Hohō | no attack (Type A's Hohō button is Step/Dash) |
+
+**2. Keyboard: the Hohō after an attack is less reliable than on a pad.** On a pad,
+releasing the Hohō button while the trigger is held asks for the Hohō a second time.
+The keyboard path does not. The plugin makes a keyboard release behave like the pad's.
+
+### What it writes
+
+- **One pointer in the game image, claimed.** Slot 2 of the `BrainPad` vtable (RVA
+  `0x142C058`, 8 bytes) is swapped for a wrapper around the original function
+  (`0x140410ED0`). This is done only after `claim()` grants the 8 bytes, and only if the
+  slot still holds the stock function. The wrapper always calls the original.
+- **Only for the length of that call:**
+  - Custom scheme: the five attack masks of the player's `BrainPad` object (heap memory,
+    not the exe) are rewritten as described above, then put back when the call returns.
+  - Keyboard: one entry of the game's key table gets its pressed bit, then is put back.
+- **Nothing on disk.** Remove the plugin and the next launch is stock.
+
+### What it does NOT touch
+
+- **Type A, Type B and Type C.** Their buttons already follow the rule, so the plugin
+  leaves them alone. Type C is left exactly as the game ships it.
+- **A Custom scheme with "Unpair Spiritual Pressure Move Trigger" on.** There is no
+  trigger combo in that mode.
+- **No command is added or removed.** Every command still comes from the game's own
+  code. The only change is which button the game thinks is held.
+- **Online.** Each client runs the input conversion for its own player only, so the change
+  is made before the input leaves the machine, and both clients see the same match.
+  Checked on a two-client room match.
+
+### It declines rather than guesses
+
+It logs one line, writes nothing, and returns 0 (the game runs stock) if:
+
+- the host ABI is not 1;
+- the `BrainPad` vtable slot does not hold the stock `BrainPad::vfunc2`;
+- the loader's claim registry refuses the 8 bytes at `0x142C058`, because another plugin
+  owns them;
+- `VirtualProtect` fails.
+
+### How to verify it applied
+
+In `<game>/patch_ranked.log`:
+
+1. `KBHOHO: ARMED -- ...` and `BROS/plugins: ... "kbhoho.dll" armed.`
+2. Once per player per session, at the first battle:
+   `KBHOHO/diag: BrainPad P1 (...) first active call -- scheme N, unpaired N; hoho .. trig .. ...`.
+   Scheme 3 is Custom. The masks are the buttons as the game sees them.
+3. On a Custom scheme that needs the rule, one line per combo:
+   `KBHOHO/pad: P1 Custom, SP2 = SP trigger + button 0x10, which is Kikon Move -- with the trigger down it counts as Signature Move, as in Type A`.
+4. While playing: `KBHOHO/pad: <combo> -- N trigger press(es) rewritten to Type A so far`.
+
+### How it was built
+
+Built from `kbhoho_plugin.c` (this folder) with the dev environment's `build_plugin.sh`
+and Zig, target `x86_64-windows-gnu`:
+
+```
+zig cc -target x86_64-windows-gnu -O2 -fms-extensions -Xclang -fasync-exceptions \
+       -Wno-date-time -shared -DPATCH_BUILD_ID="\"360daed-20260927-dirty\"" \
+       -o kbhoho.dll kbhoho_plugin.c
+```
+
+`-Xclang -fasync-exceptions` is required. Without it, the `__try` blocks around the
+plugin's reads catch nothing.
+
+`bros_plugin.h` is not reproduced here. The plugin reads four of its fields: `abi` (+0),
+`mod` (+8), `log` (+0x10) and `claim` (+0x28). The shipped
+`Files/Matchmaking/dinput8.dll` assigns all four, and was checked to load it:
+`3 found, 3 armed, 0 declined ... 3 exe range(s) claimed, 0 refused`.
