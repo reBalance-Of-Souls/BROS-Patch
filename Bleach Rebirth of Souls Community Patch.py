@@ -1588,6 +1588,30 @@ try:
         _sync_scroll()
     fit_window()
     window.deiconify()
+    # First start after the update: every player picks the netcode once before the
+    # launcher can be used (Berg 2026-10-03: "Use the new improved netcode?", yes or
+    # no). On Windows a Yes/No box has no close button, so an answer is required.
+    # Asked only while no choice is saved -- by this question or by the switch on the
+    # Game Modes page (Json/netcode.json).
+    if _netcode_mode and not os.path.exists(_netcode_mode.choice_path(BASE_DIR)):
+        window.update()
+        netcodeAnswer = messagebox.askyesno("New netcode", "Use the new improved netcode?", parent=window)
+        try:
+            _netcode_mode.save_choice(BASE_DIR, bool(netcodeAnswer))
+        except _netcode_mode.NetcodeError as e:
+            messagebox.showwarning(
+                "New netcode",
+                f"Your choice could not be saved:\n\n{e}\n\nThe launcher will ask again at its next start.",
+                parent=window)
+        netcodeOn = _netcode_mode.load_choice(BASE_DIR)
+        actualiseNetcodeButton()
+        if os.path.exists(_netcode_mode.choice_path(BASE_DIR)):
+            # Written into the game folder now too, as the switch does; every launch
+            # writes it again.
+            try:
+                print("[netcode] " + _netcode_mode.apply(game_path, netcodeOn, None, BASE_DIR))
+            except Exception as e:
+                print(f"[netcode] bros_net.txt not written now ({e}); the next launch writes it")
     window.mainloop()
 except Exception as e:
     try :

@@ -25,6 +25,31 @@ try:
 except Exception:
     _netcode_mode = None
 
+
+def _ask_netcode_once():
+    """First start after the update: the main launcher's question, asked here too while no
+    choice is saved, so nobody starts the game without having picked (Berg 2026-10-03).
+    Yes = the New netcode switch ON, No = OFF, saved exactly as the switch saves it
+    (Json/netcode.json). A save failure raises into the launch's handler: no game start."""
+    if os.path.exists(_netcode_mode.choice_path(BASE_DIR)):
+        return
+    try:
+        import tkinter
+        from tkinter import messagebox
+        root = tkinter.Tk()
+        root.withdraw()
+        root.attributes("-topmost", True)
+        try:
+            on = messagebox.askyesno("New netcode", "Use the new improved netcode?", parent=root)
+        finally:
+            root.destroy()
+    except Exception as e:
+        print("[netcode] could not ask which netcode to use (%s); the switch's default applies" % e)
+        return
+    _netcode_mode.save_choice(BASE_DIR, bool(on))
+    print("[netcode] your choice: %s (change it on the main launcher's Game Modes page)"
+          % ("the New netcode" if on else "the game's own netcode"))
+
 GAME_VERSION = "Bleach Rebirth of Souls Community Patch"
 
 config_path = os.path.join(BASE_DIR, "Json", "config.json")
@@ -326,6 +351,7 @@ def launch(gameVersion):
         # The New netcode switch, once the loader is in (as in the main launcher).
         # A failure raises into the handler below, so the game is not started.
         if _netcode_mode:
+            _ask_netcode_once()
             _netcode_mode.launch_step(BASE_DIR, game_path, [gameVersion],
                                       os.path.join(game_path, "dinput8.dll"))
         launch_patched(game_path)
