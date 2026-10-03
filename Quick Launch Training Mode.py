@@ -16,6 +16,15 @@ except:
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
+# The main launcher's "New netcode" switch (Json/netcode.json), applied here too,
+# so this shortcut runs the netcode the switch shows (launcher/netcode_mode.py).
+# ON unless the player switched it OFF. Optional: without the module a launch
+# leaves bros_net.txt as it is.
+try:
+    from launcher import netcode_mode as _netcode_mode
+except Exception:
+    _netcode_mode = None
+
 GAME_VERSION = "Bleach Rebirth of Souls Community Patch"
 
 config_path = os.path.join(BASE_DIR, "Json", "config.json")
@@ -314,6 +323,11 @@ def launch(gameVersion):
 
        
         setup_matchmaking(game_path, gameVersion)
+        # The New netcode switch, once the loader is in (as in the main launcher).
+        # A failure raises into the handler below, so the game is not started.
+        if _netcode_mode:
+            _netcode_mode.launch_step(BASE_DIR, game_path, [gameVersion],
+                                      os.path.join(game_path, "dinput8.dll"))
         launch_patched(game_path)
 
     except Exception as e:

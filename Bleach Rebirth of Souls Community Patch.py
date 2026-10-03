@@ -99,6 +99,17 @@ try:
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
     print("Checking for updates, please wait")
 
+    # The "New netcode" switch on the Game Modes page: the game's own online
+    # netcode or the Rebalance netcode (PART 41 of Files/Matchmaking/dinput8.dll),
+    # written into <game>\bros_net.txt when it is switched and at every launch
+    # (launcher/netcode_mode.py, the Dev Environment's module). ON by default: a
+    # player opts out by switching it OFF. Optional: without the module a launch
+    # leaves bros_net.txt as it is.
+    try:
+        from launcher import netcode_mode as _netcode_mode
+    except Exception:
+        _netcode_mode = None
+
     reworks = ["OFF"]
 
     # ── Version info ─────────────────────────────────────────────────────────
@@ -880,6 +891,21 @@ try:
             VANILLA_VERSION = "Bleach Rebirth of Souls"
             if gameVersion != VANILLA_VERSION:
                 setup_matchmaking(game_path, gameVersion)
+                # The New netcode switch, once the loader is in. If it cannot be
+                # applied, the game is not started -- a game on a netcode the
+                # switch does not show is the "works for me, not for them" bug.
+                if _netcode_mode:
+                    try:
+                        _netcode_mode.launch_step(BASE_DIR, game_path, [gameVersion],
+                                                  os.path.join(game_path, "dinput8.dll"))
+                    except _netcode_mode.NetcodeError as e:
+                        messagebox.showerror(
+                            "Launch Error",
+                            f"The New netcode switch could not be applied:\n\n{e}\n\n"
+                            "The game was NOT started. Fix the cause and launch again.")
+                        return
+                else:
+                    print("[netcode] launcher/netcode_mode.py is missing: bros_net.txt is left as it is")
                 launch_patched(game_path)
             else:
                 remove_matchmaking(game_path)
@@ -1462,6 +1488,50 @@ try:
     reawakeningBattle.pack(pady=(paddingYvalue,0), fill=X)
     gameModesOuter.pack(fill=X, pady=(0,7))
     set_toggle_visual(teamBattleButton, config["TEAM_BATTLE"] == "ON")
+
+    # Netcode -- the New netcode switch (launcher/netcode_mode.py). A card of its
+    # own because it is not a game mode: it combines with any of them. Kept in
+    # Json/netcode.json, not config.json, so no config.json change is needed.
+    # ON unless the player switched it OFF.
+    netcodeOuter, netcodeInner = make_card(gameModesPage, "Netcode")
+    netcodeOn = _netcode_mode.load_choice(BASE_DIR) if _netcode_mode else False
+
+    def actualiseNetcodeButton():
+        netcodeButton.config(text=f'New netcode : (Currently {"ON" if netcodeOn else "OFF"})')
+        set_toggle_visual(netcodeButton, netcodeOn)
+
+    def netcodeFunc():
+        global netcodeOn
+        if not _netcode_mode:
+            return
+        try:
+            _netcode_mode.save_choice(BASE_DIR, not netcodeOn)
+        except _netcode_mode.NetcodeError as e:
+            messagebox.showerror("New netcode", f"The switch could not be saved:\n\n{e}")
+            return
+        netcodeOn = not netcodeOn
+        actualiseNetcodeButton()
+        # Written into the game folder now too, so a game started from the exe
+        # runs it; every launch writes it again.
+        try:
+            print("[netcode] " + _netcode_mode.apply(game_path, netcodeOn, None, BASE_DIR))
+        except _netcode_mode.NetcodeError as e:
+            messagebox.showwarning(
+                "New netcode",
+                f"The switch is saved, but bros_net.txt could not be written now:\n\n{e}\n\n"
+                "The next launch writes it again, and does not start the game if it still cannot.")
+
+    netcodeButton = mkbutton(
+        netcodeInner,
+        text=f'New netcode : (Currently {"ON" if netcodeOn else "OFF"})',
+        command=netcodeFunc,
+        tooltip="ON (the default): the Rebalance netcode -- a lock around the send queues, the network thread every 1 ms, 8 inputs per packet and one frame off the input delay. OFF: the game's own netcode. Takes effect at the next game start. A match between a player with it ON and one with it OFF is safe."
+    )
+    netcodeButton.pack(pady=(paddingYvalue,0), fill=X)
+    if not _netcode_mode:
+        netcodeButton.config(state=DISABLED)
+    netcodeOuter.pack(fill=X, pady=(0,7))
+    set_toggle_visual(netcodeButton, netcodeOn)
 
     gameModesMenuButton = mkbutton(gameModesPage, "Main Menu", backToMainMenu, kind="ghost", icon="←",
                                     tooltip="Return to the main menu.")

@@ -17685,12 +17685,1121 @@ static DWORD WINAPI worker(LPVOID u)
     }
 }
 
+/* =====================================================================
+ *  PART 41 -- NETTEST: the online battle's netcode, measured, and three
+ *  transport fixes behind a switch file.                    2026-09-21
+ *  Build 3, 2026-09-22: the input delay can be trimmed on both seats alike
+ *  (`delay`), the delay nobody used is measured (NET/ahead), and the guest
+ *  checks every host snapshot against its own simulation before adopting it
+ *  (NET/snap) -- the groundwork for the symmetric delay scheme (NETCODE 05).
+ * ---------------------------------------------------------------------
+ *  Research (static analysis of the live exe, md5 7b213566):
+ *      D:\Development Log\NETCODE\00_OVERVIEW.md      <- start here
+ *      01_TRANSPORT.md  02_SYNC_LOOP.md  03_ROLLBACK_FEASIBILITY.md
+ *      04_NETTEST.md                                  <- how to test this part
+ *
+ *  WHAT IT MEASURES -- read-only, on whenever this part is compiled in
+ *    NET/match  per battle: host or guest, the input delay D the game chose
+ *               and the RTT' it chose it from (read after
+ *               OnlineCharacterNetworkDataManager::setup, 0x1AAD40), then
+ *               every freeze. A freeze is the game's OWN stall flag,
+ *               [cnd+0xD8]: CheckStall (0x1AB020) sets it when the frame's
+ *               remote input is missing and clears it the moment the frame is
+ *               ready. Sampled at ~1 kHz on a high-resolution waitable timer,
+ *               which -- unlike timeBeginPeriod -- leaves the process's timer
+ *               resolution alone. Time counts only while the battle runs:
+ *               while the frame counter [cnd+0xB8] advances (its one writer is
+ *               GetFrameInputs, 0x1AB475) or the stall flag is up. Intros,
+ *               result screens and rematch menus do not dilute the rates.
+ *               A freeze still open when the battle ends never resolved into
+ *               play: at a normal finish it is the result screen (the flag
+ *               stays up until the manager dies -- 16 to 20 s at the end of
+ *               every match on 2026-09-21), after a crash on the other side it
+ *               is the lost peer. It is reported on its own as "ended frozen"
+ *               and counted neither as a stall nor as battle time.
+ *    NET/loop   per battle: the network thread's real period (between
+ *               Transmission::Update entries), and how often the main thread
+ *               and the network thread met on the send queues.
+ *    Relay per peer is already logged by ROOM3/p2p in the community build.
+ *    Stall classes (build 3). A stall that begins inside, or within 500 ms
+ *               after, a quiet stretch -- 700 ms or more with the frame counter
+ *               still and the stall flag down, which is a cutscene -- is "after
+ *               a cutscene": the handshake of 02 §3.7, one round trip (04 §0b).
+ *               A stall while a fighter is down (hp [f+0x10C0] <= 0 and
+ *               [f+0x1128] == 0, the game's own KO test at exe+0x801C10) is "at
+ *               a KO": the game plays on there, it is not a freeze. Everything
+ *               else is "network", and that is the headline.
+ *    NET/ahead  (build 3) per battle: after every frame, how many frames of the
+ *               other side's input were already in hand -- the host counts the
+ *               guest's records in map78 ([cnd+0x88], its size), the guest the
+ *               host's in mapE0 ([cnd+0xF0]). The second after a cutscene is left
+ *               out. On the host the smallest values are the input delay the
+ *               guest paid and nobody used: how far D can fall before the host
+ *               starts to wait. With it, the tempo each frame ran at: the
+ *               speed-up-only rule of 02 §5.1, the word at
+ *               [[exe+0x1CFCB40]+0x10]+0x80 (FrameworkFullAsync, 0x9E751F).
+ *    NET/snap   (build 3, guest) the determinism check. Every host position
+ *               snapshot the guest is about to adopt (exe+0x80202C, inside the
+ *               sync step's per-fighter loop) is first compared with the guest's
+ *               own fighter: position through the getter the host built it with
+ *               (0x8B5B80), rotation Y (0x8B5D00, +4), and the second state byte
+ *               ([[f+0xBB0]+0x5C5]). No difference means the two simulations
+ *               agree and the snapshots correct nothing; how often they do
+ *               decides how the symmetric scheme must treat them (NETCODE 05).
+ *               The two getters change nothing the game reads: they refresh
+ *               the transform's lazily cached world values, which every write
+ *               invalidates (0x8BD440). SetPosition's own first call is the
+ *               same position getter (0x8B4465), and the host calls both at
+ *               the same point of its frame to build the snapshot.
+ *
+ *  WHAT IT CHANGES -- each is one line in bros_net.txt beside the exe.
+ *  Defaults below are what ships; `lock 0`, `sleep 8`, `window 3` is stock.
+ *    lock   1  One lock around Transmission::Send (0xA79A70, main thread) and
+ *              Transmission::Update (0xA78CB0, NetworkUpdateThread). The two
+ *              share the send queues with no lock in the shipped game
+ *              (01 §2.6), so a record appended while Update resets a queue can
+ *              be lost or corrupt it. The main thread waits at most 4 ms for
+ *              the lock; past that it goes ahead unlocked -- exactly what the
+ *              stock game does every time -- and the log counts it. So the
+ *              lock can neither hitch a frame by more than that nor deadlock,
+ *              whatever the network thread is stuck in. Required before
+ *              `sleep` changes.
+ *    sleep  1  NetworkUpdateThread's sleep between passes in ms -- stock 8,
+ *              the literal at 0x8900A6, written once before the thread's loop
+ *              (0x8900C0) and read by sleep_for (0xED630) on every pass.
+ *              Windows rounds it up to the system tick (~15.6 ms) unless the
+ *              timer resolution is raised, so this also calls
+ *              timeBeginPeriod(1). A record waits for the next pass to leave
+ *              and a datagram waits for the next pass to be read, on both
+ *              ends, so the pass length is paid in every input's trip and in
+ *              the RTT the delay is computed from. Ignored unless `lock` took
+ *              effect.
+ *    window 8  Input entries per datagram -- stock 3, the literal at 0x1AABCB
+ *              (OnlineCharacterNetworkDataManager ctor). Survives a burst of
+ *              window-1 lost datagrams instead of 2, and a resend answer
+ *              carries window frames from the one asked for. Verified
+ *              2026-09-21 on every reader of [cnd+0x14]:
+ *                - the builders (host 0x1AB7C0, guest 0x1AC130) copy older
+ *                  records from the 60-deep history with a size check into
+ *                  heap std::vectors with a grow path, and build exactly ONE
+ *                  new record per call whatever the window -- no timing change;
+ *                - setup (0x1AAEB6) caps the host's own-input deque at
+ *                  window + D, but the host's input is only ever read at index
+ *                  D (0x1AB0EB, 0x1AB154, 0x1ABB08), so the longer deque only
+ *                  keeps entries nobody reads;
+ *                - the receivers (host 0x7FF820, guest 0x1ABF00, both through
+ *                  the parser 0x1AA3E0, which sizes a heap vector by the count
+ *                  it received) skip every entry older than the current frame
+ *                  -- so an UNPATCHED peer takes window 8 without a crash, a
+ *                  leak or any change in behaviour, and mixed lobbies are safe;
+ *                - size: the per-tick arena is 16 KiB (0x1AACEF, reset every
+ *                  sync step at 0x801943), the record header encodes up to
+ *                  16 KiB, and an unreliable record must stay under 1,198 B
+ *                  (0xA78B23). A host entry is 8 B + its commands + at most
+ *                  42 B of snapshot, so the window is clamped to 10.
+ *    delay  0  (build 3) Frames taken off the input delay D after setup has
+ *              computed it: 0 to -6, lowered in the setup detour before the
+ *              first sync step reads it. Every reader of [cnd+0x74] reads it
+ *              live -- IsFrameReady, GetFrameInputs, the host's push guard
+ *              (its start-up fill), both builders (the guest's start-up fill
+ *              of frames 0..D+1 included), the tempo threshold -- and the
+ *              only value setup derived from it, the host's deque cap at
+ *              +0x48 (window + D), stays at the old D: more history kept,
+ *              nothing else. Positive values are refused: they could outgrow
+ *              that cap. Each seat lowers its own D from its own file; the
+ *              launcher gives both the same file, so both lose the same
+ *              frames and parity is kept.
+ *    probe  1  (build 3) The determinism check above. 0 leaves exe+0x80202C
+ *              untouched.
+ *
+ *  Nothing here changes the simulation or the match code, and every packet
+ *  stays readable by an unpatched peer, so there is no matchmaking pool shift
+ *  and patched and unpatched players still meet. `delay` changes when each
+ *  side's own input applies and nothing on the wire: a side with a shorter
+ *  delay only leaves the other side less margin.
+ *
+ *  INSTALLED FROM DllMain. DINPUT8.dll is a static import of the exe, so this
+ *  runs during process start-up, before the exe's entry point and before any
+ *  game thread exists: the sleep literal is written before NetworkUpdateThread
+ *  can read it, and no thread can be inside a prologue while it is replaced.
+ *  Nothing here logs from DllMain: the report is composed into a buffer and
+ *  written by net_watch.
+ *
+ *  CLAIMED. Every exe byte written here is declared in the master's claim
+ *  registry first, under "dinput8.dll (master)" -- six rows, see CLAIMS.md.
+ *  From DllMain the table is still empty, so a claim cannot be refused, and
+ *  bros_claim's refusal path (the only one that logs) cannot run under the
+ *  loader lock. Claiming this early is what keeps a plugin loaded later from
+ *  patching the same bytes without being told.
+ *
+ *  NO __try. On x86_64-windows-gnu -fms-extensions makes __try compile, but an
+ *  access violation is NOT caught (measured by the C track, bros-launcher
+ *  build.sh). The manager the watch thread reads is freed when a battle ends,
+ *  so it is read with ReadProcessMemory, which fails cleanly on an unmapped
+ *  page instead of taking the game down.
+ *
+ *  ONE ENTRY POINT, nettest_start(). The Python track's DllMain calls it. The
+ *  C track (bros-launcher) ports everything above DllMain into exe_runtime.c
+ *  and replaces DllMain with its own; its exe_runtime_start() -- generated by
+ *  tools/port_exe_runtime.py, called from its DllMain -- must call
+ *  nettest_start() too, or PART 41 is compiled in and never started there.
+ * ===================================================================== */
+#ifndef ENABLE_NETTEST
+#define ENABLE_NETTEST 1
+#endif
+
+#if ENABLE_NETTEST
+
+#ifndef BROS_MASTER_OWNER
+#define BROS_MASTER_OWNER "dinput8.dll (master)"
+#endif
+
+#define NET_RVA_TX_SEND     0xA79A70u   /* Transmission::Send, 6 args            */
+#define NET_RVA_TX_UPDATE   0xA78CB0u   /* Transmission::Update, 1 arg           */
+#define NET_RVA_CND_SETUP   0x1AAD40u   /* ...NetworkDataManager::setup, 3 args  */
+#define NET_RVA_SLEEP_INS   0x8900A6u   /* mov qword [rsp+0x90], 8   (12 bytes)  */
+#define NET_RVA_WINDOW_INS  0x1AABCBu   /* mov dword [rcx+0x14], 3   (7 bytes)   */
+/* build 3 */
+#define NET_RVA_SNAP_SITE   0x80202Cu   /* movss xmm2,[r14+0x24]: the guest adopts a host snapshot (6 bytes) */
+#define NET_RVA_GETPOS      0x8B5B80u   /* fighter position: the getter the host snapshots with (0x1AB4CE)  */
+#define NET_RVA_GETROT      0x8B5D00u   /* fighter rotation, Y at +4 (0x1AB4FB)                            */
+#define NET_RVA_FWK_PTR     0x1CFCB40u  /* FrameworkFullAsync singleton, read at 0x9E751F                  */
+
+/* The stock bytes each change replaces. A mismatch means a different exe or
+   somebody else got there first: the change is refused, never forced. */
+static const unsigned char NET_SLEEP_INS[12] = { 0x48,0xC7,0x84,0x24,0x90,0x00,0x00,0x00,
+                                                 0x08,0x00,0x00,0x00 };
+static const unsigned char NET_WINDOW_INS[7] = { 0xC7,0x41,0x14,0x03,0x00,0x00,0x00 };
+/* Prologues to steal: whole instructions, no RIP-relative operand, no branch. */
+static const unsigned char NET_SEND_PRO[7]   = { 0x48,0x81,0xEC,0x98,0x00,0x00,0x00 }; /* sub rsp,0x98   */
+static const unsigned char NET_UPDATE_PRO[5] = { 0x48,0x89,0x4C,0x24,0x08 };           /* mov [rsp+8],rcx */
+static const unsigned char NET_SETUP_PRO[5]  = { 0x48,0x89,0x5C,0x24,0x08 };           /* mov [rsp+8],rbx */
+/* The instruction the snapshot stub displaces, and runs again before jumping back. */
+static const unsigned char NET_SNAP_INS[6]   = { 0xF3,0x41,0x0F,0x10,0x56,0x24 };      /* movss xmm2,[r14+0x24] */
+
+static int  g_net_cfg_lock = 1, g_net_cfg_sleep = 1, g_net_cfg_window = 8, g_net_cfg_file = 0;
+static int  g_net_on_lock = 0, g_net_on_sleep = 0, g_net_on_setup = 0, g_net_on_update = 0;
+static int  g_net_window_live = 3;        /* what every new manager will carry at +0x14 */
+static int  g_net_cfg_delay = 0, g_net_cfg_probe = 1;           /* build 3 */
+static int  g_net_on_probe = 0;
+static const char* g_net_why_probe = "off (probe 0)";
+static char g_net_early[768];
+static unsigned char* g_net_mod;
+
+typedef uintptr_t (*net_fn6_t)(uintptr_t, uintptr_t, uintptr_t, uintptr_t, uintptr_t, uintptr_t);
+typedef uintptr_t (*net_fn4_t)(uintptr_t, uintptr_t, uintptr_t, uintptr_t);
+static net_fn6_t o_net_send;
+static net_fn4_t o_net_update;
+static net_fn4_t o_net_setup;
+
+static CRITICAL_SECTION g_net_cs;
+static volatile LONG64  g_net_lock_entries = 0;
+static volatile LONG64  g_net_lock_met     = 0;   /* the other thread was already inside  */
+static volatile LONG64  g_net_lock_gaveup  = 0;   /* main thread waited 4 ms, went ahead  */
+
+/* NetworkUpdateThread's period, quarter-millisecond buckets; the last is overflow. */
+#define NET_PB 129
+static volatile LONG64 g_net_period[NET_PB];
+static LARGE_INTEGER   g_net_qpf;
+static LONG64          g_net_last_upd = 0;     /* written by the network thread only */
+
+/* The current battle, published by the setup detour (main thread). */
+static volatile uintptr_t g_net_mgr     = 0;
+static volatile LONG      g_net_mode    = -1;  /* 0 host, 1 guest */
+static volatile LONG      g_net_D       = -1;  /* D the battle runs with                 */
+static volatile LONG      g_net_D0      = -1;  /* D as the game chose it, before `delay` */
+static volatile LONG      g_net_lat     = -1;
+static volatile LONG      g_net_W       = -1;  /* the window this manager was built with */
+static volatile LONG      g_net_newgame = 0;
+static int                g_net_match_seq = 0;
+
+/* ---- the detours ------------------------------------------------------ */
+/* Main thread (Send). Bounded: see the header. Returns 1 if the lock is held. */
+static int net_lock_main(void)
+{
+    LARGE_INTEGER t0, t;
+    int spins = 0;
+    InterlockedIncrement64(&g_net_lock_entries);
+    if (TryEnterCriticalSection(&g_net_cs)) return 1;
+    InterlockedIncrement64(&g_net_lock_met);
+    QueryPerformanceCounter(&t0);
+    for (;;) {
+        if (++spins < 64) YieldProcessor(); else SwitchToThread();
+        if (TryEnterCriticalSection(&g_net_cs)) return 1;
+        QueryPerformanceCounter(&t);
+        if ((t.QuadPart - t0.QuadPart) * 250 >= g_net_qpf.QuadPart) {   /* 4 ms */
+            InterlockedIncrement64(&g_net_lock_gaveup);
+            return 0;
+        }
+    }
+}
+
+/* Network thread (Update). Unbounded: the only other holder is Send, which
+   copies one record and returns. */
+static void net_lock_net(void)
+{
+    InterlockedIncrement64(&g_net_lock_entries);
+    if (!TryEnterCriticalSection(&g_net_cs)) {
+        InterlockedIncrement64(&g_net_lock_met);
+        EnterCriticalSection(&g_net_cs);
+    }
+}
+
+static uintptr_t net_send(uintptr_t a, uintptr_t b, uintptr_t c,
+                          uintptr_t d, uintptr_t e, uintptr_t f)
+{
+    uintptr_t r;
+    int held = net_lock_main();
+    r = o_net_send(a, b, c, d, e, f);
+    if (held) LeaveCriticalSection(&g_net_cs);
+    return r;
+}
+
+static uintptr_t net_update(uintptr_t a, uintptr_t b, uintptr_t c, uintptr_t d)
+{
+    LARGE_INTEGER t;
+    uintptr_t r;
+    QueryPerformanceCounter(&t);
+    if (g_net_last_upd && g_net_qpf.QuadPart) {
+        LONG64 q = (t.QuadPart - g_net_last_upd) * 4000 / g_net_qpf.QuadPart;
+        if (q < 0) q = 0;
+        if (q >= NET_PB) q = NET_PB - 1;
+        InterlockedIncrement64(&g_net_period[q]);
+    }
+    g_net_last_upd = t.QuadPart;
+    if (g_net_on_lock) net_lock_net();
+    r = o_net_update(a, b, c, d);
+    if (g_net_on_lock) LeaveCriticalSection(&g_net_cs);
+    return r;
+}
+
+static uintptr_t net_setup(uintptr_t mgr, uintptr_t mode, uintptr_t st, uintptr_t d)
+{
+    uintptr_t r = o_net_setup(mgr, mode, st, d);
+    /* The manager is live here: setup has just written these fields. */
+    int d0 = *(volatile int*)(mgr + 0x74);                          /* the delay, in ticks */
+    int d1 = d0 + g_net_cfg_delay;                                   /* `delay` is 0..-6    */
+    if (d1 < 0) d1 = 0;
+    /* Lowered before the first sync step can read it -- see `delay` in the header. */
+    if (d1 != d0) *(volatile int*)(mgr + 0x74) = d1;
+    g_net_D0   = d0;
+    g_net_D    = d1;
+    g_net_lat  = (LONG)*(volatile unsigned long long*)(mgr + 0x08); /* the RTT' it used    */
+    g_net_W    = *(volatile int*)(mgr + 0x14);                      /* entries per packet  */
+    g_net_mode = (LONG)(mode & 0xFF);
+    g_net_mgr  = mgr;
+    InterlockedExchange(&g_net_newgame, 1);
+    return r;
+}
+
+/* ---- the determinism check (guest, build 3) ------------------------------ */
+/* Written only by the main thread, from the stub installed below; the watch
+   thread reads it when the battle's report is printed, which is after the
+   battle's last snapshot. Reset by the main thread when the manager changes. */
+#define NET_SNB 6
+static const char* NET_SN_NAME[NET_SNB] = { "0", "<1e-5", "<1e-3", "<0.01", "<0.1", ">=0.1" };
+static struct {
+    uintptr_t mgr;             /* the battle these counts belong to          */
+    LONG64 n, pos_same, rot_same, b2_seen, b2_diff;
+    LONG64 bin[NET_SNB];       /* the largest of |dx|,|dy|,|dz|, by size     */
+    double max_dpos, max_drot;
+    int    shown;              /* the first differences, kept for the log    */
+    int    ex_F[4], ex_who[4];
+    float  ex_d[4][4];         /* dx dy dz drot                              */
+} g_ns;
+
+typedef float* (*net_get4_t)(void* self, float* out);
+
+/* Called by the stub on the main thread with the snapshot the guest is about to
+   adopt (r14: position at +0x1C, rotation Y at +0x28, state bytes at +0x2C and
+   +0x2D), the fighter it is for (rcx) and the loop's byte offset (rsi: 0 or
+   0x48). The getters are the ones the host built the snapshot with (0x1AB4A0),
+   read at the same point of the frame: the host after its tick F, the guest
+   before its tick F+1, with nothing in between that moves a fighter. Both write
+   16 bytes with movaps, hence the aligned buffers. */
+static void net_snap_probe(const unsigned char* s, unsigned char* fighter, uintptr_t off)
+{
+    __attribute__((aligned(16))) float pos[4];
+    __attribute__((aligned(16))) float rot[4];
+    float sx, sy, sz, sry, dx, dy, dz, dr, m;
+    uintptr_t mgr = g_net_mgr;
+    const unsigned char* bb;
+    int b;
+    if (!s || !fighter || !mgr) return;
+    if (g_ns.mgr != mgr) { memset(&g_ns, 0, sizeof(g_ns)); g_ns.mgr = mgr; }
+    ((net_get4_t)(g_net_mod + NET_RVA_GETPOS))(fighter, pos);
+    ((net_get4_t)(g_net_mod + NET_RVA_GETROT))(fighter, rot);
+    memcpy(&sx, s + 0x1C, 4); memcpy(&sy, s + 0x20, 4); memcpy(&sz, s + 0x24, 4);
+    memcpy(&sry, s + 0x28, 4);
+    dx = pos[0] - sx; dy = pos[1] - sy; dz = pos[2] - sz; dr = rot[1] - sry;
+    if (dx < 0) dx = -dx;
+    if (dy < 0) dy = -dy;
+    if (dz < 0) dz = -dz;
+    if (dr < 0) dr = -dr;
+    m = dx > dy ? dx : dy;
+    if (dz > m) m = dz;
+    g_ns.n++;
+    if (m == 0.0f)  g_ns.pos_same++;
+    if (dr == 0.0f) g_ns.rot_same++;
+    b = m == 0.0f ? 0 : m < 1e-5f ? 1 : m < 1e-3f ? 2 : m < 1e-2f ? 3 : m < 1e-1f ? 4 : 5;
+    g_ns.bin[b]++;
+    if (m  > g_ns.max_dpos) g_ns.max_dpos = m;
+    if (dr > g_ns.max_drot) g_ns.max_drot = dr;
+    bb = *(const unsigned char* const*)(fighter + 0xBB0);
+    if (bb) {
+        g_ns.b2_seen++;
+        if ((bb[0x5C5] != 0) != (s[0x2D] != 0)) g_ns.b2_diff++;
+    }
+    if ((m != 0.0f || dr != 0.0f) && g_ns.shown < 4) {
+        int k = g_ns.shown++;
+        g_ns.ex_F[k]    = *(volatile int*)(mgr + 0xB8);
+        g_ns.ex_who[k]  = (int)(off / 0x48);
+        g_ns.ex_d[k][0] = pos[0] - sx; g_ns.ex_d[k][1] = pos[1] - sy;
+        g_ns.ex_d[k][2] = pos[2] - sz; g_ns.ex_d[k][3] = rot[1] - sry;
+    }
+}
+
+/* ---- install helpers ---------------------------------------------------- */
+static int net_poke(unsigned int rva, const void* src, int n)
+{
+    unsigned char* p = g_net_mod + rva;
+    DWORD old;
+    if (!VirtualProtect(p, (SIZE_T)n, PAGE_EXECUTE_READWRITE, &old)) return 0;
+    memcpy(p, src, (size_t)n);
+    VirtualProtect(p, (SIZE_T)n, old, &old);
+    FlushInstructionCache(GetCurrentProcess(), p, (SIZE_T)n);
+    return 1;
+}
+
+/* A true detour, not an observer. The site jumps (rel32) to a relay that sits
+   next to it -- `mov rax, detour; jmp rax`, because the loader itself may load
+   beyond +/-2 GB of the exe -- and the original is reached through a
+   trampoline holding the stolen prologue plus a jump back. rax is free at a
+   function entry (none of the three is variadic). *orig is set to the
+   trampoline BEFORE the site is rewritten, so there is no instant at which
+   the detour can run without it. Returns 1 when installed. */
+static int net_detour(unsigned int rva, const unsigned char* pro, int stolen,
+                      void* detour, void** orig, const char* what)
+{
+    unsigned char* site = g_net_mod + rva;
+    unsigned char* stub;
+    long long rel;
+    DWORD old;
+    int i;
+    if (memcmp(site, pro, (size_t)stolen) != 0) return 0;
+    if (!bros_claim(BROS_MASTER_OWNER, rva, (unsigned)stolen, what)) return 0;
+    stub = (unsigned char*)gauge_alloc_near(site, 64);
+    if (!stub) return 0;
+    memcpy(stub, site, (size_t)stolen);                         /* trampoline */
+    rel = (long long)(site + stolen) - (long long)(stub + stolen + 5);
+    if (rel > 0x7FFFFFFFLL || rel < -0x80000000LL) return 0;
+    stub[stolen] = 0xE9; memcpy(stub + stolen + 1, &rel, 4);
+    stub[32] = 0x48; stub[33] = 0xB8; memcpy(stub + 34, &detour, 8);   /* relay */
+    stub[42] = 0xFF; stub[43] = 0xE0;
+    FlushInstructionCache(GetCurrentProcess(), stub, 64);
+    rel = (long long)(stub + 32) - (long long)(site + 5);
+    if (rel > 0x7FFFFFFFLL || rel < -0x80000000LL) return 0;
+    if (!VirtualProtect(site, (SIZE_T)stolen, PAGE_EXECUTE_READWRITE, &old)) return 0;
+    *orig = stub;
+    site[0] = 0xE9; memcpy(site + 1, &rel, 4);
+    for (i = 5; i < stolen; i++) site[i] = 0x90;
+    VirtualProtect(site, (SIZE_T)stolen, old, &old);
+    FlushInstructionCache(GetCurrentProcess(), site, (SIZE_T)stolen);
+    return 1;
+}
+
+/* The snapshot stub (build 3). exe+0x80202C is inside the sync step's
+   per-fighter loop, after every condition for adopting a host snapshot has
+   passed and before the snapshot is read. The site jumps to a stub that saves
+   everything the loop may hold -- rax rcx rdx r8-r11, the flags, xmm0-5; rbx
+   keeps the unaligned rsp, and the stack is realigned rather than assumed --
+   calls net_snap_probe(r14, rcx, rsi), restores it all, runs the displaced
+   movss and jumps back. It only ever runs on the guest: the host never sets
+   the snapshot flag (02 §6), so it never reaches the site. It changes nothing
+   the game reads -- the getters only refresh cached values (NET/snap in the
+   header) -- and the adoption that follows is untouched. Returns the status
+   text. */
+static const char* net_snap_install(void)
+{
+    static const unsigned char save[] = {
+        0x50, 0x51, 0x52, 0x41,0x50, 0x41,0x51, 0x41,0x52, 0x41,0x53,   /* push rax rcx rdx r8-r11 */
+        0x9C, 0x53,                                                      /* pushfq; push rbx        */
+        0x48,0x89,0xE3,                                                  /* mov  rbx, rsp           */
+        0x48,0x83,0xE4,0xF0,                                             /* and  rsp, -16           */
+        0x48,0x81,0xEC,0x80,0x00,0x00,0x00,                              /* sub  rsp, 0x80          */
+        0xF3,0x0F,0x7F,0x44,0x24,0x20, 0xF3,0x0F,0x7F,0x4C,0x24,0x30,    /* movdqu [rsp+..], xmm0-5 */
+        0xF3,0x0F,0x7F,0x54,0x24,0x40, 0xF3,0x0F,0x7F,0x5C,0x24,0x50,
+        0xF3,0x0F,0x7F,0x64,0x24,0x60, 0xF3,0x0F,0x7F,0x6C,0x24,0x70,
+        0x48,0x89,0xCA,                                                  /* mov  rdx, rcx (fighter) */
+        0x4C,0x89,0xF1,                                                  /* mov  rcx, r14 (snapshot)*/
+        0x49,0x89,0xF0,                                                  /* mov  r8,  rsi (offset)  */
+        0x48,0xB8 };                                                     /* mov  rax, imm64 ...     */
+    static const unsigned char restore[] = {
+        0xFF,0xD0,                                                       /* call rax                */
+        0xF3,0x0F,0x6F,0x44,0x24,0x20, 0xF3,0x0F,0x6F,0x4C,0x24,0x30,    /* movdqu xmm0-5, [rsp+..] */
+        0xF3,0x0F,0x6F,0x54,0x24,0x40, 0xF3,0x0F,0x6F,0x5C,0x24,0x50,
+        0xF3,0x0F,0x6F,0x64,0x24,0x60, 0xF3,0x0F,0x6F,0x6C,0x24,0x70,
+        0x48,0x89,0xDC,                                                  /* mov  rsp, rbx           */
+        0x5B, 0x9D,                                                      /* pop rbx; popfq          */
+        0x41,0x5B, 0x41,0x5A, 0x41,0x59, 0x41,0x58, 0x5A, 0x59, 0x58,    /* pop r11-r8 rdx rcx rax  */
+        0xF3,0x41,0x0F,0x10,0x56,0x24,                                   /* movss xmm2,[r14+0x24]   */
+        0xE9 };                                                          /* jmp  back ...           */
+    unsigned char* site = g_net_mod + NET_RVA_SNAP_SITE;
+    unsigned char* stub;
+    unsigned char  b[sizeof(save) + 8 + sizeof(restore) + 4];
+    void* fn = (void*)net_snap_probe;
+    long long rel;
+    DWORD old;
+    int n = 0;
+    if (memcmp(site, NET_SNAP_INS, sizeof(NET_SNAP_INS)) != 0)
+        return "REFUSED, exe+0x80202C is not the stock instruction";
+    if (!bros_claim(BROS_MASTER_OWNER, NET_RVA_SNAP_SITE, 6,
+                    "PART 41 NETTEST: the guest's adoption of a host snapshot "
+                    "(determinism check, read-only)"))
+        return "REFUSED, the bytes are claimed by another owner";
+    stub = (unsigned char*)gauge_alloc_near(site, 256);
+    if (!stub) return "REFUSED, no stub within +/-2 GB";
+    memcpy(b + n, save, sizeof(save));       n += (int)sizeof(save);
+    memcpy(b + n, &fn, 8);                   n += 8;
+    memcpy(b + n, restore, sizeof(restore)); n += (int)sizeof(restore);
+    rel = (long long)(site + 6) - (long long)(stub + n + 4);
+    if (rel > 0x7FFFFFFFLL || rel < -0x80000000LL) return "REFUSED, the way back is out of rel32 reach";
+    memcpy(b + n, &rel, 4);                  n += 4;
+    memcpy(stub, b, (size_t)n);
+    FlushInstructionCache(GetCurrentProcess(), stub, (SIZE_T)n);
+    rel = (long long)stub - (long long)(site + 5);
+    if (rel > 0x7FFFFFFFLL || rel < -0x80000000LL) return "REFUSED, the stub is out of rel32 reach";
+    if (!VirtualProtect(site, 6, PAGE_EXECUTE_READWRITE, &old)) return "REFUSED, VirtualProtect failed";
+    site[0] = 0xE9; memcpy(site + 1, &rel, 4); site[5] = 0x90;
+    VirtualProtect(site, 6, old, &old);
+    FlushInstructionCache(GetCurrentProcess(), site, 6);
+    g_net_on_probe = 1;
+    return "on (exe+0x80202C, guest only)";
+}
+
+/* bros_net.txt: `key value` per line, `#` starts a comment. Missing file ->
+   the defaults. Read with kernel32 only, because this runs in DllMain. */
+static void net_read_cfg(void)
+{
+    char path[MAX_PATH], buf[2048], key[32];
+    HANDLE h;
+    DWORD n = 0;
+    char* p;
+    int k, val;
+    exe_dir_path("bros_net.txt", path, sizeof(path));
+    h = CreateFileA(path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+    if (h == INVALID_HANDLE_VALUE) return;
+    if (!ReadFile(h, buf, sizeof(buf) - 1, &n, NULL)) n = 0;
+    CloseHandle(h);
+    buf[n] = 0;
+    g_net_cfg_file = 1;
+    p = buf;
+    if ((unsigned char)p[0] == 0xEF && (unsigned char)p[1] == 0xBB && (unsigned char)p[2] == 0xBF)
+        p += 3;                                   /* a UTF-8 BOM from an editor */
+    while (*p) {
+        while (*p == ' ' || *p == '\t' || *p == '\r' || *p == '\n') p++;
+        if (!*p) break;
+        if (*p == '#') { while (*p && *p != '\n') p++; continue; }
+        k = 0;
+        while (*p && k < 31 && ((*p >= 'a' && *p <= 'z') || (*p >= 'A' && *p <= 'Z')))
+            key[k++] = (char)(*p++ | 0x20);
+        key[k] = 0;
+        while (*p == ' ' || *p == '\t' || *p == '=' || *p == ':') p++;
+        val = atoi(p);
+        if      (!strcmp(key, "lock"))   g_net_cfg_lock   = val ? 1 : 0;
+        else if (!strcmp(key, "sleep"))  g_net_cfg_sleep  = val;
+        else if (!strcmp(key, "window")) g_net_cfg_window = val;
+        else if (!strcmp(key, "delay"))  g_net_cfg_delay  = val;
+        else if (!strcmp(key, "probe"))  g_net_cfg_probe  = val ? 1 : 0;
+        while (*p && *p != '\n') p++;
+    }
+    if (g_net_cfg_sleep  < 1)  g_net_cfg_sleep  = 1;
+    if (g_net_cfg_sleep  > 8)  g_net_cfg_sleep  = 8;
+    if (g_net_cfg_window < 3)  g_net_cfg_window = 3;
+    if (g_net_cfg_window > 10) g_net_cfg_window = 10;
+    if (g_net_cfg_delay  > 0)  g_net_cfg_delay  = 0;      /* reductions only -- see `delay` */
+    if (g_net_cfg_delay  < -6) g_net_cfg_delay  = -6;
+}
+
+/* Every RVA this part reads or writes lies inside the game's image, and none
+   of them may be read in a host that is not the game: a process whose image
+   is smaller would fault on the first memcmp, inside DllMain. 24 MB is the C
+   track's EXE_MIN_IMAGE for the same check; the game's image is ~28 MB. */
+static int net_host_is_the_game(void)
+{
+    IMAGE_DOS_HEADER* dos = (IMAGE_DOS_HEADER*)g_net_mod;
+    IMAGE_NT_HEADERS* nt;
+    if (!dos || dos->e_magic != IMAGE_DOS_SIGNATURE) return 0;
+    nt = (IMAGE_NT_HEADERS*)(g_net_mod + dos->e_lfanew);
+    if (nt->Signature != IMAGE_NT_SIGNATURE) return 0;
+    return nt->OptionalHeader.SizeOfImage >= 24u * 1024u * 1024u;
+}
+
+/* Called from DllMain before any game thread exists. No logging here.
+   Returns 0, having touched nothing, when the host is not the game. */
+static int net_early_install(void)
+{
+    const char* why_window = "stock";
+    const char* why_sleep  = "stock";
+    g_net_mod = (unsigned char*)GetModuleHandleA(NULL);
+    if (!net_host_is_the_game()) return 0;
+    QueryPerformanceFrequency(&g_net_qpf);
+    InitializeCriticalSectionAndSpinCount(&g_net_cs, 4000);
+    net_read_cfg();
+
+    if (g_net_cfg_window != 3) {
+        if (memcmp(g_net_mod + NET_RVA_WINDOW_INS, NET_WINDOW_INS, 7) != 0)
+            why_window = "REFUSED, exe+0x1AABCB is not the stock literal";
+        else if (!bros_claim(BROS_MASTER_OWNER, NET_RVA_WINDOW_INS + 3, 4,
+                             "PART 41 NETTEST: input entries per packet (imm32 of "
+                             "mov [rcx+0x14],3 in the network-data manager ctor)"))
+            why_window = "REFUSED, the bytes are claimed by another owner";
+        else {
+            int v = g_net_cfg_window;
+            if (net_poke(NET_RVA_WINDOW_INS + 3, &v, 4)) { g_net_window_live = v; why_window = "applied"; }
+            else why_window = "REFUSED, VirtualProtect failed";
+        }
+    }
+
+    /* Update is always detoured -- the period measurement lives there -- and
+       only locks if Send was detoured too; one side of a lock is no lock. */
+    g_net_on_update = net_detour(NET_RVA_TX_UPDATE, NET_UPDATE_PRO, 5,
+                                 (void*)net_update, (void**)&o_net_update,
+                                 "PART 41 NETTEST: Transmission::Update prologue "
+                                 "(network-thread period, send-queue lock)");
+    if (g_net_cfg_lock && g_net_on_update)
+        g_net_on_lock = net_detour(NET_RVA_TX_SEND, NET_SEND_PRO, 7,
+                                   (void*)net_send, (void**)&o_net_send,
+                                   "PART 41 NETTEST: Transmission::Send prologue "
+                                   "(send-queue lock)");
+
+    if (g_net_cfg_sleep != 8) {
+        if (!g_net_on_lock)
+            why_sleep = "NOT applied: it needs the lock, and the lock is off";
+        else if (memcmp(g_net_mod + NET_RVA_SLEEP_INS, NET_SLEEP_INS, 12) != 0)
+            why_sleep = "REFUSED, exe+0x8900A6 is not the stock literal";
+        else if (!bros_claim(BROS_MASTER_OWNER, NET_RVA_SLEEP_INS + 8, 4,
+                             "PART 41 NETTEST: NetworkUpdateThread sleep in ms "
+                             "(imm32 of mov qword [rsp+0x90],8)"))
+            why_sleep = "REFUSED, the bytes are claimed by another owner";
+        else {
+            int v = g_net_cfg_sleep;
+            if (net_poke(NET_RVA_SLEEP_INS + 8, &v, 4)) { g_net_on_sleep = v; why_sleep = "applied"; }
+            else why_sleep = "REFUSED, VirtualProtect failed";
+        }
+    }
+
+    g_net_on_setup = net_detour(NET_RVA_CND_SETUP, NET_SETUP_PRO, 5,
+                                (void*)net_setup, (void**)&o_net_setup,
+                                "PART 41 NETTEST: OnlineCharacterNetworkDataManager::setup "
+                                "prologue (per-battle report, `delay`)");
+
+    if (g_net_cfg_probe) g_net_why_probe = net_snap_install();
+
+    snprintf(g_net_early, sizeof(g_net_early),
+             "NET: bros_net.txt %s -> lock %d, sleep %d ms, window %d, delay %d | lock %s | "
+             "sleep %s | window %s (%d, stock 3) | delay %s | period probe %s | battle probe %s | "
+             "snapshot check %s",
+             g_net_cfg_file ? "read" : "absent, defaults",
+             g_net_cfg_lock, g_net_cfg_sleep, g_net_cfg_window, g_net_cfg_delay,
+             g_net_on_lock ? "ON (Send + Update share one lock)"
+                           : (g_net_cfg_lock ? "FAILED to install" : "off"),
+             why_sleep, why_window, g_net_window_live,
+             g_net_cfg_delay == 0 ? "stock (D as the game computes it)"
+                                  : (g_net_on_setup ? "applied (D lowered at every battle's setup)"
+                                                    : "NOT applied: the battle probe is off"),
+             g_net_on_update ? "on" : "FAILED", g_net_on_setup ? "on" : "FAILED",
+             g_net_why_probe);
+    return 1;
+}
+
+/* ---- the watch thread: freezes, period, and the per-battle report ------- */
+#define NET_FZB 7
+static const int   NET_FZ_EDGE[NET_FZB] = { 17, 33, 67, 133, 267, 533, 0x7FFFFFFF };
+static const char* NET_FZ_NAME[NET_FZB] = { "<17", "17-33", "33-67", "67-133",
+                                            "133-267", "267-533", ">533" };
+static struct {
+    int    active, seq, started, in_fz, fz_pre, last_F;
+    LONG   mode, D, lat, W;
+    LONG64 last_t, last_F_t;   /* qpc: previous sample, last frame advance      */
+    LONG64 run;                /* qpc ticks of battle time (see the header)     */
+    LONG64 n[NET_FZB];
+    LONG64 count, felt;        /* all stalls, and those >= 33 ms                */
+    LONG64 total_ms, longest_ms;
+    LONG64 first_wait_ms;      /* the wait for frame 0 -- not a stall           */
+    LONG64 tail_ms;            /* the freeze the battle ended in -- not a stall */
+    LONG64 fz_t0;
+    LONG64 fz_run0;            /* battle time when the open freeze began        */
+    LONG64 period0[NET_PB];    /* the period histogram when the battle began    */
+    LONG64 lk_e0, lk_m0, lk_g0;
+    /* build 3 */
+    uintptr_t mgr;             /* this battle's manager (for the snapshot check) */
+    LONG   D0;                 /* D as the game chose it, before `delay`        */
+    LONG64 quiet_t0;           /* frame counter still, flag down, since (0: no) */
+    LONG64 resume_t;           /* the frame counter moved after a quiet stretch */
+    int    fz_class, fz_polls; /* the open stall's class; samples since the KO test */
+    LONG64 cls_n[3], cls_felt[3], cls_ms[3], cls_longest[3];   /* network, cutscene, KO */
+    LONG64 net_hist[NET_FZB];  /* network stalls only                           */
+    LONG64 ahead[17];          /* the other side's frames in hand, 16 = 16+     */
+    LONG64 ahead_n;
+    LONG64 tempo[7];           /* 60, <=72, <=84, <=96, <=108, <=120, other     */
+} g_nm;
+
+#define NET_CLS_NET 0
+#define NET_CLS_CUT 1
+#define NET_CLS_KO  2
+static const char* NET_TEMPO_NAME[7] = { "60", "72", "84", "96", "108", "120", "other" };
+static uintptr_t g_net_rate_at = 0;        /* the tempo word, once found            */
+static int       g_net_rate_tries = 0;
+
+static const char* net_side(LONG mode)
+{
+    return mode == 0 ? "host" : mode == 1 ? "guest" : "?";
+}
+
+static void net_fz_close(LONG64 now)
+{
+    LONG64 ms = (now - g_nm.fz_t0) * 1000 / g_net_qpf.QuadPart;
+    int b = 0;
+    g_nm.in_fz = 0;
+    if (g_nm.fz_pre) {         /* began before the first frame ran: the start-up
+                                  wait for the other side's frame 0 */
+        g_nm.first_wait_ms = ms;
+        return;
+    }
+    while (b < NET_FZB - 1 && ms >= NET_FZ_EDGE[b]) b++;
+    g_nm.n[b]++;
+    g_nm.count++;
+    if (ms >= 33) g_nm.felt++;
+    g_nm.total_ms += ms;
+    if (ms > g_nm.longest_ms) g_nm.longest_ms = ms;
+    /* build 3: the same stall, by class */
+    g_nm.cls_n[g_nm.fz_class]++;
+    if (ms >= 33) g_nm.cls_felt[g_nm.fz_class]++;
+    g_nm.cls_ms[g_nm.fz_class] += ms;
+    if (ms > g_nm.cls_longest[g_nm.fz_class]) g_nm.cls_longest[g_nm.fz_class] = ms;
+    if (g_nm.fz_class == NET_CLS_NET) g_nm.net_hist[b]++;
+    if (ms >= 33)   /* one line per felt stall: its time is the log line's */
+        log_line("NET/stall #%d %s: %lld ms, %s, at frame %d", g_nm.seq, net_side(g_nm.mode),
+                 (long long)ms,
+                 g_nm.fz_class == NET_CLS_CUT ? "after a cutscene" :
+                 g_nm.fz_class == NET_CLS_KO  ? "at a KO (the game plays on)" : "network",
+                 g_nm.last_F);
+}
+
+/* Is a fighter down? The sync step's own KO test (exe+0x801C10): hp at
+   +0x10C0 (float) <= 0 and +0x1128 == 0. The two fighters are the entries of
+   the manager's vector at +0x50 (setup pushes exactly two, stride 0x48, the
+   object at +0x20). Read with ReadProcessMemory like the manager itself. */
+static int net_someone_down(const unsigned char* m)
+{
+    uintptr_t fa, f;
+    float hp;
+    int rev, i;
+    SIZE_T got;
+    memcpy(&fa, m + 0x50, sizeof(fa));
+    if (!fa) return 0;
+    for (i = 0; i < 2; i++) {
+        if (!ReadProcessMemory(GetCurrentProcess(), (LPCVOID)(fa + 0x20 + (uintptr_t)i * 0x48),
+                               &f, sizeof(f), &got) || got != sizeof(f) || !f) continue;
+        if (!ReadProcessMemory(GetCurrentProcess(), (LPCVOID)(f + 0x10C0), &hp, 4, &got) || got != 4)
+            continue;
+        if (!ReadProcessMemory(GetCurrentProcess(), (LPCVOID)(f + 0x1128), &rev, 4, &got) || got != 4)
+            continue;
+        if (hp <= 0.0f && rev == 0) return 1;
+    }
+    return 0;
+}
+
+/* The tempo word, [[exe+0x1CFCB40]+0x10]+0x80: FrameworkFullAsync's update
+   rate, set to 60 at the top of every sync step and raised up to 120 by the
+   speed-up rule (02 §5.1), 10,000 while frozen. The singleton exists long
+   before a battle; found once. */
+static int net_read_tempo(unsigned short* out)
+{
+    SIZE_T got;
+    if (!g_net_rate_at && g_net_rate_tries < 50) {
+        uintptr_t fw = 0, impl = 0;
+        g_net_rate_tries++;
+        if (ReadProcessMemory(GetCurrentProcess(), (LPCVOID)(g_net_mod + NET_RVA_FWK_PTR),
+                              &fw, sizeof(fw), &got) && got == sizeof(fw) && fw &&
+            ReadProcessMemory(GetCurrentProcess(), (LPCVOID)(fw + 0x10),
+                              &impl, sizeof(impl), &got) && got == sizeof(impl) && impl)
+            g_net_rate_at = impl + 0x80;
+    }
+    if (!g_net_rate_at) return 0;
+    return ReadProcessMemory(GetCurrentProcess(), (LPCVOID)g_net_rate_at, out, 2, &got) && got == 2;
+}
+
+static void net_loop_line(const char* who, const LONG64* base, LONG64 e0, LONG64 m0, LONG64 g0)
+{
+    LONG64 c[NET_PB], total = 0, run = 0;
+    int i, p50 = -1, p90 = -1, p99 = -1, top = 0;
+    for (i = 0; i < NET_PB; i++) {
+        c[i] = g_net_period[i] - (base ? base[i] : 0);
+        if (c[i] < 0) c[i] = 0;
+        total += c[i];
+        if (c[i]) top = i;
+    }
+    if (total == 0) {
+        log_line("NET/loop %s: the network thread did not run", who);
+        return;
+    }
+    for (i = 0; i < NET_PB; i++) {
+        run += c[i];
+        if (p50 < 0 && run * 100 >= total * 50) p50 = i;
+        if (p90 < 0 && run * 100 >= total * 90) p90 = i;
+        if (p99 < 0 && run * 100 >= total * 99) p99 = i;
+    }
+    log_line("NET/loop %s: network thread period p50 %.2f ms, p90 %.2f ms, p99 %.2f ms, "
+             "max %s%.2f ms over %lld passes | send queues: %lld lock entries, the threads met "
+             "%lld time(s), main thread gave up waiting %lld time(s)%s",
+             who, (p50 + 1) / 4.0, (p90 + 1) / 4.0, (p99 + 1) / 4.0,
+             top == NET_PB - 1 ? ">" : "", (top == NET_PB - 1 ? top : top + 1) / 4.0,
+             (long long)total, (long long)(g_net_lock_entries - e0),
+             (long long)(g_net_lock_met - m0), (long long)(g_net_lock_gaveup - g0),
+             g_net_on_lock ? "" : " (lock off: nothing to count)");
+}
+
+/* `now` is only used to size a freeze that is still open ("so far" lines).
+   Build 3: the headline is the NETWORK stalls -- the ones neither a cutscene's
+   handshake nor a KO explains -- and "frozen" leaves out the KO stalls, during
+   which the game plays on. log_line cuts at 511 characters, so the classes and
+   the build-2 totals have their own line (net_stalls_line). */
+static void net_match_line(const char* why, LONG64 now)
+{
+    char hist[160], who[48], tail[128], dtxt[48];
+    int at = 0, b;
+    /* An open freeze has not resolved yet: its time is not battle time until it
+       does, so a "so far" line reports the battle up to where it began. */
+    LONG64 run  = (g_nm.in_fz && !g_nm.fz_pre) ? g_nm.fz_run0 : g_nm.run;
+    LONG64 secs = run / g_net_qpf.QuadPart;
+    double bsec = (double)run / (double)g_net_qpf.QuadPart;
+    double mins = bsec / 60.0;
+    double froz = (double)(g_nm.cls_ms[NET_CLS_NET] + g_nm.cls_ms[NET_CLS_CUT]) / 1000.0;
+    for (b = 0; b < NET_FZB; b++)
+        at += snprintf(hist + at, sizeof(hist) - at, "%s%s:%lld", b ? " " : "",
+                       NET_FZ_NAME[b], (long long)g_nm.net_hist[b]);
+    tail[0] = 0;
+    if (g_nm.in_fz && !g_nm.fz_pre)
+        snprintf(tail, sizeof(tail), " | a freeze of %.1f s is still open (not counted yet)",
+                 (double)(now - g_nm.fz_t0) / (double)g_net_qpf.QuadPart);
+    else if (g_nm.tail_ms)
+        snprintf(tail, sizeof(tail), " | ended frozen %.1f s (result screen or lost peer "
+                 "-- not a stall, not battle time)", g_nm.tail_ms / 1000.0);
+    if (g_nm.D0 >= 0 && g_nm.D0 != g_nm.D)
+        snprintf(dtxt, sizeof(dtxt), "D %ld (game %ld, delay %ld)",
+                 (long)g_nm.D, (long)g_nm.D0, (long)(g_nm.D - g_nm.D0));
+    else
+        snprintf(dtxt, sizeof(dtxt), "D %ld", (long)g_nm.D);
+    log_line("NET/match #%d %s -- %s | %s from RTT' %ld ms | battle time %lldm %02llds | "
+             "network stalls %lld, felt %lld = %.1f/min, longest %lld ms | %s | "
+             "frozen %.2f s (%.1f%%), network %.2f s | frame 0 waited %lld ms%s | "
+             "window %ld, lock %s, sleep %d ms",
+             g_nm.seq, net_side(g_nm.mode), why, dtxt, (long)g_nm.lat,
+             (long long)(secs / 60), (long long)(secs % 60),
+             (long long)g_nm.cls_n[NET_CLS_NET], (long long)g_nm.cls_felt[NET_CLS_NET],
+             mins > 0.05 ? g_nm.cls_felt[NET_CLS_NET] / mins : 0.0,
+             (long long)g_nm.cls_longest[NET_CLS_NET], hist,
+             froz, bsec > 0 ? 100.0 * froz / bsec : 0.0, g_nm.cls_ms[NET_CLS_NET] / 1000.0,
+             (long long)g_nm.first_wait_ms, tail, (long)g_nm.W, g_net_on_lock ? "on" : "off",
+             g_net_on_sleep ? g_net_on_sleep : 8);
+    snprintf(who, sizeof(who), "#%d", g_nm.seq);
+    net_loop_line(who, g_nm.period0, g_nm.lk_e0, g_nm.lk_m0, g_nm.lk_g0);
+}
+
+/* The other two classes, and the totals build 2 printed (for comparisons). */
+static void net_stalls_line(void)
+{
+    log_line("NET/stalls #%d %s: after a cutscene %lld, mean %lld ms, longest %lld ms | "
+             "at a KO %lld, %lld ms, the game plays on (not frozen) | all %lld, felt %lld, "
+             "longest %lld ms (the build-2 count)",
+             g_nm.seq, net_side(g_nm.mode),
+             (long long)g_nm.cls_n[NET_CLS_CUT],
+             (long long)(g_nm.cls_n[NET_CLS_CUT] ? g_nm.cls_ms[NET_CLS_CUT] / g_nm.cls_n[NET_CLS_CUT] : 0),
+             (long long)g_nm.cls_longest[NET_CLS_CUT],
+             (long long)g_nm.cls_n[NET_CLS_KO], (long long)g_nm.cls_ms[NET_CLS_KO],
+             (long long)g_nm.count, (long long)g_nm.felt, (long long)g_nm.longest_ms);
+}
+
+/* How much of the other side's input was in hand after each frame, and the
+   tempo each frame ran at. On the host the minimum is the guest input delay
+   nobody used. */
+static void net_ahead_line(void)
+{
+    char h[256], t[192];
+    int at = 0, i, mn = -1, mx = -1, p1 = -1, p5 = -1, p50 = -1;
+    LONG64 run = 0, tn = 0;
+    if (!g_nm.ahead_n) {
+        log_line("NET/ahead #%d %s: no frame was sampled", g_nm.seq, net_side(g_nm.mode));
+        return;
+    }
+    h[0] = 0;
+    for (i = 0; i < 17; i++) {
+        run += g_nm.ahead[i];
+        if (g_nm.ahead[i]) {
+            if (mn < 0) mn = i;
+            mx = i;
+            at += snprintf(h + at, sizeof(h) - at, "%s%d%s:%lld", at ? " " : "", i,
+                           i == 16 ? "+" : "", (long long)g_nm.ahead[i]);
+        }
+        if (p1  < 0 && run * 100 >= g_nm.ahead_n * 1)  p1  = i;
+        if (p5  < 0 && run * 100 >= g_nm.ahead_n * 5)  p5  = i;
+        if (p50 < 0 && run * 100 >= g_nm.ahead_n * 50) p50 = i;
+    }
+    for (i = 0; i < 7; i++) tn += g_nm.tempo[i];
+    at = 0; t[0] = 0;
+    if (tn)
+        for (i = 0; i < 7; i++)
+            at += snprintf(t + at, sizeof(t) - at, "%s%s %.1f%%", i ? ", " : "",
+                           NET_TEMPO_NAME[i], 100.0 * (double)g_nm.tempo[i] / (double)tn);
+    log_line("NET/ahead #%d %s: frames of the %s's input in hand after each frame -- min %d, "
+             "p1 %d, p5 %d, p50 %d, max %d%s over %lld frames (the second after a cutscene "
+             "left out) | %s | tempo (Hz, up to) %s",
+             g_nm.seq, net_side(g_nm.mode), g_nm.mode == 0 ? "guest" : "host",
+             mn, p1, p5, p50, mx, mx == 16 ? "+" : "", (long long)g_nm.ahead_n, h,
+             tn ? t : "not read");
+}
+
+/* The determinism check, guest only. */
+static void net_snap_line(void)
+{
+    char h[160], ex[160];
+    int at = 0, i;
+    if (g_nm.mode != 1 || !g_net_on_probe) return;
+    if (g_ns.mgr != g_nm.mgr || !g_ns.n) {
+        log_line("NET/snap #%d guest: no host snapshot was adopted in this battle", g_nm.seq);
+        return;
+    }
+    for (i = 0; i < NET_SNB; i++)
+        at += snprintf(h + at, sizeof(h) - at, "%s%s:%lld", i ? " " : "", NET_SN_NAME[i],
+                       (long long)g_ns.bin[i]);
+    log_line("NET/snap #%d guest: %lld host snapshots checked against the guest's own fighters "
+             "before adoption -- position identical %lld (%.1f%%), rotation identical %lld, "
+             "state byte 2 differs %lld of %lld | largest difference: position %.6g, rotation %.6g "
+             "| position difference by size %s",
+             g_nm.seq, (long long)g_ns.n, (long long)g_ns.pos_same,
+             100.0 * (double)g_ns.pos_same / (double)g_ns.n, (long long)g_ns.rot_same,
+             (long long)g_ns.b2_diff, (long long)g_ns.b2_seen, g_ns.max_dpos, g_ns.max_drot, h);
+    for (i = 0; i < g_ns.shown && i < 4; i++) {
+        snprintf(ex, sizeof(ex), "frame %d, fighter %d: dx %.6g, dy %.6g, dz %.6g, rotation %.6g",
+                 g_ns.ex_F[i], g_ns.ex_who[i], g_ns.ex_d[i][0], g_ns.ex_d[i][1],
+                 g_ns.ex_d[i][2], g_ns.ex_d[i][3]);
+        log_line("NET/snap #%d guest: difference %d -- %s", g_nm.seq, i + 1, ex);
+    }
+}
+
+/* The battle is over. A freeze still open never resolved into play -- see the
+   header -- so it is set aside as the tail instead of being closed as a stall,
+   and its time comes back out of the battle time. The frame-0 wait is the one
+   exception: it is closed as what it is. */
+static void net_match_end(const char* why, LONG64 now)
+{
+    if (!g_nm.active) return;
+    if (g_nm.in_fz) {
+        if (g_nm.fz_pre) net_fz_close(now);
+        else {
+            g_nm.tail_ms = (now - g_nm.fz_t0) * 1000 / g_net_qpf.QuadPart;
+            g_nm.run     = g_nm.fz_run0;
+            g_nm.in_fz   = 0;
+        }
+    }
+    net_match_line(why, now);
+    net_stalls_line();
+    net_ahead_line();
+    net_snap_line();
+    g_nm.active = 0;
+}
+
+static DWORD WINAPI net_watch(LPVOID unused)
+{
+    typedef UINT (WINAPI *tbp_t)(UINT);
+    HANDLE tm;
+    LARGE_INTEGER now, due;
+    LONG64 last_report = 0;
+    int hires = 1, i, first_look = 0;
+    (void)unused;
+
+    log_line("%s", g_net_early);
+    if (g_net_on_sleep) {
+        HMODULE wm = GetModuleHandleA("winmm.dll");
+        tbp_t tbp;
+        if (!wm) wm = LoadLibraryA("winmm.dll");
+        tbp = wm ? (tbp_t)GetProcAddress(wm, "timeBeginPeriod") : NULL;
+        if (tbp && tbp(1) == 0 /* TIMERR_NOERROR */)
+            log_line("NET: timer resolution held at 1 ms, so the %d ms network sleep is %d ms",
+                     g_net_on_sleep, g_net_on_sleep);
+        else
+            log_line("NET: timeBeginPeriod(1) FAILED -- the network sleep rounds up to the "
+                     "system tick (~15.6 ms), the same as the stock 8 ms sleep does");
+    }
+
+    /* 0x00000002 = CREATE_WAITABLE_TIMER_HIGH_RESOLUTION (Windows 10 1803+). */
+    tm = CreateWaitableTimerExW(NULL, NULL, 0x00000002, TIMER_ALL_ACCESS);
+    if (!tm) { tm = CreateWaitableTimerExW(NULL, NULL, 0, TIMER_ALL_ACCESS); hires = 0; }
+    log_line("NET: freeze sampler ready -- %s", hires
+             ? "~1 kHz during battles on a high-resolution timer (no effect on the game's timer)"
+             : "only at the system tick (~64 Hz): stalls under ~16 ms will be missed");
+    if (!tm) { log_line("NET: no timer at all -- freeze sampling is off"); return 0; }
+
+    memset(&g_nm, 0, sizeof(g_nm));
+    for (;;) {
+        uintptr_t mgr;
+        int fast = g_nm.active || g_net_newgame;
+        due.QuadPart = fast ? -10000 : -200000;   /* 1 ms in a battle, 20 ms outside */
+        if (SetWaitableTimer(tm, &due, 0, NULL, NULL, FALSE)) WaitForSingleObject(tm, 100);
+        else Sleep(fast ? 1 : 20);
+        QueryPerformanceCounter(&now);
+
+        if (InterlockedExchange(&g_net_newgame, 0)) {
+            net_match_end("the next battle began", now.QuadPart);
+            memset(&g_nm, 0, sizeof(g_nm));
+            g_nm.active = 1;
+            g_nm.seq  = ++g_net_match_seq;
+            g_nm.mode = g_net_mode; g_nm.D = g_net_D; g_nm.lat = g_net_lat; g_nm.W = g_net_W;
+            g_nm.D0   = g_net_D0;  g_nm.mgr = g_net_mgr;
+            g_nm.last_t = now.QuadPart;
+            g_nm.last_F = -1;
+            g_nm.quiet_t0 = now.QuadPart;   /* build 3: still since the battle was set up */
+            for (i = 0; i < NET_PB; i++) g_nm.period0[i] = g_net_period[i];
+            g_nm.lk_e0 = g_net_lock_entries; g_nm.lk_m0 = g_net_lock_met;
+            g_nm.lk_g0 = g_net_lock_gaveup;
+            last_report = now.QuadPart;
+            log_line("NET/match #%d %s -- starts | D %ld ticks (game %ld, delay %ld) from RTT' "
+                     "%ld ms (host plays D+1, guest D+2) | window %ld, lock %s, sleep %d ms",
+                     g_nm.seq, net_side(g_nm.mode), (long)g_nm.D, (long)g_nm.D0,
+                     (long)(g_nm.D - g_nm.D0), (long)g_nm.lat,
+                     (long)g_nm.W, g_net_on_lock ? "on" : "off",
+                     g_net_on_sleep ? g_net_on_sleep : 8);
+        }
+
+        mgr = g_net_mgr;
+        if (g_nm.active && mgr) {
+            int ok = 0, F = 0, v18 = 0, v14 = 0;
+            unsigned char flag = 0, m[0x100];   /* build 3: up to mapE0's size at +0xF0 */
+            void* proxy = NULL;
+            SIZE_T got = 0;
+            LONG64 dt = now.QuadPart - g_nm.last_t;
+            g_nm.last_t = now.QuadPart;
+            /* The manager dies with the battle scene (exe+0x801734..0x8017AF):
+               the teardown zeroes its deque proxy at +0x20 before freeing it,
+               and its ctor stamps +0x18 = 60 and +0x14 = the window. Copied
+               with ReadProcessMemory -- see the header, NO __try. */
+            if (ReadProcessMemory(GetCurrentProcess(), (LPCVOID)mgr, m, sizeof(m), &got) &&
+                got == sizeof(m)) {
+                memcpy(&proxy, m + 0x20, sizeof(proxy));
+                memcpy(&v18,   m + 0x18, 4);
+                memcpy(&v14,   m + 0x14, 4);
+                ok = proxy != NULL && v18 == 60 && v14 == g_nm.W;
+                if (ok) {
+                    flag = m[0xD8];
+                    memcpy(&F, m + 0xB8, 4);
+                }
+            }
+            if (!ok) {
+                net_match_end("the battle ended", now.QuadPart);
+                if (g_net_mgr == mgr) g_net_mgr = 0;
+            } else {
+                /* build 3: a quiet stretch is 700 ms or more with the frame counter
+                   still and the stall flag down -- a cutscene (02 §3.7). */
+                int quiet = g_nm.quiet_t0 &&
+                            (now.QuadPart - g_nm.quiet_t0) * 10 >= g_net_qpf.QuadPart * 7;
+                if (F != g_nm.last_F) {
+                    if (quiet) g_nm.resume_t = now.QuadPart;
+                    g_nm.quiet_t0 = now.QuadPart;
+                    quiet = 0;
+                    if (g_nm.last_F >= 0 && !g_nm.started) {
+                        g_nm.started = 1;
+                        g_nm.resume_t = now.QuadPart;   /* the start is a resume too */
+                    }
+                    g_nm.last_F = F;
+                    g_nm.last_F_t = now.QuadPart;
+                    /* build 3: after each frame, the other side's frames in hand
+                       and the tempo -- not in the second after a cutscene, where
+                       the other side is still catching up by design. */
+                    if (g_nm.started &&
+                        !(g_nm.resume_t && now.QuadPart - g_nm.resume_t < g_net_qpf.QuadPart)) {
+                        unsigned long long q = 0;
+                        unsigned short rate = 0;
+                        memcpy(&q, m + (g_nm.mode == 0 ? 0x88 : 0xF0), sizeof(q));
+                        g_nm.ahead[q > 16 ? 16 : (int)q]++;
+                        g_nm.ahead_n++;
+                        if (net_read_tempo(&rate))
+                            g_nm.tempo[rate == 60 ? 0 : rate < 60 ? 6 : rate <= 72 ? 1 :
+                                       rate <= 84 ? 2 : rate <= 96 ? 3 : rate <= 108 ? 4 :
+                                       rate <= 120 ? 5 : 6]++;
+                    }
+                }
+                /* A freeze opens BEFORE this sample's time is added, so the
+                   battle time it began at excludes it: if the battle ends in
+                   it, that is exactly what comes back out (net_match_end). */
+                if (flag && !g_nm.in_fz) {
+                    g_nm.in_fz = 1; g_nm.fz_t0 = now.QuadPart; g_nm.fz_pre = !g_nm.started;
+                    g_nm.fz_run0 = g_nm.run;
+                    /* build 3: its class, decided as it opens */
+                    g_nm.fz_class = (quiet || (g_nm.resume_t &&
+                                     (now.QuadPart - g_nm.resume_t) * 2 <= g_net_qpf.QuadPart))
+                                    ? NET_CLS_CUT : NET_CLS_NET;
+                    g_nm.fz_polls = 0;
+                    if (!g_nm.fz_pre && net_someone_down(m)) g_nm.fz_class = NET_CLS_KO;
+                } else if (flag && g_nm.in_fz && !g_nm.fz_pre && g_nm.fz_class != NET_CLS_KO &&
+                           (++g_nm.fz_polls & 15) == 0 && net_someone_down(m)) {
+                    g_nm.fz_class = NET_CLS_KO;   /* a fighter went down during it */
+                }
+                if (flag) g_nm.quiet_t0 = 0;      /* stalled, not quiet */
+                else if (!g_nm.quiet_t0) g_nm.quiet_t0 = now.QuadPart;
+                /* Battle time: the frame counter moved in the last 250 ms, or the
+                   game is frozen waiting for the other side. */
+                if (g_nm.started &&
+                    (flag || (now.QuadPart - g_nm.last_F_t) * 4 < g_net_qpf.QuadPart))
+                    g_nm.run += dt;
+                if (!flag && g_nm.in_fz) {
+                    net_fz_close(now.QuadPart);
+                } else if (g_nm.in_fz && !g_nm.fz_pre &&
+                           (now.QuadPart - g_nm.fz_t0) > 20 * g_net_qpf.QuadPart) {
+                    /* 20 s is past the game's own give-up (10 s + 5 s): the battle
+                       is over or the other side is gone -- the tail, not a freeze. */
+                    net_match_end("no frame for 20 s", now.QuadPart);
+                    if (g_net_mgr == mgr) g_net_mgr = 0;
+                }
+            }
+        }
+
+        if (g_nm.active && now.QuadPart - last_report >= 60 * g_net_qpf.QuadPart) {
+            last_report = now.QuadPart;
+            if (g_nm.run) net_match_line("so far", now.QuadPart);
+        }
+
+        /* One early look at the network thread, so the sleep can be checked
+           from a lobby without playing a battle. */
+        if (!first_look) {
+            LONG64 total = 0;
+            for (i = 0; i < NET_PB; i++) total += g_net_period[i];
+            if (total >= 2000) { first_look = 1; net_loop_line("first 2000 passes", NULL, 0, 0, 0); }
+        }
+    }
+}
+
+/* THE entry point -- see the header. Call it from DLL_PROCESS_ATTACH. */
+static void nettest_start(void)
+{
+    HANDLE t;
+    if (!net_early_install()) return;          /* not the game: nothing touched */
+    t = CreateThread(NULL, 0, net_watch, NULL, 0, NULL);
+    if (t) CloseHandle(t);
+}
+
+#endif /* ENABLE_NETTEST */
+
 BOOL WINAPI DllMain(HINSTANCE h, DWORD reason, LPVOID res)
 {
     (void)res;
     if (reason==DLL_PROCESS_ATTACH) {
         if (InterlockedCompareExchange(&g_started,1,0)==0) {
             DisableThreadLibraryCalls(h);
+#if ENABLE_NETTEST
+            nettest_start();   /* PART 41 -- first, and from here: see its header */
+#endif
             CreateThread(NULL,0,worker,NULL,0,NULL);
         }
     }

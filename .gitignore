@@ -12,3 +12,8 @@ BalanceLeadTools/rig_up.ps1
 BalanceLeadTools/Rig Up.bat
 BalanceLeadTools/rig_up3.ps1
 BalanceLeadTools/Rig Up 3.bat
+
+# The New netcode switch's per-player choice (launcher/netcode_mode.py): absent = ON,
+# the default. Each player's own, never committed.
+Json/netcode.json
+Json/netcode.json.tmp
