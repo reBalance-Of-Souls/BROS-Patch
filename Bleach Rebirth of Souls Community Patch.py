@@ -238,6 +238,14 @@ try:
     with open(config_path, "r") as f:
         config = json.load(f)
 
+    # Team Battle needs a host's token beside the launcher
+    # (GameModes/TeamBattle/TokenOpen.txt). Without one, every launch already
+    # forces it OFF before installing anything, so the menu must say OFF too.
+    # A config.json still saved as "ON" -- from a past host session, say -- used
+    # to show "Currently ON" here, and the button could not switch it off.
+    if not os.path.exists(os.path.join(BASE_DIR,"GameModes","TeamBattle","TokenOpen.txt")):
+        config["TEAM_BATTLE"] = "OFF"
+
     admin_config = None
 
     if admin_config_path is not None:
@@ -1162,6 +1170,8 @@ try:
         if not os.path.exists(os.path.join(BASE_DIR,"GameModes","TeamBattle","TokenOpen.txt")):
             config["TEAM_BATTLE"] = "OFF"
             saveJson()
+            teamBattleButton.config(text='Team Battle : (Currently OFF)')
+            set_toggle_visual(teamBattleButton, False)
             messagebox.showinfo("Team Battle", "You need to contact a Team Battle host to be able to join a team battle, for that, ping one on the discord using @Team Battle Host")
             return
         config["TEAM_BATTLE"] = "ON" if config["TEAM_BATTLE"] == "OFF" else "OFF"
