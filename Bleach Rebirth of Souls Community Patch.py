@@ -760,6 +760,22 @@ try:
         except Exception as e:
             print(f"[matchmaking] could not remove dinput8.dll: {e}")
 
+        # The plugins too, as Quick Launch Bros Vanilla does: inert without the
+        # loader, but a vanilla game folder should not keep them.
+        try:
+            pdst = os.path.join(target_path, "ReBalanceOfSouls")
+            if os.path.isdir(pdst):
+                gone = []
+                for f in os.listdir(pdst):
+                    if f.lower().endswith(".dll"):
+                        os.remove(os.path.join(pdst, f))
+                        gone.append(f)
+                if gone:
+                    print(f"[plugins] removed {len(gone)} plugin(s) for a vanilla run: "
+                          f"{', '.join(gone)}")
+        except Exception as e:
+            print(f"[plugins] could not clear plugins: {e}")
+
     def launch_patched(target_path):
         """Launch the patched game. On Windows, start the .exe directly (required
         so EasyAntiCheat doesn't block the injected dinput8.dll -- crash otherwise).
@@ -827,6 +843,11 @@ try:
         if not os.path.exists(os.path.join(BASE_DIR,"GameModes","TeamBattle","TokenOpen.txt")):
             config["TEAM_BATTLE"] = "OFF"
         try:
+            # Vanilla means the game as Steam ships it: no game mode, no Team
+            # Battle table, no patch data of any kind (the mode and Team Battle
+            # copies below used to run for it too, putting a modded
+            # CharaStatus.fsv into a Steam/EasyAntiCheat online game).
+            vanilla = (gameVersion == "Bleach Rebirth of Souls")
             #folder injection
             revert_foreign_overlay(game_path, gameVersion)
             injectFolder(gameVersion,"Script")
@@ -881,7 +902,7 @@ try:
 
 
             #gamemode injection
-            if gameMode != "DEFAULT":
+            if gameMode != "DEFAULT" and not vanilla:
                 srcPath = os.path.join(BASE_DIR,"GameModes",f"{gameMode}","Script")
                 dstPath = os.path.join(game_path,"Script")
 
@@ -892,7 +913,7 @@ try:
 
 
             #team battle injection
-            if config["TEAM_BATTLE"] == "ON":
+            if config["TEAM_BATTLE"] == "ON" and not vanilla:
                 srcPath = os.path.join(BASE_DIR,"GameModes","TeamBattle")
                 dstPath = os.path.join(game_path,"Script")
                 shutil.copy(
