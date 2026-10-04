@@ -25,6 +25,43 @@ try:
 except Exception:
     _netcode_mode = None
 
+# The online match pool (launcher/match_pool.py, 2026-10-04): derived from what the
+# game loads, not from the commit, so a push that changes nothing the game loads no
+# longer splits the players. Required -- without it a launch has no pool to join.
+try:
+    from launcher import match_pool as _match_pool
+    _match_pool_error = ""
+except Exception as _e:
+    _match_pool = None
+    _match_pool_error = str(_e)
+
+
+class MatchmakingError(Exception):
+    """setup_matchmaking() could not put the loader or the pool code in place: no launch."""
+
+
+def _matchmaking_error_box(e):
+    """A matchmaking failure stops the launch. This console can close the moment the script
+    ends, so the reason goes to a message box as well."""
+    text = ("Online matchmaking could not be set up:\n\n%s\n\n"
+            "The game was NOT started, so it cannot end up in the wrong match pool." % e)
+    print("Launch Error: " + text)
+    try:
+        import tkinter
+        from tkinter import messagebox
+        root = tkinter.Tk()
+        root.withdraw()
+        root.attributes("-topmost", True)
+        try:
+            messagebox.showerror("Launch Error", text, parent=root)
+        finally:
+            root.destroy()
+    except Exception:
+        try:
+            input("Press Enter to close")
+        except Exception:
+            pass
+
 
 def _ask_netcode_once():
     """First start after the update: the main launcher's question, asked here too while no
@@ -217,8 +254,17 @@ def setup_matchmaking(target_path, gameVersion):
     try:
         shutil.copy(src, os.path.join(target_path, "dinput8.dll"))
     except Exception as e:
-        print(f"[matchmaking] could not install dinput8.dll: {e}")
-        return
+        # This used to print and return, and the game started anyway -- with the
+        # previous loader and the previous build's pool code, a pool nobody else was
+        # in, and nothing on screen saying why.
+        if not os.path.exists(src):
+            why = ("The launcher's own copy is missing -- an antivirus may have removed it: "
+                   "allow the launcher folder, then launch again.")
+        else:
+            why = ("Usually the game -- or a game that crashed -- is still running: close it "
+                   "(check the Task Manager), then launch again.")
+        raise MatchmakingError(
+            f"The matchmaking loader (dinput8.dll) could not be installed into the game folder ({e}). " + why)
 
     # ---- PLUGINS ------------------------------------------------------------
     # Mirrored: whatever is in Files/Matchmaking/Plugins goes to
@@ -262,14 +308,23 @@ def setup_matchmaking(target_path, gameVersion):
         raise
     except Exception as e:
         print(f"[plugins] could not install plugins: {e}")
-    build = get_snapshot() or "unknown"
-    seed = f"{build}|{gameVersion}"
-    code = 100000 + (zlib.crc32(seed.encode("utf-8")) % 800000)
+    # The match pool (launcher/match_pool.py): derived from what the game loads --
+    # this version's data, the game modes, the loader and plugin DLLs, the
+    # performance-mode files -- by git's own content ids, plus the version's name.
+    # The same content gives the same pool on every machine, whatever the commit; a
+    # change to anything the game loads gives a new pool. It used to be the short
+    # commit hash: every push split the players (launcher-only pushes included), and
+    # the short hash is not the same length on every machine. A failure stops the
+    # launch rather than start the game in a wrong pool.
+    if _match_pool is None:
+        raise MatchmakingError(f"launcher/match_pool.py could not be loaded ({_match_pool_error}).")
     try:
-        with open(os.path.join(target_path, "patch_ranked.txt"), "w") as f:
-            f.write(str(code) + "\n")
-    except Exception as e:
-        print(f"[matchmaking] could not write match code: {e}")
+        code, content = _match_pool.match_code(BASE_DIR, gameVersion)
+        _match_pool.write_code(target_path, code)
+    except _match_pool.PoolError as e:
+        raise MatchmakingError(str(e))
+    print(f"[matchmaking] pool code {code} -- content {content[:12]} of '{gameVersion}' "
+          f"(pool rev {_match_pool.POOL_REV})")
 
 
 def remove_matchmaking(target_path):
@@ -347,7 +402,11 @@ def launch(gameVersion):
             shutil.copy(os.path.join(srcPath, "CharaStatus.fsv"), os.path.join(dstPath, "CharaStatus.fsv"))
 
        
-        setup_matchmaking(game_path, gameVersion)
+        try:
+            setup_matchmaking(game_path, gameVersion)
+        except MatchmakingError as e:
+            _matchmaking_error_box(e)
+            return
         # The New netcode switch, once the loader is in (as in the main launcher).
         # A failure raises into the handler below, so the game is not started.
         if _netcode_mode:
