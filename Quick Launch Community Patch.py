@@ -222,10 +222,16 @@ def injectFolder(files, folderName, fullFolder=True):
 
 def injectPerformanceFiles(folderName, lowspecmodornot):
     try:
-        shutil.copytree(os.path.join(BASE_DIR, "Files", "Spec Mod", f"{folderName}", f"{lowspecmodornot}"),
-                         os.path.join(game_path, "00HIGH", "Effect", "spfx", "com"), dirs_exist_ok=True)
-        shutil.copytree(os.path.join(BASE_DIR, "Files", "Spec Mod", f"{folderName}", f"{lowspecmodornot}"),
-                         os.path.join(game_path, "01MIDDLE", "Effect", "spfx", "com"), dirs_exist_ok=True)
+        src = os.path.join(BASE_DIR, "Files", "Spec Mod", f"{folderName}", f"{lowspecmodornot}")
+        shutil.copytree(src, os.path.join(game_path, "00HIGH", "Effect", "spfx", "com"), dirs_exist_ok=True)
+        shutil.copytree(src, os.path.join(game_path, "01MIDDLE", "Effect", "spfx", "com"), dirs_exist_ok=True)
+        # A value's folder holds the HIGH tier's bytes. Where the Middle tier's own files
+        # differ, they sit beside it as <value>_middle and go on top here. Without them, a
+        # player on a lower graphics preset got the High effects: the evolve aura at 4.3
+        # times its Middle size, the hit sparks at 3 times, on every hit.
+        if os.path.isdir(src + "_middle"):
+            shutil.copytree(src + "_middle", os.path.join(game_path, "01MIDDLE", "Effect", "spfx", "com"),
+                            dirs_exist_ok=True)
     except Exception as e:
         print(f"Error injecting performance files: {e}")
 
