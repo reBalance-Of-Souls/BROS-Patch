@@ -5312,8 +5312,22 @@ static LONG crash_veh_body(EXCEPTION_POINTERS* ep)
        apart -- but the first few exe-resident values on the stack ARE the
        call chain in practice, and that is what names the caller.
 
-       Everything here is a read of memory the process already owns, inside
-       SEH, in a handler that has already decided the process is dying. */
+       Everything here is a read of memory the process already owns, in a
+       handler that has already decided the process is dying.
+
+       ★ 2026-10-05: AND IT STOPS AT THE TOP OF THE STACK. The scan used to
+       read 512 qwords up from rsp whatever lay above, inside a __try that
+       this zig build compiles to no scope at all (a read is not a call; see
+       crashlog.c's cl_readable). A fault less than 4 KB below a thread's stack
+       top therefore made this loop read past the stack base: a SECOND access
+       violation, inside this handler, which killed the process and rewrote
+       the crash report's culprit as "the patch loader itself". That is how
+       steamclient64.dll's own null read at +0x88C692, on a shallow Steam
+       thread after an online battle ended, became 12 of one player's 14
+       crashes (2026-10-02..05, DINPUT8.dll+0x9236 / +0xC5C6, every faulting
+       address the 1 MB-aligned stack top). A vectored handler runs on the
+       faulting thread, so this thread's TEB bounds are that stack's bounds;
+       cl_readable then checks the span itself. */
     if (ep->ContextRecord) {
         CONTEXT* c = ep->ContextRecord;
         log_line("CRASH/regs: rax=%016llX rbx=%016llX rcx=%016llX rdx=%016llX",
@@ -5328,21 +5342,30 @@ static LONG crash_veh_body(EXCEPTION_POINTERS* ep)
         log_line("CRASH/regs: r12=%016llX r13=%016llX r14=%016llX r15=%016llX",
                  (unsigned long long)c->R12, (unsigned long long)c->R13,
                  (unsigned long long)c->R14, (unsigned long long)c->R15);
-        __try {
+        {
             unsigned long long base = (unsigned long long)mod;
-            unsigned long long* sp  = (unsigned long long*)c->Rsp;
-            int i, n = 0;
-            for (i = 0; i < 512 && n < 12; i++) {
-                unsigned long long v = sp[i];
-                if (v > base && v < base + 0x2000000ULL) {
-                    log_line("CRASH/stack: [rsp+0x%03X] exe+0x%llX",
-                             (unsigned)(i * 8), v - base);
-                    n++;
+            unsigned long long rsp  = (unsigned long long)c->Rsp;
+            unsigned long long top  = (unsigned long long)((NT_TIB*)NtCurrentTeb())->StackBase;
+            unsigned long long* sp  = (unsigned long long*)rsp;
+            int i, n = 0, words = 0;
+            if (rsp && rsp < top)
+                words = (top - rsp) / 8 < 512 ? (int)((top - rsp) / 8) : 512;
+            if (words && !cl_readable(sp, (SIZE_T)words * 8)) words = 0;
+            if (!words) {
+                log_line("CRASH/stack: rsp %016llX is not on this thread's readable stack"
+                         " (top %016llX) -- not scanned", rsp, top);
+            } else {
+                for (i = 0; i < words && n < 12; i++) {
+                    unsigned long long v = sp[i];
+                    if (v > base && v < base + 0x2000000ULL) {
+                        log_line("CRASH/stack: [rsp+0x%03X] exe+0x%llX",
+                                 (unsigned)(i * 8), v - base);
+                        n++;
+                    }
                 }
+                if (!n) log_line("CRASH/stack: no exe-resident value in the %d bytes above rsp",
+                                 words * 8);
             }
-            if (!n) log_line("CRASH/stack: no exe-resident value in the first 4 KB");
-        } __except(EXCEPTION_EXECUTE_HANDLER) {
-            log_line("CRASH/stack: stack unreadable from the handler");
         }
     }
     vfn_report("at the crash");
