@@ -419,45 +419,218 @@ static void log_lock_ready(void)
     }
 }
 
+/* ★★★ 2026-10-03: THE LOG NO LONGER TOUCHES THE DISK ON THE CALLER'S THREAD.
+
+   Until now every line was fopen + write + fflush + FlushFileBuffers + fclose,
+   on whatever thread called log_line. FlushFileBuffers (2026-09-17, Berg's
+   power-cut requirement, below) is a real disk round-trip, and the threads that
+   log include the game's own: the Steam P2P send/receive hooks (ROOM3 dumps,
+   input-stream samples, history decodes -- "this runs on the game thread"),
+   every C++ throw, the guards. Measured on the maintainer's game drive, a USB
+   hard disk, one flushed line: p50 0.9 ms, p90 20 ms, p99 44-83 ms, max 294 ms
+   (on the SSD: 1.3 ms flat). A 60 fps frame is 16.7 ms. So on a hard disk one
+   line in ten cost the calling thread more than a frame, and the log is written
+   exactly where online play is most sensitive: in the packet path, mid-match.
+   (A two-client A/B on 2026-10-03 found online play equal to vanilla on the
+   maintainer's PC, so this is not a measured cause of lag: it is a cost the
+   game's threads had no reason to pay.)
+
+   Now log_line formats and timestamps the line, copies it into an in-memory
+   queue under g_log_cs (a memcpy, nothing else) and wakes a writer thread. The
+   writer appends each batch with one WriteFile and STILL calls FlushFileBuffers,
+   on its own thread, so Berg's guarantee holds batch by batch: what was queued
+   more than ~250 ms before a power cut is on the disk. Two paths write the
+   queue on the spot with log_drain_now(): crash_veh, each time it reports an
+   access violation (the first four sites), and process detach -- so the
+   CRASH lines are on the disk before the process can die. crashlog.c still
+   writes its crash report files itself, synchronously; only its one
+   "CRASHLOG: wrote" line in this log can miss the disk when the process dies
+   right after it. A __fastfail, which no handler sees, can take the last
+   batch with it; the session marker already covers that case.
+
+   A full queue (2048 lines) drops new lines rather than block, and the writer
+   says how many it dropped. The file format is unchanged: CRLF lines, same
+   timestamps (taken when the line is logged, not when it is written). The log
+   is also capped now, as in the development loader since 2026-09-23: at the
+   first write of a process, a log past 4 MB moves to patch_ranked.log.1. */
+#if ENABLE_LOG
+#define LOGQ_LINES 2048u
+#define LOGQ_LEN   560u
+static char          g_logq[LOGQ_LINES][LOGQ_LEN];
+static unsigned      g_logq_len[LOGQ_LINES];
+static volatile LONG g_logq_head = 0;        /* next slot to fill, under g_log_cs   */
+static volatile LONG g_logq_tail = 0;        /* next slot to write, under g_log_cs  */
+static volatile LONG g_logq_dropped = 0;
+static HANDLE        g_logq_wake = NULL;
+static volatile LONG g_logq_thread = 0;      /* 0 none, 1 starting, 2 running, 3 failed */
+static volatile LONG g_logw_busy = 0;        /* one writer at a time                 */
+static char          g_logw_buf[LOGQ_LINES * LOGQ_LEN + 512];
+
+#ifndef LOG_ROTATE_BYTES
+#define LOG_ROTATE_BYTES (4ull << 20)
+#endif
+static void log_rotate(const char* path, char* note, size_t n)
+{
+    WIN32_FILE_ATTRIBUTE_DATA a;
+    char prev[MAX_PATH + 4];
+    unsigned long long size;
+
+    if (!GetFileAttributesExA(path, GetFileExInfoStandard, &a)) return;
+    size = ((unsigned long long)a.nFileSizeHigh << 32) | a.nFileSizeLow;
+    if (size <= LOG_ROTATE_BYTES) return;
+    snprintf(prev, sizeof(prev), "%s.1", path);
+    if (MoveFileExA(path, prev, MOVEFILE_REPLACE_EXISTING))
+        snprintf(note, n, "LOG: the previous log reached %llu bytes (cap %llu) and"
+                 " was moved to patch_ranked.log.1; this file starts with this"
+                 " session", size, (unsigned long long)LOG_ROTATE_BYTES);
+    else
+        snprintf(note, n, "LOG: the log is %llu bytes (cap %llu) but could not be"
+                 " moved aside (error %lu) -- still appending, the next boot"
+                 " tries again", size, (unsigned long long)LOG_ROTATE_BYTES,
+                 GetLastError());
+}
+
+/* Write everything queued so far. Safe from any thread; one writer at a time.
+   `wait_ms` bounds the wait for another writer and for the queue lock, so a
+   writer or producer killed mid-way at process exit cannot hang the caller. */
+static void log_write_pending(DWORD wait_ms)
+{
+    static int rotated = 0;
+    char path[MAX_PATH];
+    size_t at = 0;
+    LONG head, tail, i, dropped;
+    DWORD waited = 0;
+    HANDLE f;
+
+    if (g_log_cs_state != 2) return;
+    while (InterlockedCompareExchange(&g_logw_busy, 1, 0) != 0) {
+        if (waited >= wait_ms) return;
+        Sleep(1); waited++;
+    }
+    while (!TryEnterCriticalSection(&g_log_cs)) {
+        if (waited >= wait_ms) { InterlockedExchange(&g_logw_busy, 0); return; }
+        Sleep(1); waited++;
+    }
+    head = g_logq_head; tail = g_logq_tail;
+    LeaveCriticalSection(&g_log_cs);
+
+    dropped = InterlockedExchange(&g_logq_dropped, 0);
+    exe_dir_path("patch_ranked.log", path, sizeof(path));
+    if (!rotated) {                    /* once per process, before its first write */
+        char note[200];
+        note[0] = 0;
+        rotated = 1;
+        log_rotate(path, note, sizeof(note));
+        if (note[0]) {
+            SYSTEMTIME t; GetLocalTime(&t);
+            at += (size_t)snprintf(g_logw_buf + at, sizeof(g_logw_buf) - at,
+                                   "[%02d:%02d:%02d.%03d] %s\r\n", t.wHour, t.wMinute,
+                                   t.wSecond, t.wMilliseconds, note);
+        }
+    }
+    /* Slots tail..head-1 are stable: producers only fill at head, and never
+       reuse a slot until tail has moved past it, which happens below. */
+    for (i = tail; i != head; i++) {
+        unsigned s = (unsigned)i % LOGQ_LINES, n = g_logq_len[s];
+        if (n > LOGQ_LEN) n = LOGQ_LEN;
+        memcpy(g_logw_buf + at, g_logq[s], n);
+        at += n;
+    }
+    if (dropped) {
+        SYSTEMTIME t; GetLocalTime(&t);
+        at += (size_t)snprintf(g_logw_buf + at, sizeof(g_logw_buf) - at,
+                               "[%02d:%02d:%02d.%03d] LOG: %ld line(s) dropped -- the queue was"
+                               " full while the disk was slow\r\n", t.wHour, t.wMinute,
+                               t.wSecond, t.wMilliseconds, (long)dropped);
+    }
+    if (at) {
+        f = CreateFileA(path, FILE_APPEND_DATA,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL,
+                        OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (f != INVALID_HANDLE_VALUE) {
+            DWORD w = 0;
+            WriteFile(f, g_logw_buf, (DWORD)at, &w, NULL);
+            /* ★★ 2026-09-17, kept: PUSH IT TO THE DEVICE, NOT JUST TO THE OS.
+               Berg: "I will have to restart my pc after it lags because it's
+               unusable when it is lagging ... make sure whatever we get from the
+               lag log is not gone on restart or anything." A clean shutdown
+               writes the OS cache out, a held power button does not, and a
+               machine wedged badly enough for the button is the one this log
+               exists to describe. FlushFileBuffers is what forces the data onto
+               the disk -- here, on the writer's thread, never the game's. */
+            FlushFileBuffers(f);
+            CloseHandle(f);
+        }
+    }
+    if (TryEnterCriticalSection(&g_log_cs)) {
+        g_logq_tail = head;
+        LeaveCriticalSection(&g_log_cs);
+    } else {
+        InterlockedExchange(&g_logq_tail, head);    /* only this writer moves it */
+    }
+    InterlockedExchange(&g_logw_busy, 0);
+}
+
+static DWORD WINAPI log_writer_thread(LPVOID unused)
+{
+    (void)unused;
+    InterlockedExchange(&g_logq_thread, 2);
+    for (;;) {
+        WaitForSingleObject(g_logq_wake, 250);
+        log_write_pending(INFINITE);
+    }
+    return 0;
+}
+
+/* The crash paths call this: whatever is queued goes to the disk now, on the
+   calling thread, which is about to die anyway. */
+static void log_drain_now(void)
+{
+    log_write_pending(500);
+}
+#else
+static void log_drain_now(void) { }
+#endif
+
 static void log_line(const char* fmt, ...)
 {
 #if ENABLE_LOG
-    char path[MAX_PATH], buf[512];
-    SYSTEMTIME t; GetLocalTime(&t);
-    va_list ap; va_start(ap, fmt);
+    char buf[512];
+    SYSTEMTIME t;
+    va_list ap;
+    int n;
+    LONG th;
+    GetLocalTime(&t);
+    va_start(ap, fmt);
     vsnprintf(buf, sizeof(buf), fmt, ap); va_end(ap);
-    exe_dir_path("patch_ranked.log", path, sizeof(path));
     log_lock_ready();
+
+    th = g_logq_thread;
+    if (th == 0 && InterlockedCompareExchange(&g_logq_thread, 1, 0) == 0) {
+        g_logq_wake = CreateEventA(NULL, FALSE, FALSE, NULL);
+        if (!g_logq_wake || !CreateThread(NULL, 0, log_writer_thread, NULL, 0, NULL))
+            InterlockedExchange(&g_logq_thread, 3);
+    }
+
     EnterCriticalSection(&g_log_cs);
-    {
-        FILE* f = fopen(path, "a");
-        if (f) { fprintf(f, "[%02d:%02d:%02d.%03d] %s\n",
-                         t.wHour,t.wMinute,t.wSecond,t.wMilliseconds, buf);
-                 /* \u2605\u2605 2026-09-17: PUSH IT TO THE DEVICE, NOT JUST TO THE OS.
-                    Berg: "I will have to restart my pc after it lags because
-                    it's unusable when it is lagging ... make sure whatever we
-                    get from the lag log is not gone on restart or anything."
-                    fclose() flushes the CRT buffer into the OS cache and
-                    returns; a clean shutdown writes that cache out, a held
-                    power button does not -- and a machine wedged badly enough
-                    that the user reaches for the button is exactly the machine
-                    this log exists to describe. FlushFileBuffers is what forces
-                    the data and the file's metadata onto the disk.
-                    \u21d2 \u2605\u2605 RULE: "FLUSHED" HAS TWO MEANINGS AND ONLY ONE OF THEM
-                      SURVIVES A POWER CUT. Decide which one the diagnostic
-                      needs. Cost is one disk round-trip per line at the ~2
-                      lines/second this log measured at -- and it is already
-                      serialised behind g_log_cs, so no new contention. */
-                 fflush(f);
-                 { int fd = _fileno(f);
-                   if (fd >= 0) {
-                       HANDLE h = (HANDLE)_get_osfhandle(fd);
-                       if (h != INVALID_HANDLE_VALUE && h != (HANDLE)(INT_PTR)-2)
-                           FlushFileBuffers(h);
-                   } }
-                 fclose(f); }
+    if ((unsigned)(g_logq_head - g_logq_tail) >= LOGQ_LINES) {
+        InterlockedIncrement(&g_logq_dropped);
+    } else {
+        unsigned s = (unsigned)g_logq_head % LOGQ_LINES;
+        n = snprintf(g_logq[s], LOGQ_LEN, "[%02d:%02d:%02d.%03d] %s\r\n",
+                     t.wHour, t.wMinute, t.wSecond, t.wMilliseconds, buf);
+        if (n < 0) n = 0;
+        if ((unsigned)n >= LOGQ_LEN) {               /* truncated: keep the CRLF */
+            n = LOGQ_LEN - 1;
+            g_logq[s][n - 2] = '\r'; g_logq[s][n - 1] = '\n';
+        }
+        g_logq_len[s] = (unsigned)n;
+        g_logq_head++;
     }
     LeaveCriticalSection(&g_log_cs);
+
+    if (g_logq_thread == 3) log_write_pending(INFINITE);  /* no writer thread: as before */
+    else if (g_logq_wake) SetEvent(g_logq_wake);
 #else
     (void)fmt;
 #endif
@@ -847,6 +1020,25 @@ static void*            g_room3_stw_this  = 0;
 #endif
 #ifndef ROOM3_NO_THROTTLE
 #define ROOM3_NO_THROTTLE 0
+#endif
+/* ROOM3_DIAG (2026-10-05): the three-player room's DIAGNOSTICS that run for every
+   player -- the heartbeat's ROOM3 block (about 40 lines every 30 s, reading cached
+   battle pointers under a __try that compiles to nothing in this build) and the
+   per-update Brain scan, room3_log_brains, which walks 8 KB from a sync-word
+   pointer and faults at battle start. Nothing a room needs: the seats, the arm,
+   the gates, FORCE_READY, the result menu and the spectator stay as they are.
+   Build with -DROOM3_DIAG=1 to bring them back for a rig investigation. */
+#ifndef ROOM3_DIAG
+#define ROOM3_DIAG 0
+#endif
+/* BROS_HOT_COUNTERS (2026-10-05): a call counter on a hook that runs hundreds of
+   thousands of times a second is a write to one shared cache line from every
+   thread that calls it (bros-hot-hook-no-shared-writes). The handle guard
+   (exe+0x92790, ~212k calls/s in battle) and the barrier guard (~18k/s) counted
+   every call for the heartbeat line only. Off for players; the guards still
+   count what they DO (neutralised handles, dropped barriers). */
+#ifndef BROS_HOT_COUNTERS
+#define BROS_HOT_COUNTERS 0
 #endif
 #ifndef ROOM3_FORCE_READY
 #define ROOM3_FORCE_READY 1
@@ -2398,7 +2590,7 @@ static void gauge_handle_guard(unsigned char* src)
     unsigned long long v40, v38 = 0;
     int bad = 0;
     const char* why = "";
-    g_hg_calls++;
+    if (BROS_HOT_COUNTERS) g_hg_calls++;
     if (!src) return;
     v40 = *(unsigned long long*)(src + 0x40);
     if (v40 == 0) return;                    /* nothing to validate       */
@@ -3842,7 +4034,7 @@ static void WINAPI hk_ResourceBarrier(void* list, UINT num, const void* bars)
     ClVt* v = clvt_resolve(list);
     UINT i, k = 0;
     if (!v) return;                    /* no graphics table was ever patched */
-    InterlockedIncrement(&g_bar_calls);
+    if (BROS_HOT_COUNTERS) InterlockedIncrement(&g_bar_calls);
     if (!num || !bars) { InterlockedIncrement(&g_bar_empty); return; }
     if (num > 16) { v->o26(list, num, bars); return; }
     for (i = 0; i < num; i++) {
@@ -5043,7 +5235,20 @@ static int crash_site_seen(unsigned long long rva)
     return 0;
 }
 
+static LONG crash_veh_body(EXCEPTION_POINTERS* ep);
+static volatile LONG g_crash_reported;
+/* 2026-10-05: the log is written by its own thread now, so a fault this
+   handler reports is put on the disk right here -- the process may be about
+   to die. Only when a line was really written for it (the reported-crash
+   budget moved), so a module that probes memory with SEH in a loop does not
+   turn every handled fault into a disk write. */
 static LONG CALLBACK crash_veh(EXCEPTION_POINTERS* ep)
+{
+    LONG before = g_crash_reported, r = crash_veh_body(ep), after = g_crash_reported;
+    if (after != before && after <= 4) log_drain_now();
+    return r;
+}
+static LONG crash_veh_body(EXCEPTION_POINTERS* ep)
 {
     unsigned char* mod;
     void* addr;
@@ -5287,7 +5492,7 @@ static DWORD WINAPI gauge_stats_thread(LPVOID u)
                      "%ld list(s) tracked; %ld Reset(s), %ld of them failed",
                      g_exec_calls, g_submit_dropped, g_submit_closed, g_submit_closefail,
                      g_submit_emptied, g_clst_n, g_reset_calls, g_reset_failed);
-        if (ENABLE_BARRIER_GUARD && g_bar_calls)
+        if (ENABLE_BARRIER_GUARD && (g_bar_calls || g_bar_dropped || g_bar_empty))
             log_line("BARRIERGUARD: %ld ResourceBarrier calls, %ld barriers dropped for having "
                      "no resource, %ld calls with no barrier at all", g_bar_calls,
                      g_bar_dropped, g_bar_empty);
@@ -5341,7 +5546,7 @@ static DWORD WINAPI gauge_stats_thread(LPVOID u)
         /* Its own line, not appended to the one above: log_line's buffer is 512
            chars and that format is already close to it, so an appended clause is
            the first thing to be silently truncated. */
-        if (ENABLE_ROOM3) {
+        if (ENABLE_ROOM3 && ROOM3_DIAG) {
             char line[400]; int off = 0, t, shown = 0;
             for (t = 0; t < 256 && off < (int)sizeof(line) - 24; t++) {
                 if (!g_pkt_rx_type[t] && !g_pkt_tx_type[t]) continue;
@@ -5352,11 +5557,11 @@ static DWORD WINAPI gauge_stats_thread(LPVOID u)
             if (shown)
                 log_line("ROOM3/pkt: types seen (hex: received/sent) -- %s", line);
         }
-        if (ENABLE_ROOM3) { room3_state_log(); room3_rip_log(); }
+        if (ENABLE_ROOM3 && ROOM3_DIAG) { room3_state_log(); room3_rip_log(); }
         /* ⚠ Gated on the clamp counters until 2026-09-16, which meant the line vanished
            exactly when the arm patch made the clamps unnecessary -- and with it the only
            report of whether the spectator was muted. Print it whenever this build is in. */
-        if (ENABLE_ROOM3)
+        if (ENABLE_ROOM3 && ROOM3_DIAG)
             log_line("ROOM3: seat clamp -- %lld read(s) with no seat of their own served "
                      "seat 0, %lld bailed with no fighter list at all. The first number is "
                      "a spectator watching; the second is a client that never built the "
@@ -5365,7 +5570,7 @@ static DWORD WINAPI gauge_stats_thread(LPVOID u)
                      (long long)g_room3_clamped, (long long)g_room3_skip_empty,
                      (long long)g_room3_role_forced, (long long)g_room3_muted,
                      g_room3_is_spectator ? "IS" : "is not");
-        if (ENABLE_ROOM3 && (g_room3_slot26_seen || g_room3_setup_seen || g_room3_state1_seen))
+        if (ENABLE_ROOM3 && ROOM3_DIAG && (g_room3_slot26_seen || g_room3_setup_seen || g_room3_state1_seen))
             log_line("ROOM3/crumb: inside slot26 -- +0E3D %lld, +0E56 %lld, +0F0E %lld "
                      "(registration is at +0x10C9)",
                      (long long)g_room3_s26[0], (long long)g_room3_s26[1],
@@ -5375,14 +5580,14 @@ static DWORD WINAPI gauge_stats_thread(LPVOID u)
                      "zero is where this client stops",
                      (long long)g_room3_slot26_seen, (long long)g_room3_reg_seen,
                      (long long)g_room3_setup_seen, (long long)g_room3_state1_seen);
-        if (ENABLE_ROOM3 && (g_room3_sm_calls || g_room3_stw_calls))
+        if (ENABLE_ROOM3 && ROOM3_DIAG && (g_room3_sm_calls || g_room3_stw_calls))
             log_line("ROOM3/st: machine called %lld time(s), last state 0x%X on object %p; "
                      "state set to 0x32 %lld time(s) on object %p -- a call count that "
                      "stops rising means the driver gave up; two different objects mean the "
                      "write lands somewhere the machine never reads",
                      (long long)g_room3_sm_calls, (unsigned)g_room3_sm_last, g_room3_sm_this,
                      (long long)g_room3_stw_calls, g_room3_stw_this);
-        if (ENABLE_ROOM3 && (g_room3_tick_calls || g_room3_reach_calls))
+        if (ENABLE_ROOM3 && ROOM3_DIAG && (g_room3_tick_calls || g_room3_reach_calls))
             log_line("ROOM3/tick: scene tick %lld (last %.1f s ago, from exe+0x%X), reached "
                      "slot 11 ran %lld time(s) (last %.1f s ago, from exe+0x%X) -- slot 11 "
                      "calls the tick with nothing in between, so these two numbers agree "
@@ -5393,7 +5598,7 @@ static DWORD WINAPI gauge_stats_thread(LPVOID u)
                      (long long)g_room3_reach_calls,
                      (double)(GetTickCount64() - g_room3_reach_tick) / 1000.0,
                      (unsigned)g_room3_reach_caller);
-        if (ENABLE_ROOM3) {
+        if (ENABLE_ROOM3 && ROOM3_DIAG) {
             int i;
             for (i = 0; i < 8; i++) {
                 if (!g_p2p_id[i] || !g_p2p_hist[i]) continue;
@@ -5414,7 +5619,7 @@ static DWORD WINAPI gauge_stats_thread(LPVOID u)
                          (long long)g_p2p_rx3[i][1], (long long)g_p2p_rx3[i][2]);
             }
         }
-        if (ENABLE_ROOM3 && (g_room3_lsm || g_room3_sa)) {
+        if (ENABLE_ROOM3 && ROOM3_DIAG && (g_room3_lsm || g_room3_sa)) {
             int role = -9, sendon = -1, rq = -1; unsigned sent = 0, used = 0, played = 0;
             unsigned seed = 0; LONG64 queue = -1;
             __try {
@@ -5451,7 +5656,7 @@ static DWORD WINAPI gauge_stats_thread(LPVOID u)
                      (long long)g_room3_skips, (long long)g_room3_idx_src,
                      (long long)g_room3_norestart, seed);
         }
-        if (ENABLE_ROOM3 && g_room3_pk_n) {
+        if (ENABLE_ROOM3 && ROOM3_DIAG && g_room3_pk_n) {
             char out[900]; int at = 0, i;
             for (i = 0; i < (int)g_room3_pk_n && i < ROOM3_PK_MAX && at < 820; i++) {
                 const char* nm = g_room3_pk_name[i] ? g_room3_pk_name[i] : "?";
@@ -5466,7 +5671,7 @@ static DWORD WINAPI gauge_stats_thread(LPVOID u)
             }
             log_line("ROOM3/quiet: packet classes sent/dropped (* = SOnlineAction) -- %s", out);
         }
-        if (ENABLE_ROOM3 && g_room3_lsm) {
+        if (ENABLE_ROOM3 && ROOM3_DIAG && g_room3_lsm) {
             LONG mode = -1, kind = -1; LONG64 recs = -1;
             __try {
                 unsigned char* m = (unsigned char*)g_room3_lsm;
@@ -5481,7 +5686,7 @@ static DWORD WINAPI gauge_stats_thread(LPVOID u)
                      mode == 1 ? "LiveStreaming" : mode == 0 ? "Idle" : "?", (int)kind,
                      (long long)recs);
         }
-        if (ENABLE_ROOM3 && g_room3_ep_count) {
+        if (ENABLE_ROOM3 && ROOM3_DIAG && g_room3_ep_count) {
             int i; char line[400]; int at = 0;
             for (i = 0; i < ROOM3_EP_MAX && i < g_room3_ep_count; i++) {
                 if (at > (int)sizeof(line) - 60) break;
@@ -5491,15 +5696,15 @@ static DWORD WINAPI gauge_stats_thread(LPVOID u)
             }
             log_line("ROOM3/make: Brains created so far -- %s", line);
         }
-        if (ENABLE_ROOM3 && g_room3_to_lines)
+        if (ENABLE_ROOM3 && ROOM3_DIAG && g_room3_to_lines)
             log_line("ROOM3/timeout: the barrier's clock last read %.1f, mark %.1f, delta "
                      "%.1f of a 1000 budget", g_room3_to_now, g_room3_to_then,
                      g_room3_to_now - g_room3_to_then);
-        if (ENABLE_ROOM3 && g_room3_bit_lines)
+        if (ENABLE_ROOM3 && ROOM3_DIAG && g_room3_bit_lines)
             log_line("ROOM3/bit: the barrier's flag word last read 0x%X; 0x401 forced %lld "
                      "time(s) -- a client that never aborts shows what a healthy value is",
                      (unsigned)g_room3_bit_last, (long long)g_room3_bit_set);
-        if (ENABLE_ROOM3 && g_room3_thr_calls) {
+        if (ENABLE_ROOM3 && ROOM3_DIAG && g_room3_thr_calls) {
             int i; char line[256]; int at = 0;
             for (i = 0; i < ROOM3_THR_MAX && g_room3_thr_n[i]; i++) {
                 if (at > (int)sizeof(line) - 32) break;
@@ -5513,7 +5718,7 @@ static DWORD WINAPI gauge_stats_thread(LPVOID u)
                      ROOM3_NO_THROTTLE && g_room3_is_spectator
                          ? " -- and the drop is being refused on this client" : "");
         }
-        if (ENABLE_ROOM3 && g_room3_wr_rip[0]) {
+        if (ENABLE_ROOM3 && ROOM3_DIAG && g_room3_wr_rip[0]) {
             int i; char line[512]; int at = 0;
             for (i = 0; i < ROOM3_WR_MAX && g_room3_wr_rip[i]; i++) {
                 if (at > (int)sizeof(line) - 40) break;
@@ -5525,7 +5730,7 @@ static DWORD WINAPI gauge_stats_thread(LPVOID u)
                      "(the four known ones are 0x801A5C, 0x801C6D, 0x802875, 0x802A77)",
                      line);
         }
-        if (ENABLE_ROOM3 && g_room3_exits_on) {
+        if (ENABLE_ROOM3 && ROOM3_DIAG && g_room3_exits_on) {
             int i; char line[512]; int at = 0;
             for (i = 0; i < ROOM3_EXIT_MAX; i++) {
                 if (!g_room3_exit_rva[i] || !g_room3_exit_n[i]) continue;
@@ -5540,7 +5745,7 @@ static DWORD WINAPI gauge_stats_thread(LPVOID u)
                      "keeps climbing while the reach count stops is where it gives up",
                      at ? line : "(none taken)", (unsigned)g_room3_exit);
         }
-        if (ENABLE_ROOM3 && g_room3_t5_calls)
+        if (ENABLE_ROOM3 && ROOM3_DIAG && g_room3_t5_calls)
             log_line("ROOM3/task5: exe+0x857390 entered %lld time(s), last %.1f s ago, from "
                      "exe+0x%X; reached the call at 0x857CC9 %lld time(s), last %.1f s ago "
                      "-- entered but not reaching means it returns inside 0x940 bytes, both "
@@ -5550,7 +5755,7 @@ static DWORD WINAPI gauge_stats_thread(LPVOID u)
                      (unsigned)g_room3_t5_caller, (long long)g_room3_t5_reach,
                      g_room3_t5_rtick
                          ? (double)(GetTickCount64() - g_room3_t5_rtick) / 1000.0 : -1.0);
-        if (ENABLE_ROOM3 && g_room3_fn_calls) {
+        if (ENABLE_ROOM3 && ROOM3_DIAG && g_room3_fn_calls) {
             unsigned char* m = (unsigned char*)GetModuleHandleA(NULL);
             LONG sw = -1;
             __try { sw = *(LONG*)(m + 0x1CE1D4C); }
@@ -5563,7 +5768,7 @@ static DWORD WINAPI gauge_stats_thread(LPVOID u)
                      (double)(GetTickCount64() - g_room3_fn_tick) / 1000.0,
                      (unsigned)g_room3_fn_caller, (int)sw);
         }
-        if (ENABLE_ROOM3 && g_room3_walk_calls)
+        if (ENABLE_ROOM3 && ROOM3_DIAG && g_room3_walk_calls)
             log_line("ROOM3/walk: the loop HEAD (exe+0x8A0CF5, +0x1E5 into the function) "
                      "was reached %lld time(s) on %p, last %.1f s ago, "
                      "with %d element(s) last time (min %d, max %d) -- if this keeps running "
@@ -5571,7 +5776,7 @@ static DWORD WINAPI gauge_stats_thread(LPVOID u)
                      (long long)g_room3_walk_calls, g_room3_walk_this,
                      (double)(GetTickCount64() - g_room3_walk_tick) / 1000.0,
                      (int)g_room3_walk_count, (int)g_room3_walk_min, (int)g_room3_walk_max);
-        if (ENABLE_ROOM3 && g_room3_sub[0]) {
+        if (ENABLE_ROOM3 && ROOM3_DIAG && g_room3_sub[0]) {
             int i;
             for (i = 0; i < ROOM3_SUB_MAX && g_room3_sub[i]; i++) {
                 /* Read the byte NOW rather than trusting the cached value: the cached one
@@ -5607,7 +5812,7 @@ static DWORD WINAPI gauge_stats_thread(LPVOID u)
                          g_room3_sub[i] == g_room3_bp_sub ? " <<< the watched one" : "");
             }
         }
-        if (ENABLE_ROOM3 && g_room3_obj[0]) {
+        if (ENABLE_ROOM3 && ROOM3_DIAG && g_room3_obj[0]) {
             int i;
             for (i = 0; i < ROOM3_OBJ_MAX && g_room3_obj[i]; i++)
                 log_line("ROOM3/obj: %p ticked %lld time(s), state 0x%X, last %.1f s ago",
@@ -5615,30 +5820,30 @@ static DWORD WINAPI gauge_stats_thread(LPVOID u)
                          (unsigned)g_room3_obj_state[i],
                          (double)(GetTickCount64() - g_room3_obj_tick[i]) / 1000.0);
         }
-        if (ENABLE_ROOM3 && g_room3_up_calls)
+        if (ENABLE_ROOM3 && ROOM3_DIAG && g_room3_up_calls)
             log_line("ROOM3/up: update called %lld time(s), last state 0x%X, last run %.1f s "
                      "ago, from exe+0x%X -- if THIS stops, nothing below it can run",
                      (long long)g_room3_up_calls, (unsigned)g_room3_up_last,
                      (double)(GetTickCount64() - g_room3_up_tick) / 1000.0,
                      (unsigned)g_room3_up_caller);
-        if (ENABLE_ROOM3 && g_room3_sm_calls)
+        if (ENABLE_ROOM3 && ROOM3_DIAG && g_room3_sm_calls)
             log_line("ROOM3/st: last driven %.1f s ago, from exe+0x%X -- on the spectator this "
                      "stops climbing the moment the state becomes 0x32, so the question is "
                      "why THAT caller gives up",
                      (double)(GetTickCount64() - g_room3_sm_tick) / 1000.0,
                      (unsigned)g_room3_sm_caller);
-        if (ENABLE_ROOM3 && g_room3_stw2_calls)
+        if (ENABLE_ROOM3 && ROOM3_DIAG && g_room3_stw2_calls)
             log_line("ROOM3/stw: the message handler's default tail set the state %lld "
                      "time(s) -- every message without a case of its own becomes the state",
                      (long long)g_room3_stw2_calls);
-        if (ENABLE_ROOM3 && g_room3_state1_forced)
+        if (ENABLE_ROOM3 && ROOM3_DIAG && g_room3_state1_forced)
             log_line("ROOM3/state1: the state-1 exit was bypassed %lld time(s) on this "
                      "client", (long long)g_room3_state1_forced);
-        if (ENABLE_ROOM3 && g_room3_gate_passed)
+        if (ENABLE_ROOM3 && ROOM3_DIAG && g_room3_gate_passed)
             log_line("ROOM3/part: participant test waved through %lld time(s) -- without "
                      "this the client sits in state 2 with its match clock frozen",
                      (long long)g_room3_gate_passed);
-        if (ENABLE_ROOM3 && g_room3_mode >= 0)
+        if (ENABLE_ROOM3 && ROOM3_DIAG && g_room3_mode >= 0)
             log_line("ROOM3/mode: this client entered the battle with [obj+0x480] = %d "
                      "(0 = player 1, 1 = player 2, 2 = no side -- the spectator)",
                      g_room3_mode);
@@ -10012,7 +10217,7 @@ static void room3_log_update(void* ret, void* self, unsigned int st)
     unsigned char* mod = (unsigned char*)GetModuleHandleA(NULL);
     unsigned rva = (unsigned)((unsigned char*)ret - mod);
     room3_note_object(self, st);
-    room3_log_brains();            /* which Brain sits on each fighter, per client */
+    if (ROOM3_DIAG) room3_log_brains();   /* which Brain sits on each fighter -- see ROOM3_DIAG */
     InterlockedIncrement64(&g_room3_up_calls);
     g_room3_up_last = (LONG)st;
     g_room3_up_tick = GetTickCount64();
@@ -18809,6 +19014,7 @@ BOOL WINAPI DllMain(HINSTANCE h, DWORD reason, LPVOID res)
            a __fastfail or a hang-kill by WER all skip it -- so a marker that
            survives to the next launch is proof the last session ended badly. */
         crashlog_session_end();
+        log_drain_now();
     }
     return TRUE;
 }
