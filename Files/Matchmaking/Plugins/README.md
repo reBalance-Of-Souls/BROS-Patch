@@ -289,3 +289,128 @@ plugin's reads catch nothing.
 `mod` (+8), `log` (+0x10) and `claim` (+0x28). The shipped
 `Files/Matchmaking/dinput8.dll` assigns all four, and was checked to load it:
 `3 found, 3 armed, 0 declined ... 3 exe range(s) claimed, 0 refused`.
+
+---
+
+## pacing.dll — the game's frame limiters sleep instead of spinning, on a fixed schedule
+
+| | |
+|---|---|
+| size | 190,976 bytes |
+| sha256 | `fa231a86eafaf5c6550f693fd857516dc16a07aef252e6faa9224751075b2498` |
+| md5 | `11b0e916499bce8c57ac5b96cd6df307` |
+| `BrosPluginId()` | `725f4e3-20261006` |
+| built from | dev environment commit `725f4e3` (source), shipped there as `87c62b8` |
+| exports | `BrosPluginInit`, `BrosPluginId` — nothing else |
+| imports | `kernel32` (`CreateWaitableTimerExW`, `SetWaitableTimer`, `WaitForSingleObject`, `SwitchToThread`, `TlsAlloc`/`TlsGetValue`/`TlsSetValue`, `VirtualProtect`, `FlushInstructionCache`, `CreateThread`, `Sleep`, `GetModuleFileNameA`, `CreateFileA`, `ReadFile`, `GetFileAttributesA`, `CloseHandle`, ...) plus the UCRT forwarders; no registry, network, `LoadLibrary` or `GetProcAddress` imports |
+| source | `pacing_plugin.c`, beside this file |
+
+### What it fixes
+
+The game runs two frame limiters: one on the render loop (exe RVA `0x9E6FA0`)
+and one on the main thread (`0x9E7300`). Both are the same loop:
+
+```
+while ((now - mark) / 1000 < 1000000 / fps)
+    SwitchToThread();
+mark = now;
+```
+
+- The loop spins for the whole slack of every frame, on two threads, and
+  `SwitchToThread` gives the core to any other ready thread: the loop can get it
+  back a scheduler quantum late, past the frame's deadline.
+- `mark = now` keeps every overshoot, so the frame rate drifts below 60 and
+  never catches up.
+
+Measured on 2026-10-06 with two clients on one PC (Ryzen 7 2700X), each pinned
+to its own 4 cores, Byakuya mirror room match, ~5 minutes per battle:
+
+| build | fps, host / guest | frames over 33 ms per minute | 95th percentile frame |
+|---|---|---|---|
+| vanilla | 57.0 / 57.5 | 85 / 66 | 24.5 ms |
+| patch, before this plugin | 56.9 / 57.6 | 89 / 69 | 25.0 ms |
+| patch with this plugin | 59.8 / 59.7 | 4 / 6 | 18.4 ms |
+
+The patch measured the same as vanilla online: the drops come from the stock
+limiter, and vanilla has them too. In Training, one client: 58.5–58.9 fps and
+32–40 frames over 33 ms per minute before, 59.9–60.0 fps and 0–4 with the plugin.
+
+### What it does
+
+- **The wait.** The `SwitchToThread` call in each loop (`0x9E700D`, `0x9E7370`)
+  goes to a function that sleeps on a high-resolution waitable timer until about
+  1 ms before the frame is due, then spins on `PAUSE` without giving the core
+  away. The loop's own test still decides when the frame is due.
+- **The schedule.** Where the loop stores `mark = now` (`0x9E704B`, `0x9E73C0`),
+  the mark becomes the previous mark plus one frame interval, so one late frame
+  is made up by the next one. If a frame is a whole interval late, the mark is
+  set to now, so the game never plays a burst of catch-up frames. The interval
+  comes from the game's own frame-rate words (`[timer+0x80]`, `[timer+0x82]`),
+  read every frame.
+
+### What it does NOT touch
+
+- **Gameplay.** No simulation, input, netcode or data code is changed. Every frame
+  is still one game frame; only the moment the wait before it ends changes.
+- **Online sync.** Both players still advance one frame at a time and still wait
+  for each other's inputs exactly as before. The netcode's own pacing (PART 41 in
+  the loader) is unchanged.
+- **The exe on disk.** Nothing is written to any file. Remove the plugin and the
+  next launch is stock.
+
+### It declines rather than guesses
+
+It logs one line, writes nothing and returns 0 (stock limiters) if:
+
+- the host ABI is not 1, or the host does not offer `mod` / `log` / `alloc_near` / `claim`;
+- `pacing_off.txt` exists beside the exe (see below); it declines before claiming;
+- any of the 35 bytes at the four sites is not this exe's stock code;
+- `pacing.txt` says `wait 0` and `abs 0`;
+- the loader's claim registry refuses one of the four ranges (another plugin owns it);
+- no stub memory is available near the exe.
+
+On a Windows without high-resolution waitable timers (before Windows 10 1803) it
+keeps the stock `SwitchToThread` wait, because a plain timer wakes on the 15.6 ms
+tick, and only the schedule half applies. The log says so.
+
+### How a player turns it off
+
+Put a file named **`pacing_off.txt`** (any content) next to
+`BLEACH_Rebirth_of_Souls.exe` and relaunch. It is not a `.dll`, so the launcher's
+plugin mirror never deletes it. The log then says:
+
+```
+PACING: pacing_off.txt is beside the exe -- declined on purpose, stock frame limiters
+```
+
+Delete the file to turn it back on. For a test, `pacing.txt` beside the exe takes
+`wait 0` (stock wait, schedule kept) or `abs 0` (sleep kept, stock `mark = now`).
+
+### How to verify it applied
+
+In `<game>/patch_ranked.log`:
+
+1. `PACING: ARMED [725f4e3-20261006] -- wait 1 (high-resolution timer sleep, then PAUSE spin), abs 1 (absolute schedule) ...`
+2. `BROS/plugins: ... "pacing.dll" armed.`
+3. 30 s after the start, then every 5 minutes:
+   `PACING: 30 s -- 1799 waits slept on the timer, marks 3597 on schedule / 1 reset to now`.
+   About 3600 marks in 30 s means both loops ran at 60 frames per second. A few
+   resets are normal (loading screens).
+
+### How it was built
+
+Built from `pacing_plugin.c` (this folder) with the dev environment's
+`build_plugin.sh` and Zig, target `x86_64-windows-gnu`, from a `git archive` of the
+committed sources:
+
+```
+zig cc -target x86_64-windows-gnu -O2 -fms-extensions -Xclang -fasync-exceptions \
+       -Wno-date-time -shared -DPATCH_BUILD_ID="\"725f4e3-20261006\"" \
+       -o pacing.dll pacing_plugin.c
+```
+
+`bros_plugin.h` is not reproduced here. The plugin reads six of its fields: `abi`
+(+0), `size` (+4), `mod` (+8), `log` (+0x10), `alloc_near` (+0x18) and `claim`
+(+0x28), each checked against `size` before use. The shipped `Files/Matchmaking/dinput8.dll`
+(`e525118-stackscan`) was checked to load it: `4 found, 4 armed, 0 declined ...
+13 exe range(s) claimed, 0 refused`.
