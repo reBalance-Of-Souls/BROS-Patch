@@ -17920,6 +17920,9 @@ static DWORD WINAPI worker(LPVOID u)
  *  (`delay`), the delay nobody used is measured (NET/ahead), and the guest
  *  checks every host snapshot against its own simulation before adopting it
  *  (NET/snap) -- the groundwork for the symmetric delay scheme (NETCODE 05).
+ *  Build 3.2, 2026-10-08: `capture` -- the guest no longer throws away the
+ *  input it sampled right after a freeze (a bug in the game's own capture,
+ *  NETCODE_INPUTDROP_2026-10-08; see `capture` below).
  * ---------------------------------------------------------------------
  *  Research (static analysis of the live exe, md5 7b213566):
  *      D:\Development Log\NETCODE\00_OVERVIEW.md      <- start here
@@ -18039,6 +18042,30 @@ static DWORD WINAPI worker(LPVOID u)
  *              frames and parity is kept.
  *    probe  1  (build 3) The determinism check above. 0 leaves exe+0x80202C
  *              untouched.
+ *    capture 1 (build 3.2) The guest keeps the input it sampled right after
+ *              a freeze. Stock, SOnlineAction's capture (0x807190 -- at the
+ *              end of every tick, and on every ~100 us poll of a freeze,
+ *              0x801D18) files the guest's newest commands under the next
+ *              frame number `seq` only while map78 has no entry for it (find
+ *              0x1ADD00, then jne at 0x80725E), and the builder (0x1AC130)
+ *              sends `seq` only while seq <= F + D + 1. A freeze holds F, so
+ *              its first poll files the commands of the tick BEFORE the
+ *              freeze under `seq`; the first tick after it finds `seq` filed
+ *              and drops its own commands -- with every press the freeze
+ *              path latched for exactly that tick (0x801C9B..0x801CB9, read
+ *              by BrainPad at 0x410FCC) -- and `seq` goes out with the old
+ *              commands. One input lost per guest freeze, the one before it
+ *              played twice, on both PCs alike: no desync, the press is just
+ *              gone. The host has no such path (PushLocalInput skips only
+ *              while [cnd+0x68] == F, the frame its builder last built). The
+ *              smaller D of `sleep` and `delay` makes guest freezes frequent
+ *              (~4 a second at D 1 on 2026-10-06), so the old rare bug became
+ *              a common one. `capture 1` turns that jne into a two-byte nop:
+ *              the game's own try_emplace + assign then always runs, and
+ *              `seq` leaves with the newest sample. Nothing on the wire
+ *              changes; an unpatched host is unaffected. Not in the file:
+ *              on whenever `lock` is on (every New netcode file), off with the
+ *              game's own settings (CLASSIC writes lock 0).
  *
  *  Nothing here changes the simulation or the match code, and every packet
  *  stays readable by an unpatched peer, so there is no matchmaking pool shift
@@ -18054,7 +18081,9 @@ static DWORD WINAPI worker(LPVOID u)
  *  written by net_watch.
  *
  *  CLAIMED. Every exe byte written here is declared in the master's claim
- *  registry first, under "dinput8.dll (master)" -- six rows, see CLAIMS.md.
+ *  registry first, under "dinput8.dll (master)" -- seven rows, see the Dev
+ *  Environment's BERG_CLAIMS.md (CLAIMS.md there is another dev's file since
+ *  2026-10-03 and has only the first six).
  *  From DllMain the table is still empty, so a claim cannot be refused, and
  *  bros_claim's refusal path (the only one that logs) cannot run under the
  *  loader lock. Claiming this early is what keeps a plugin loaded later from
@@ -18092,6 +18121,8 @@ static DWORD WINAPI worker(LPVOID u)
 #define NET_RVA_GETPOS      0x8B5B80u   /* fighter position: the getter the host snapshots with (0x1AB4CE)  */
 #define NET_RVA_GETROT      0x8B5D00u   /* fighter rotation, Y at +4 (0x1AB4FB)                            */
 #define NET_RVA_FWK_PTR     0x1CFCB40u  /* FrameworkFullAsync singleton, read at 0x9E751F                  */
+/* build 3.2 */
+#define NET_RVA_CAPTURE_JNE 0x80725Eu   /* jne after find(map78, seq) in SOnlineAction's capture 0x807190    */
 
 /* The stock bytes each change replaces. A mismatch means a different exe or
    somebody else got there first: the change is refused, never forced. */
@@ -18104,6 +18135,12 @@ static const unsigned char NET_UPDATE_PRO[5] = { 0x48,0x89,0x4C,0x24,0x08 };    
 static const unsigned char NET_SETUP_PRO[5]  = { 0x48,0x89,0x5C,0x24,0x08 };           /* mov [rsp+8],rbx */
 /* The instruction the snapshot stub displaces, and runs again before jumping back. */
 static const unsigned char NET_SNAP_INS[6]   = { 0xF3,0x41,0x0F,0x10,0x56,0x24 };      /* movss xmm2,[r14+0x24] */
+/* build 3.2: the guest branch of the capture, 0x807245..0x80725F -- lea r11,[rax+0x78] / lea rdi,[rax+0xBC] /
+   mov rdx,rdi / mov rcx,r11 / call 0x1ADD00 / test rax,rax / jne 0x807282 -- and the nop that replaces the jne. */
+static const unsigned char NET_CAPTURE_STOCK[27] = { 0x4C,0x8D,0x58,0x78, 0x48,0x8D,0xB8,0xBC,0x00,0x00,0x00,
+                                                     0x48,0x8B,0xD7, 0x49,0x8B,0xCB, 0xE8,0xA5,0x6A,0x9A,0xFF,
+                                                     0x48,0x85,0xC0, 0x75,0x22 };
+static const unsigned char NET_CAPTURE_NOP[2]    = { 0x66, 0x90 };
 
 static int  g_net_cfg_lock = 1, g_net_cfg_sleep = 1, g_net_cfg_window = 8, g_net_cfg_file = 0;
 static int  g_net_on_lock = 0, g_net_on_sleep = 0, g_net_on_setup = 0, g_net_on_update = 0;
@@ -18111,6 +18148,8 @@ static int  g_net_window_live = 3;        /* what every new manager will carry a
 static int  g_net_cfg_delay = 0, g_net_cfg_probe = 1;           /* build 3 */
 static int  g_net_on_probe = 0;
 static const char* g_net_why_probe = "off (probe 0)";
+static int  g_net_cfg_capture = -1, g_net_on_capture = 0;   /* build 3.2; -1 = not in the file */
+static const char* g_net_why_capture = "off";
 static char g_net_early[768];
 static unsigned char* g_net_mod;
 
@@ -18439,6 +18478,7 @@ static void net_read_cfg(void)
         else if (!strcmp(key, "window")) g_net_cfg_window = val;
         else if (!strcmp(key, "delay"))  g_net_cfg_delay  = val;
         else if (!strcmp(key, "probe"))  g_net_cfg_probe  = val ? 1 : 0;
+        else if (!strcmp(key, "capture")) g_net_cfg_capture = val ? 1 : 0;
         while (*p && *p != '\n') p++;
     }
     if (g_net_cfg_sleep  < 1)  g_net_cfg_sleep  = 1;
@@ -18524,10 +18564,27 @@ static int net_early_install(void)
 
     if (g_net_cfg_probe) g_net_why_probe = net_snap_install();
 
+    /* build 3.2: the guest's own-input capture (`capture` in the header). Not in
+       the file: with the New netcode, which is every file that turns `lock` on. */
+    if (g_net_cfg_capture < 0) g_net_cfg_capture = g_net_cfg_lock ? 1 : 0;
+    if (g_net_cfg_capture) {
+        if (memcmp(g_net_mod + NET_RVA_CAPTURE_JNE - 25, NET_CAPTURE_STOCK, sizeof(NET_CAPTURE_STOCK)) != 0)
+            g_net_why_capture = "REFUSED, exe+0x807245 is not the stock capture";
+        else if (!bros_claim(BROS_MASTER_OWNER, NET_RVA_CAPTURE_JNE, 2,
+                             "PART 41 NETTEST: the guest's own-input capture keeps the newest sample "
+                             "(jne after find(map78, seq) in SOnlineAction 0x807190 -> 2-byte nop)"))
+            g_net_why_capture = "REFUSED, the bytes are claimed by another owner";
+        else if (net_poke(NET_RVA_CAPTURE_JNE, NET_CAPTURE_NOP, 2)) {
+            g_net_on_capture = 1;
+            g_net_why_capture = "applied (the guest keeps the input sampled after a freeze)";
+        } else
+            g_net_why_capture = "REFUSED, VirtualProtect failed";
+    }
+
     snprintf(g_net_early, sizeof(g_net_early),
              "NET: bros_net.txt %s -> lock %d, sleep %d ms, window %d, delay %d | lock %s | "
              "sleep %s | window %s (%d, stock 3) | delay %s | period probe %s | battle probe %s | "
-             "snapshot check %s",
+             "snapshot check %s | capture %s",
              g_net_cfg_file ? "read" : "absent, defaults",
              g_net_cfg_lock, g_net_cfg_sleep, g_net_cfg_window, g_net_cfg_delay,
              g_net_on_lock ? "ON (Send + Update share one lock)"
@@ -18537,7 +18594,7 @@ static int net_early_install(void)
                                   : (g_net_on_setup ? "applied (D lowered at every battle's setup)"
                                                     : "NOT applied: the battle probe is off"),
              g_net_on_update ? "on" : "FAILED", g_net_on_setup ? "on" : "FAILED",
-             g_net_why_probe);
+             g_net_why_probe, g_net_why_capture);
     return 1;
 }
 
@@ -18723,7 +18780,7 @@ static void net_match_line(const char* why, LONG64 now)
     log_line("NET/match #%d %s -- %s | %s from RTT' %ld ms | battle time %lldm %02llds | "
              "network stalls %lld, felt %lld = %.1f/min, longest %lld ms | %s | "
              "frozen %.2f s (%.1f%%), network %.2f s | frame 0 waited %lld ms%s | "
-             "window %ld, lock %s, sleep %d ms",
+             "window %ld, lock %s, sleep %d ms, capture %s",
              g_nm.seq, net_side(g_nm.mode), why, dtxt, (long)g_nm.lat,
              (long long)(secs / 60), (long long)(secs % 60),
              (long long)g_nm.cls_n[NET_CLS_NET], (long long)g_nm.cls_felt[NET_CLS_NET],
@@ -18731,7 +18788,7 @@ static void net_match_line(const char* why, LONG64 now)
              (long long)g_nm.cls_longest[NET_CLS_NET], hist,
              froz, bsec > 0 ? 100.0 * froz / bsec : 0.0, g_nm.cls_ms[NET_CLS_NET] / 1000.0,
              (long long)g_nm.first_wait_ms, tail, (long)g_nm.W, g_net_on_lock ? "on" : "off",
-             g_net_on_sleep ? g_net_on_sleep : 8);
+             g_net_on_sleep ? g_net_on_sleep : 8, g_net_on_capture ? "on" : "off");
     snprintf(who, sizeof(who), "#%d", g_nm.seq);
     net_loop_line(who, g_nm.period0, g_nm.lk_e0, g_nm.lk_m0, g_nm.lk_g0);
 }
