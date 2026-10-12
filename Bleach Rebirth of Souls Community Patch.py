@@ -173,9 +173,13 @@ try:
 
 
     try:
+        # A player's update is the fetch + reset --hard inside pulling_from_git(), so the
+        # `git pull` after it always answers "Already up to date.": only a DevToken user's
+        # update shows in that text. The commit moving is what tells an update landed.
+        _head_before = get_snapshot()
         result = pulling_from_git()
         output = result.stdout.strip()
-        if "Already up to date." in output:
+        if "Already up to date." in output and get_snapshot() == _head_before:
             pass
 
         # An update that lands new launcher code cannot take effect in THIS

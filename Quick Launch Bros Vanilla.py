@@ -74,7 +74,7 @@ def pulling_from_git():
     return subprocess.run(["git", "-C", BASE_DIR, "pull"], check=True, capture_output=True, text=True)
 
 
-def _relaunch_if_code_changed(result):
+def _relaunch_if_code_changed(result, head_before=None):
     """A pull that lands new launcher code cannot take effect in this process.
 
     Python already holds the old module in memory, so the run that fetches an
@@ -82,7 +82,13 @@ def _relaunch_if_code_changed(result):
     exactly how new data can land while the code that installs it does not. So
     re-exec once, marked, so a pull that keeps reporting changes cannot loop."""
     try:
-        if result is None or "Already up to date." in (result.stdout or ""):
+        # A player's update is the fetch + reset --hard inside pulling_from_git(), so the
+        # `git pull` after it always answers "Already up to date.": only a DevToken user's
+        # update shows in that text. The commit moving is what tells an update landed.
+        if result is None:
+            return
+        if "Already up to date." in (result.stdout or "") and \
+                (head_before is None or get_snapshot() == head_before):
             return
         if os.environ.get("BROS_LAUNCHER_RELAUNCHED") == "1":
             return
@@ -440,7 +446,8 @@ def launch_patched(target_path):
 
 
 def launch(gameVersion):
-    _relaunch_if_code_changed(pulling_from_git())
+    _head_before = get_snapshot()
+    _relaunch_if_code_changed(pulling_from_git(), _head_before)
     if not os.path.exists(os.path.join(BASE_DIR,"GameModes","TeamBattle","TokenOpen.txt")):
         config["TEAM_BATTLE"] = "OFF"
     try:
