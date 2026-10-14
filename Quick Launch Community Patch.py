@@ -172,6 +172,7 @@ def revert_foreign_overlay(game_path, gameVersion):
     prev = list(state.get("overlay", []))
     if not prev:
         return 0
+    created = set(state.get("beta_created", []))   # made by the beta: no stock copy ever existed
     backup_root = os.path.join(game_path, "_launcher_vanilla_backup")
     restored, left = 0, []
     for rel in prev:
@@ -182,7 +183,7 @@ def revert_foreign_overlay(game_path, gameVersion):
                 shutil.copy2(bak, dst)
                 os.remove(bak)
                 restored += 1
-            elif os.path.exists(dst) and rel in _OVERLAY_ALWAYS_REMOVE:
+            elif os.path.exists(dst) and (rel in _OVERLAY_ALWAYS_REMOVE or rel in created):
                 os.remove(dst)
                 restored += 1
             elif os.path.exists(dst):
@@ -193,6 +194,8 @@ def revert_foreign_overlay(game_path, gameVersion):
             print(f"[overlay] could not revert {rel}: {e}")
             left.append(rel)
     state["overlay"] = sorted(left)
+    if "beta_created" in state:
+        state["beta_created"] = sorted(created & set(left))
     state["version"] = gameVersion
     try:
         with open(state_path, "w") as f:

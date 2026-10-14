@@ -51,6 +51,7 @@ def revert_foreign_overlay(game_path, gameVersion):
     prev = list(state.get("overlay", []))
     if not prev:
         return 0
+    created = set(state.get("beta_created", []))   # made by the beta: no stock copy ever existed
     backup_root = os.path.join(game_path, "_launcher_vanilla_backup")
     restored, left = 0, []
     for rel in prev:
@@ -61,7 +62,7 @@ def revert_foreign_overlay(game_path, gameVersion):
                 shutil.copy2(bak, dst)
                 os.remove(bak)
                 restored += 1
-            elif os.path.exists(dst) and rel in _OVERLAY_ALWAYS_REMOVE:
+            elif os.path.exists(dst) and (rel in _OVERLAY_ALWAYS_REMOVE or rel in created):
                 os.remove(dst)
                 restored += 1
             elif os.path.exists(dst):
@@ -72,6 +73,8 @@ def revert_foreign_overlay(game_path, gameVersion):
             print(f"[overlay] could not revert {rel}: {e}")
             left.append(rel)
     state["overlay"] = sorted(left)
+    if "beta_created" in state:
+        state["beta_created"] = sorted(created & set(left))
     state["version"] = gameVersion
     try:
         with open(state_path, "w") as f:
@@ -120,6 +123,14 @@ try:
         _match_pool = None
         _match_pool_error = str(_e)
 
+
+    # The invite-only beta (launcher/beta.py, 2026-10-14): a hidden page reached by a key sequence, a code handshake
+    # with the beta's keygen, and an encrypted Dev build published as release assets, outside this repository's git
+    # tree. Optional: without the module the launcher is exactly what it was.
+    try:
+        from launcher import beta as _beta
+    except Exception:
+        _beta = None
 
     class MatchmakingError(Exception):
         """setup_matchmaking() could not put the loader or the pool code in place: no launch."""
@@ -843,6 +854,15 @@ try:
             bootMode = None
 
     def _launch_impl(gameVersion):
+        # The beta first: a failed update (no connection) must not stop it, since it can start offline from the
+        # build already downloaded.
+        if _beta and gameVersion == _beta.BETA_NAME:
+            try:
+                pulling_from_git()
+            except Exception as e:
+                print(f"[beta] launcher update skipped ({e}); the beta starts with what is on disk")
+            _launch_beta()
+            return
         pulling_from_git()
         if not os.path.exists(os.path.join(BASE_DIR,"GameModes","TeamBattle","TokenOpen.txt")):
             config["TEAM_BATTLE"] = "OFF"
@@ -992,6 +1012,110 @@ try:
 
         window.destroy()
 
+
+
+    # ---- The invite-only beta: launch path (launcher/beta.py) ------------------------------------------------------
+    def _beta_run(task, first_text="Checking for the latest beta build..."):
+        """Run task(progress) in a worker thread behind a small modal progress window; returns (result, error).
+        The worker never touches a widget: the window reads its progress object. Closing the window, or Cancel,
+        asks the worker to stop, and the window stays until it has."""
+        import threading
+        result = {}
+        prog = _beta.Progress()
+
+        def work():
+            try:
+                result["r"] = task(prog)
+            except Exception as e:
+                result["e"] = e
+
+        dlg = Toplevel(window)
+        dlg.title("Beta")
+        dlg.config(bg=bgcolor)
+        dlg.transient(window)
+        lab = Label(dlg, text=first_text, font=FONT_BODY, bg=bgcolor, fg=labelcolor,
+                    padx=24, pady=18, wraplength=420, justify="left")
+        lab.pack()
+
+        def cancel():
+            prog.cancel.set()
+            lab.config(text="Cancelling...")
+        mkbutton(dlg, "Cancel", cancel, kind="ghost").pack(pady=(0, 14), padx=24, fill=X)
+        dlg.protocol("WM_DELETE_WINDOW", cancel)
+        dlg.grab_set()
+        worker = threading.Thread(target=work, daemon=True)
+        worker.start()
+
+        def poll():
+            if worker.is_alive():
+                if not prog.cancel.is_set():
+                    phase, done, total = prog.snapshot()
+                    lab.config(text=phase + (f"\n{done / 1e6:,.0f} of {total / 1e6:,.0f} MB" if total else ""))
+                dlg.after(250, poll)
+            else:
+                dlg.grab_release()
+                dlg.destroy()
+        poll()
+        window.wait_window(dlg)
+        return result.get("r"), result.get("e")
+
+    def _launch_beta():
+        """The beta version: its build (downloaded first when needed) installed by launcher/beta.py, then the same
+        FPS booster files, netcode switch and direct start as any other version. Game modes and Team Battle stay off
+        for it: their tables are this repository's CharaStatus.fsv, not the beta's, and would replace its roster."""
+        if not _beta.is_active(BASE_DIR):
+            messagebox.showerror("Beta", "This install is not activated for the beta.")
+            return
+
+        def task(prog):
+            note = None
+            try:
+                m = _beta.sync(BASE_DIR, prog, game_path)
+            except _beta.Cancelled:
+                raise
+            except _beta.BetaError as e:
+                # no connection, a revoked slot, a damaged download: the build already downloaded still plays
+                m = _beta.cached_manifest(BASE_DIR)
+                if m is None:
+                    raise
+                note = str(e)
+            _beta.install(BASE_DIR, game_path, m, progress=prog)
+            return note
+
+        note, err = _beta_run(task)
+        if err is not None:
+            if not isinstance(err, _beta.Cancelled):
+                messagebox.showerror("Beta", f"{err}\n\nThe game was not started.")
+            return
+        if note:
+            messagebox.showwarning("Beta", f"{note}\n\nStarting the beta build you already have.")
+        try:
+            shutil.copytree(os.path.join(BASE_DIR,"Files","Spec Mod",'reverse_globe',f'{config["reverse_globe"]}',"high"),
+                        os.path.join(game_path,"00HIGH","Effect","spfx","com"),dirs_exist_ok=True)
+            shutil.copytree(os.path.join(BASE_DIR,"Files","Spec Mod",'reverse_globe',f'{config["reverse_globe"]}',"middle"),
+                        os.path.join(game_path,"01MIDDLE","Effect","spfx","com"),dirs_exist_ok=True)
+            for folder in os.listdir(os.path.join(BASE_DIR,"Files","Spec Mod")):
+                if folder != "reverse_globe":
+                    injectPerformanceFiles(folder,config[folder])
+            # after every copy, as the Dev launcher does: stray effect banks out of the Effect folders
+            _beta.sweep_effect_strays(game_path)
+        except Exception as e:
+            messagebox.showerror("Launch Error", f"The beta could not be installed:\n\n{e}\n\nThe game was not started.")
+            return
+        if gameMode != "DEFAULT" or config.get("TEAM_BATTLE") == "ON":
+            print("[beta] game modes and Team Battle are off for the beta")
+        if _netcode_mode:
+            try:
+                _netcode_mode.launch_step(BASE_DIR, game_path, [_beta.BETA_NAME],
+                                          os.path.join(game_path, "dinput8.dll"))
+            except _netcode_mode.NetcodeError as e:
+                messagebox.showerror(
+                    "Launch Error",
+                    f"The New netcode switch could not be applied:\n\n{e}\n\n"
+                    "The game was NOT started. Fix the cause and launch again.")
+                return
+        launch_patched(game_path)
+        window.destroy()
 
 
     def readBalanceChanges():
@@ -1631,10 +1755,122 @@ try:
     reworksBackToMenuButton = mkbutton(reworksPage, "Back to menu", lambda: mainPage.tkraise(), kind="ghost", icon="←")
     reworksBackToMenuButton.pack(pady=paddingYvalue, fill=X)
 
+    # ---- The invite-only beta: its page, reached only by the key sequence (launcher/beta.py) -------------------------
+    if _beta:
+        betaPage = Frame(container, bg=bgcolor)
+        build_header(betaPage, icon="🧪").pack()
+        betaOuter, betaInner = make_card(betaPage, "Beta access")
+        betaStatus = Label(betaInner, text="", font=FONT_BODY, bg=PANEL, fg=labelcolor, wraplength=470, justify="left")
+        betaStatus.pack(anchor="w", pady=(0, 8))
+        Label(betaInner, text="1.  Send this request code to the beta's organiser:", font=FONT_SMALL, bg=PANEL,
+              fg=TEXT_MUTED).pack(anchor="w")
+        betaRequestVar = StringVar()
+        Entry(betaInner, textvariable=betaRequestVar, font=FONT_MONO, state="readonly", readonlybackground=PANEL_SOFT,
+              fg=labelcolor, relief=FLAT).pack(fill=X, pady=(2, 4), ipady=3)
+
+        def _beta_copy_request():
+            window.clipboard_clear()
+            window.clipboard_append(betaRequestVar.get())
+            betaStatus.config(text="Request code copied. Paste it in your message to the organiser.")
+        mkbutton(betaInner, "Copy the request code", _beta_copy_request, icon="📋").pack(fill=X, pady=(0, 10))
+        Label(betaInner, text="2.  Paste the activation code you get back:", font=FONT_SMALL, bg=PANEL,
+              fg=TEXT_MUTED).pack(anchor="w")
+        betaCodeVar = StringVar()
+        Entry(betaInner, textvariable=betaCodeVar, font=FONT_MONO, bg=PANEL_SOFT, fg=labelcolor,
+              insertbackground=labelcolor, relief=FLAT).pack(fill=X, pady=(2, 4), ipady=3)
+
+        def _beta_add_to_list():
+            vals = list(brosVersionList.cget("values"))
+            if _beta.BETA_NAME not in vals:
+                vals.insert(1 if vals else 0, _beta.BETA_NAME)
+                brosVersionList.configure(values=vals)
+
+        def _beta_refresh():
+            if not _beta.available():
+                betaRequestVar.set("")
+                betaStatus.config(text="The beta runs on Windows only.")
+                return
+            try:
+                betaRequestVar.set(_beta.request_code(BASE_DIR))
+            except Exception as e:
+                betaRequestVar.set("")
+                betaStatus.config(text=f"No request code could be made on this PC: {e}")
+                return
+            lic = None
+            try:
+                lic = _beta.license_info(BASE_DIR)
+            except Exception:
+                pass
+            if lic:
+                betaStatus.config(text=f"This install is activated (tester slot {lic['slot']}). "
+                                       f"'{_beta.BETA_NAME}' is in the version list on the main page.")
+            else:
+                betaStatus.config(text="This install is not activated yet. A code works only on the PC and install "
+                                       "that showed the request code; a reinstall needs a new one.")
+
+        def _beta_activate():
+            code = betaCodeVar.get().strip()
+            if not code:
+                return
+            try:
+                slot = _beta.activate(BASE_DIR, code)
+            except Exception as e:
+                messagebox.showerror("Beta", str(e))
+                return
+            betaCodeVar.set("")
+            _beta_add_to_list()
+            _beta_refresh()
+            messagebox.showinfo("Beta", f"Activated (tester slot {slot}).\n\nPick '{_beta.BETA_NAME}' in the version "
+                                        "list and launch. The first launch downloads about 2 GB.")
+
+        def _beta_download_now():
+            if not _beta.is_active(BASE_DIR):
+                messagebox.showerror("Beta", "Activate this install first.")
+                return
+            _r, err = _beta_run(lambda prog: _beta.sync(BASE_DIR, prog, game_path))
+            if err is None:
+                messagebox.showinfo("Beta", "The beta is downloaded and up to date.")
+            elif not isinstance(err, _beta.Cancelled):
+                messagebox.showerror("Beta", str(err))
+
+        def _beta_free():
+            if messagebox.askyesno("Beta", "Delete the downloaded beta files? The activation stays, and the next beta "
+                                           "launch downloads them again."):
+                try:
+                    freed = _beta.forget_cache(BASE_DIR)
+                except Exception as e:
+                    messagebox.showerror("Beta", str(e))
+                    return
+                messagebox.showinfo("Beta", f"{freed / 1e9:.1f} GB freed.")
+
+        mkbutton(betaInner, "Activate", _beta_activate, kind="primary", icon="🔑").pack(fill=X, pady=(0, 10))
+        mkbutton(betaInner, "Download or update the beta now", _beta_download_now, icon="⬇").pack(fill=X, pady=(0, 4))
+        mkbutton(betaInner, "Delete the downloaded beta files", _beta_free, kind="ghost", icon="🗑").pack(fill=X)
+        betaOuter.pack(fill=X, pady=(0, 7))
+        mkbutton(betaPage, "Back to menu", lambda: mainPage.tkraise(), kind="ghost", icon="←")\
+            .pack(pady=paddingYvalue, fill=X)
+
+        def _beta_open():
+            _beta_refresh()
+            betaPage.tkraise()
+
+        _beta_keys = []
+
+        def _beta_keypress(event):
+            _beta_keys.append(event.keysym)
+            del _beta_keys[:-_beta.SEQUENCE_LEN]
+            if len(_beta_keys) == _beta.SEQUENCE_LEN and _beta.is_sequence(_beta_keys):
+                _beta_keys.clear()
+                _beta_open()
+
+        window.bind_all("<KeyPress>", _beta_keypress, add="+")
+        if _beta.is_active(BASE_DIR):
+            _beta_add_to_list()
+
     # Let the stacked pages fill the whole container (so buttons stretch to width).
     container.grid_rowconfigure(0, weight=1)
     container.grid_columnconfigure(0, weight=1)
-    for page in(mainPage,settingsPage,gameModesPage,repairPage,reworksPage):
+    for page in(mainPage,settingsPage,gameModesPage,repairPage,reworksPage) + ((betaPage,) if _beta else ()):
         page.grid(row=0,column=0,sticky="nsew")
     mainPage.tkraise()
 
