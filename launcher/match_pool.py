@@ -35,7 +35,9 @@ import os
 import subprocess
 import zlib
 
-POOL_REV = 1
+# 2: 2026-10-14, the New netcode's bros_net.txt is written at delay 0 instead of -1 -- a player on the previous
+#    launcher would otherwise still play one frame short against everyone who updated.
+POOL_REV = 2
 
 LOADER = "Files/Matchmaking/dinput8.dll"
 PLUGINS = "Files/Matchmaking/Plugins/"

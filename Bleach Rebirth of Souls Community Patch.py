@@ -1593,7 +1593,7 @@ try:
         netcodeInner,
         text=f'New netcode : (Currently {"ON" if netcodeOn else "OFF"})',
         command=netcodeFunc,
-        tooltip="ON (the default): the Rebalance netcode -- a lock around the send queues, the network thread every 1 ms, 8 inputs per packet and one frame off the input delay. OFF: the game's own netcode. Takes effect at the next game start. A match between a player with it ON and one with it OFF is safe."
+        tooltip="ON (the default): the Rebalance netcode -- a lock around the send queues, the network thread every 1 ms and 8 inputs per packet, at the input delay the game computes. OFF: the game's own netcode. Takes effect at the next game start. A match between a player with it ON and one with it OFF is safe."
     )
     netcodeButton.pack(pady=(paddingYvalue,0), fill=X)
     if not _netcode_mode:
