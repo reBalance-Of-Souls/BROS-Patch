@@ -88,6 +88,49 @@ def revert_foreign_overlay(game_path, gameVersion):
     return restored
 
 
+# ---------------------------------------------------------------------------
+# The exe a development launch patched
+#
+# A development launch of a version with an exe recipe (Exe/exe_patch.recipe)
+# also patches BLEACH_Rebirth_of_Souls.exe, keeps the stock copy in
+# _launcher_vanilla_backup and sets "exe": true in launcher_patch_state.json.
+# revert_foreign_overlay() never looked at it, so the next launch here ran this
+# patch's loader on the development exe, and the game crashed at exe+0x8B3092
+# as the room match or training screen opened (a player's report, 2026-10-15:
+# 13 crashes in a row). Same rule as the beta (launcher/beta.py): put the stock
+# copy back and keep it. Without a stock copy the exe is left as it is and the
+# player is told to verify the game files in Steam.
+# ---------------------------------------------------------------------------
+def revert_foreign_exe(game_path):
+    state_path = os.path.join(game_path, "launcher_patch_state.json")
+    try:
+        with open(state_path, "r") as f:
+            state = json.load(f)
+    except Exception:
+        return False                   # no state file: no launcher ever patched the exe
+    if not state.get("exe"):
+        return False
+    exe = os.path.join(game_path, "BLEACH_Rebirth_of_Souls.exe")
+    bak = os.path.join(game_path, "_launcher_vanilla_backup", "BLEACH_Rebirth_of_Souls.exe")
+    if not os.path.exists(bak):
+        print("[exe] a development launch patched the game exe and left no stock copy: "
+              "verify the game files in Steam before playing")
+        return False
+    try:
+        shutil.copy2(bak, exe)
+    except Exception as e:
+        print(f"[exe] could not put the stock exe back: {e}")
+        return False
+    state["exe"] = False
+    try:
+        with open(state_path, "w") as f:
+            json.dump(state, f, indent=1)
+    except Exception as e:
+        print(f"[exe] could not write patch state: {e}")
+    print("[exe] the exe a development launch patched put back to stock")
+    return True
+
+
 
 try:
     import requests
@@ -874,6 +917,7 @@ try:
             vanilla = (gameVersion == "Bleach Rebirth of Souls")
             #folder injection
             revert_foreign_overlay(game_path, gameVersion)
+            revert_foreign_exe(game_path)
             injectFolder(gameVersion,"Script")
             injectFolder(gameVersion,"Motion")
             injectFolder(gameVersion,"00HIGH",False)
