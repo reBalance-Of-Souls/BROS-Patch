@@ -4,7 +4,7 @@ IN THE LAUNCHER. The Game Modes page has a "New netcode" switch, independent of 
 kept in Json/netcode.json and applied to <game>\\bros_net.txt when it is switched and at every launch that installs the
 master dinput8.dll (the main launcher and the Quick Launch scripts; BalanceInit through Quick Launch Community Patch):
 
-  ON (the default)   NEW: lock 1, sleep 1, window 8, delay 0, probe 1 (build 3). A player who switched ON themselves
+  ON (the default)   NEW: lock 1, sleep 8, window 8, delay 0, probe 1 (build 3). A player who switched ON themselves
                      gets the launched version's own bros_net.txt instead, if its Overlay ships one (V1.2's, which
                      carries the current delay test block); the default never hands out a version's test block.
   OFF                CLASSIC is written: lock 0, sleep 8, window 3, delay 0, probe 0 -- the shipped game's values.
@@ -25,11 +25,11 @@ are NEW at delay 0; that is why OFF is written out explicitly. A switch takes ef
            no lock around the send queues, the network thread sleeps 8 ms between passes, 3 inputs per packet, the input
            delay the game computes, no determinism check. The master still MEASURES (its NET lines in patch_ranked.log:
            stalls, the network thread's period), so the two netcodes can be compared like for like.
-  NEW      lock 1, sleep 1, window 8, delay 0, probe 1 -- build 3 (NETCODE 04): one lock around the send queues, the
-           network thread every 1 ms (with the timer at 1 ms), 8 inputs per packet, the input delay the game
-           computes, the guest's determinism check. From 2026-09-29 to 2026-10-14 NEW was written with delay -1
-           (one frame off the input delay); a file with those values (EARLIER) is still the launcher's own, never
-           a hand edit.
+  NEW      lock 1, sleep 8, window 8, delay 0, probe 1 -- build 3 (NETCODE 04): one lock around the send queues, the
+           network thread at the game's own 8 ms, 8 inputs per packet, the input delay the game computes, the
+           guest's determinism check. Until 2026-10-15 NEW ran the network thread every 1 ms (sleep 1), and from
+           2026-09-29 to 2026-10-14 one frame off the input delay (delay -1); files with those values (EARLIER)
+           are still the launcher's own, never a hand edit.
 
 Both seats of a match may use different netcodes: every packet stays readable by the other side (window: the receivers
 skip entries they already have; lock and sleep are local; each seat computes and uses its own input delay -- NETCODE 04
@@ -82,8 +82,12 @@ CLASSIC = (0, 8, 3, 0, 0)                    # the shipped game ("`lock 0`, `sle
 # delay -1: one frame off the input delay (2026-09-29). delay -2 was tried in real matches the same day (5a3249a) and
 # dropped. As guest at RTT' 68 it ran D 2 with ~5,500 micro-stalls per battle (about one frame in three waiting a few
 # ms) and 2 % frozen time, and the user found some dashes hard to get out. delay -1 in real play: 77-170 stalls, 0.06 %.
-NEW = (1, 1, 8, 0, 1)                        # build 3 at the input delay the game computes (delay -1 until 2026-10-14)
-EARLIER = {(1, 1, 8, -1, 1), (1, 1, 8, -2, 1)}  # NEW as the launcher wrote it before: still its own file, not a hand edit
+# sleep 8 since 2026-10-15. With sleep 1 the other side's next input is nearly always in hand a frame early, and at
+# low ping (D 1) that alone trips the game's speed-up rule (NETCODE 02 §5.1: faster than 60 Hz as soon as more than
+# D/2 inputs wait), so the game ran at 72 Hz on 66-74% of frames: 30-38 fps instead of 54-59 on the rig (two
+# clients on one PC, 2 to 4 cores each, fights only). sleep 8: 72 Hz on 0-12% of frames. The game sleeps 8 ms too.
+NEW = (1, 8, 8, 0, 1)                        # build 3, network thread at 8 ms (sleep 1 until 2026-10-15)
+EARLIER = {(1, 1, 8, 0, 1), (1, 1, 8, -1, 1), (1, 1, 8, -2, 1)}  # NEW as the launcher wrote it before: its own file
 
 TEXT = {
     "classic": (
@@ -95,11 +99,11 @@ TEXT = {
         "# bros_net.txt -- NEW: the Rebalance netcode, build 3 (NETCODE 04). Written by the netcode toggle (the launcher or\n"
         "# netcode_mode.py).\n"
         "# The master (dinput8.dll, PART 41) reads this once, at game start.\n"
-        "# lock 1: one lock around the send queues (the shipped game has none); sleep 1: the network thread every 1 ms\n"
-        "# instead of 8; window 8: 8 inputs per packet instead of 3; delay 0: the input delay the game computes;\n"
+        "# lock 1: one lock around the send queues (the shipped game has none); sleep 8: the network thread every 8 ms,\n"
+        "# as in the game; window 8: 8 inputs per packet instead of 3; delay 0: the input delay the game computes;\n"
         "# probe 1: the guest checks each host snapshot against its own simulation before adopting it\n"
         "# (measurement only).\n"
-        "lock 1\nsleep 1\nwindow 8\ndelay 0\nprobe 1\n"),
+        "lock 1\nsleep 8\nwindow 8\ndelay 0\nprobe 1\n"),
 }
 WANT = {"classic": CLASSIC, "new": NEW}
 
