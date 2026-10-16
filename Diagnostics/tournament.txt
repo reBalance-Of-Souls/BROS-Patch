@@ -1,0 +1,7 @@
+# Diagnostics/tournament.txt -- Berg's switch for the tournament recorder (see README.md in this folder).
+# on 1: every player who has not switched it off on the Game Modes page records; on 0: nobody does.
+# There is no time window: it stays on until this file says on 0 (or is deleted).
+on 1
+tournament 2026-10-16
+salt 88e17152a74e7199
+upload https://bros-diag.t5997zgswb.workers.dev/upload

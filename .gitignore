@@ -20,3 +20,8 @@ Json/netcode.json.tmp
 
 # The invite-only beta's per-install state and its encrypted download cache (launcher/beta.py).
 Json/beta/
+
+# The tournament recorder's per-player switch (launcher/diagnostics.py, the Game Modes page): absent = ON,
+# the default. Each player's own, never committed.
+Json/diagnostics.json
+Json/diagnostics.json.tmp

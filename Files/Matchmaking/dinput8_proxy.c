@@ -56,6 +56,7 @@
  *      patch_fast_boot          boot skips the clickable auto-save notice
  *      patch_skip_logos         boot skips the four publisher logo animations
  *      patch_boot_training      boot lands on Training, or on the room-match menu [OFF by default]
+ *      NETDIAG (PART 43)        the tournament recorder: armed only by bros_diag.txt, sends nothing
  *  Rebuild with build_dinput8.bat and check patch_ranked.log for one line
  *  per patch. See the header of each patch_* function for its anchors.
  * ---------------------------------------------------------------------
@@ -1053,6 +1054,13 @@ static NumMembers_t     o_NumMembers     = NULL;
 static SlotsFilter_t    o_SlotsFilter    = NULL;
 static SetMemberLimit_t o_SetMemberLimit = NULL;
 static SetJoinable_t    o_SetJoinable    = NULL;
+/* PART 43 (NETDIAG), read by the P2P hooks below -- see PART 43's header. All zero, and untouched, unless
+   bros_diag.txt armed the recorder. */
+static volatile LONG   g_diag_on = 0;                 /* 1 once the recorder is armed               */
+static volatile LONG64 g_diag_txb[8], g_diag_rxb[8];  /* bytes per peer slot, both ways             */
+static volatile LONG64 g_diag_rxq[8];                 /* qpc of the peer's previous packet          */
+static volatile LONG64 g_diag_gap[8];                 /* the longest gap since the recorder last read */
+static volatile LONG   g_diag_members = -1;           /* the room's member count, as the UI polls it  */
 
 /* The two numbers that say whether a third client ever reached the lobby layer
    at all. Slots 17 and 32 are not hooked, so this cannot recurse. */
@@ -1074,6 +1082,7 @@ static int hk_NumMembers(void* self, uint64_t lobby)
 {
     static int last = -1;
     int n = o_NumMembers(self, lobby);
+    if (g_diag_on) g_diag_members = n;   /* PART 43 */
     g_room3_mm = self; g_room3_lobby = lobby;   /* what the P2P watch needs */
     if (n != last) {
         last = n;
@@ -1258,6 +1267,7 @@ static unsigned char hk_SendP2P(void* self, uint64_t remote, const void* data,
         }
     }
     if (i >= 0) g_p2p_sent[i]++;
+    if (i >= 0 && g_diag_on) InterlockedExchangeAdd64(&g_diag_txb[i], (LONG64)cub);   /* PART 43 */
     if (i >= 0 && data && cub)
         g_p2p_tx3[i][room3_stream_col(((const unsigned char*)data)[0])]++;
     if (data && cub) {
@@ -1286,6 +1296,22 @@ static unsigned char hk_ReadP2P(void* self, void* dest, unsigned int cubDest,
         int i = room3_peer_slot(*remote);
         if (i >= 0) {
             g_p2p_recv[i]++;
+            if (g_diag_on) {                     /* PART 43: bytes, and the gap since this peer's last packet */
+                LARGE_INTEGER q;
+                LONG64 prev, gap, mx;
+                QueryPerformanceCounter(&q);
+                if (msgsize) InterlockedExchangeAdd64(&g_diag_rxb[i], (LONG64)*msgsize);
+                prev = InterlockedExchange64(&g_diag_rxq[i], q.QuadPart);
+                if (prev) {
+                    gap = q.QuadPart - prev;
+                    mx = g_diag_gap[i];
+                    while (gap > mx) {
+                        LONG64 seen = InterlockedCompareExchange64(&g_diag_gap[i], gap, mx);
+                        if (seen == mx) break;
+                        mx = seen;
+                    }
+                }
+            }
             if (dest && msgsize && *msgsize) {
                 unsigned char t = ((unsigned char*)dest)[0];
                 g_p2p_rx3[i][room3_stream_col(t)]++;
@@ -1314,6 +1340,24 @@ typedef struct {
     unsigned int   remote_ip;
     unsigned short remote_port;
 } room3_p2p_t;
+
+/* PART 43 (NETDIAG): each lobby member's latest P2P session state, published by the P2P watch below for the
+   recorder's thread, in the same slots as the packet counters (room3_peer_slot). One writer, one reader: the
+   stamp is odd while an entry is being written, and the reader keeps a copy only if the stamp did not move.
+   The member's id stays in g_p2p_id; nothing here is ever written to a file but the slot number. */
+static struct { volatile LONG stamp; room3_p2p_t st; unsigned char ok; } g_diag_p2p[8];
+static int room3_peer_slot(uint64_t id);
+static void diag_p2p_publish(uint64_t id, unsigned char ok, const room3_p2p_t* st)
+{
+    int i = room3_peer_slot(id);
+    if (i < 0) return;
+    if (g_diag_p2p[i].stamp && g_diag_p2p[i].ok == ok &&
+        memcmp((const void*)&g_diag_p2p[i].st, st, sizeof(*st)) == 0) return;
+    InterlockedIncrement(&g_diag_p2p[i].stamp);
+    g_diag_p2p[i].st = *st;
+    g_diag_p2p[i].ok = ok;
+    InterlockedIncrement(&g_diag_p2p[i].stamp);
+}
 
 
 static const char* room3_p2p_err(unsigned char e)
@@ -1427,7 +1471,7 @@ static DWORD WINAPI room3_p2p_watch(LPVOID unused)
 
     for (;;) {
         int k;
-        for (k = 0; k < 20; k++) {                     /* 2 s between session checks */
+        for (k = 0; k < (g_diag_on ? 10 : 20); k++) {  /* 2 s between session checks; 1 s while PART 43 records */
             if (ROOM3_RIP_SAMPLER) room3_rip_sample();
             Sleep(100);
         }
@@ -1458,6 +1502,7 @@ static DWORD WINAPI room3_p2p_watch(LPVOID unused)
                 if (!id) continue;
                 memset(&st, 0, sizeof(st));
                 ok = ((GetP2PSessionState_t)nvt[VT_NET_P2P_STATE])(net, id, &st);
+                if (g_diag_on) diag_p2p_publish(id, ok, &st);   /* PART 43 */
                 for (j = 0; j < nseen; j++) if (seen_id[j] == id) { slot = j; break; }
                 if (slot < 0 && nseen < 8) { slot = nseen++; seen_id[slot] = id; memset(&seen[slot],0xFF,sizeof(st)); }
                 if (slot < 0) continue;
@@ -18642,6 +18687,943 @@ static const char* net_side(LONG mode)
     return mode == 0 ? "host" : mode == 1 ? "guest" : "?";
 }
 
+/* =====================================================================
+ *  PART 43 -- NETDIAG: the tournament recorder.                 2026-10-12
+ * ---------------------------------------------------------------------
+ *  WHY. Players report more connection trouble in the tournaments Berg hosts
+ *  (about 16 players at once, two-player room matches, a match often streamed
+ *  to Discord by one of its own players) than in normal play. PART 41 already
+ *  measures every battle, but as free text in patch_ranked.log: no per-second
+ *  detail, no key shared by the two seats of a match, and nothing about the PC
+ *  or the network around the game. This part records that, for a tournament.
+ *  The launcher's "Send diagnostics" button sends it in (launcher/diagnostics.py),
+ *  and only when the player clicks it.
+ *
+ *  ARMED ONLY BY A FILE: <exe dir>\bros_diag.txt. The launchers write it from the
+ *  repository's Diagnostics\tournament.txt, which Berg pushes for an event, and
+ *  remove it when the repository has none. Its lines are `key value`:
+ *      on 1                       0 or absent: nothing below runs
+ *      tournament <id>            letters, digits, - and _ (tags the session)
+ *      salt <text>                mixed into the match key (see PRIVACY)
+ *      from 2026-10-13 16:00      UTC, optional: recorded in the session header only
+ *      until 2026-10-14 02:00     UTC, optional: the same. Since bros-diag 2 (2026-10-16)
+ *                                 neither limits anything: Berg wants no limits on
+ *                                 sessions or matches. (bros-diag 1 recorded only inside
+ *                                 the window and did not arm after `until`.)
+ *      commit <sha>               written by the launcher: the patch it installed
+ *  Without the file, or with `on 0`, this part starts no thread and opens no
+ *  file. The hooks it touches test one global and do nothing else.
+ *
+ *  WHAT IT CHANGES IN THE GAME: nothing. No packet is added, dropped, delayed
+ *  or rewritten, no game memory is written, no timing changes. It reads only:
+ *    - what PART 41's watch thread already copies out of the battle's manager;
+ *    - the counters of PART 27's pass-through P2P hooks;
+ *    - the Steam P2P session state that PART 27's watch already asks for;
+ *    - the operating system's own counters.
+ *
+ *  WHERE THE WORK RUNS
+ *    - net_watch (PART 41's thread). Once a second in a battle, it turns its
+ *      cumulative counters into one line: a format, then a memcpy under a lock.
+ *    - The P2P hooks (the network thread). While armed, each packet adds a byte
+ *      count and the gap since that peer's previous packet.
+ *    - PART 27's P2P watch. While armed it polls every 1 s instead of 2 s, and
+ *      publishes each member's session state for this part.
+ *    - diag_thread (new). The operating system's counters once a second in a
+ *      battle (every 10 s outside one), the program flags at each battle start,
+ *      and every disk write. No game thread touches the file. There is no
+ *      keyboard hook or key polling of any kind: a player's own report goes in
+ *      the launcher's send dialog.
+ *  New Windows functions from iphlpapi, wlanapi and ntdll are taken through
+ *  GetProcAddress, so the import table gains no DLL. If one is missing, its
+ *  value is left out.
+ *
+ *  OUTPUT. <exe dir>\BROS_Diagnostics\diag_<UTC>_<pid>.jsonl holds one JSON
+ *  object per line. "t" is the line's kind:
+ *      h   the session header          a   program flags
+ *      b0  a battle starts             s   one second of a battle
+ *      o   operating system counters   e   an event
+ *      b1  a battle ends
+ *  The file is written every 2 s and pushed to the disk (FlushFileBuffers)
+ *  every 10 s and at each battle's end. It has no size cap (bros-diag 2; bros-diag 1
+ *  stopped a session at 64 MB).
+ *
+ *  PRIVACY (Berg 2026-10-12: fully anonymous). Never written:
+ *    - a Steam ID, a name, an IP address;
+ *    - an adapter or network name, an SSID;
+ *    - a list of programs.
+ *  A match is keyed by FNV-1a 64 of (salt, the room's Steam LOBBY id) plus the
+ *  battle's number in that room. A lobby is a room, not a person, and both
+ *  seats compute the same key. Peers are slot numbers 0-7. Programs are yes/no
+ *  flags for a fixed list of kinds: streaming, voice and screen sharing,
+ *  browsers, and so on.
+ * ===================================================================== */
+#include <cpuid.h>
+
+#define DIAG_VERSION   "bros-diag 2"
+#define DIAG_BUF       (512u * 1024u)
+#define DIAG_LINE      4096
+
+static CRITICAL_SECTION    g_diag_cs;
+static char                g_diag_buf[DIAG_BUF];      /* lines waiting for the writer           */
+static unsigned            g_diag_len = 0;
+static char                g_diag_wbuf[DIAG_BUF];     /* the writer's copy                      */
+static volatile LONG       g_diag_dropped = 0;        /* lines lost to a full buffer            */
+static HANDLE              g_diag_file = INVALID_HANDLE_VALUE;
+static unsigned long long  g_diag_written = 0;
+static LARGE_INTEGER       g_diag_t0;                 /* session start (qpc)                    */
+static unsigned long long  g_diag_utc0;               /* session start (Unix ms, UTC)           */
+static char                g_diag_tour[48] = "", g_diag_salt[64] = "", g_diag_commit[48] = "";
+static long long           g_diag_from = 0, g_diag_until = 0;   /* Unix s, as the switch said; recorded only */
+static volatile LONG       g_diag_flush = 0;          /* net_watch asks for a disk flush        */
+static volatile LONG       g_diag_battle = 0;         /* the battle being recorded, 0 = none    */
+static volatile LONG       g_diag_newbattle = 0;      /* diag_thread: take the program flags    */
+static char                g_diag_path[MAX_PATH + 64] = "";
+
+/* ---- small helpers ------------------------------------------------------ */
+static unsigned long long diag_utc_ms(void)
+{
+    FILETIME ft;
+    ULARGE_INTEGER u;
+    GetSystemTimeAsFileTime(&ft);
+    u.LowPart = ft.dwLowDateTime; u.HighPart = ft.dwHighDateTime;
+    return (u.QuadPart - 116444736000000000ULL) / 10000ULL;
+}
+static long long diag_ms(LONG64 qpc)
+{
+    if (!g_net_qpf.QuadPart) return 0;
+    return (long long)((qpc - g_diag_t0.QuadPart) * 1000 / g_net_qpf.QuadPart);
+}
+/* Days from 1970-01-01 to y-m-d (proleptic Gregorian; H. Hinnant's days_from_civil). */
+static long long diag_days(long long y, unsigned m, unsigned d)
+{
+    long long era;
+    unsigned yoe, doy, doe;
+    y -= m <= 2;
+    era = (y >= 0 ? y : y - 399) / 400;
+    yoe = (unsigned)(y - era * 400);
+    doy = (153 * (m + (m > 2 ? -3 : 9)) + 2) / 5 + d - 1;
+    doe = yoe * 365 + yoe / 4 - yoe / 100 + doy;
+    return era * 146097 + (long long)doe - 719468;
+}
+/* "2026-10-13 16:00" or "2026-10-13T16:00Z" (UTC) -> Unix seconds; 0 if unreadable. */
+static long long diag_parse_utc(const char* s)
+{
+    int y = 0, mo = 0, d = 0, h = 0, mi = 0;
+    if (sscanf(s, "%d-%d-%d%*[ T]%d:%d", &y, &mo, &d, &h, &mi) != 5) return 0;
+    if (y < 2020 || y > 2100 || mo < 1 || mo > 12 || d < 1 || d > 31 || h < 0 || h > 23 || mi < 0 || mi > 59)
+        return 0;
+    return diag_days(y, (unsigned)mo, (unsigned)d) * 86400LL + h * 3600LL + mi * 60LL;
+}
+static unsigned long long diag_fnv(const char* s)
+{
+    unsigned long long h = 1469598103934665603ULL;
+    while (*s) { h ^= (unsigned char)*s++; h *= 1099511628211ULL; }
+    return h;
+}
+/* A JSON string body: quotes, backslashes and control characters escaped, anything
+   outside printable ASCII replaced by '?'. Always terminated; returns its length. */
+static int diag_json_str(char* out, int cap, const char* s)
+{
+    int n = 0;
+    if (cap <= 0) return 0;
+    while (s && *s && n < cap - 3) {
+        unsigned char c = (unsigned char)*s++;
+        if (c == '"' || c == '\\') { out[n++] = '\\'; out[n++] = (char)c; }
+        else if (c < 0x20 || c >= 0x7F) out[n++] = '?';
+        else out[n++] = (char)c;
+    }
+    out[n] = 0;
+    return n;
+}
+static void diag_put(const char* s, int n)
+{
+    if (n <= 0) return;
+    EnterCriticalSection(&g_diag_cs);
+    if (g_diag_len + (unsigned)n + 1 <= DIAG_BUF) {
+        memcpy(g_diag_buf + g_diag_len, s, (size_t)n);
+        g_diag_len += (unsigned)n;
+        g_diag_buf[g_diag_len++] = '\n';
+    } else {
+        InterlockedIncrement(&g_diag_dropped);
+    }
+    LeaveCriticalSection(&g_diag_cs);
+}
+static void diag_putf(const char* fmt, ...)
+{
+    char line[DIAG_LINE];
+    int n;
+    va_list ap;
+    va_start(ap, fmt);
+    n = vsnprintf(line, sizeof(line), fmt, ap);
+    va_end(ap);
+    if (n < 0 || n >= (int)sizeof(line)) { InterlockedIncrement(&g_diag_dropped); return; }
+    diag_put(line, n);
+}
+/* The writer: everything queued goes to the file in one WriteFile. diag_thread only. */
+static void diag_write(int flush)
+{
+    unsigned n;
+    LONG dropped;
+    EnterCriticalSection(&g_diag_cs);
+    n = g_diag_len;
+    if (n) memcpy(g_diag_wbuf, g_diag_buf, n);
+    g_diag_len = 0;
+    LeaveCriticalSection(&g_diag_cs);
+    dropped = InterlockedExchange(&g_diag_dropped, 0);
+    if (dropped) {
+        char line[96];
+        int k = snprintf(line, sizeof(line), "{\"t\":\"e\",\"k\":\"drop\",\"n\":%ld}\n", (long)dropped);
+        if (k > 0 && n + (unsigned)k <= DIAG_BUF) { memcpy(g_diag_wbuf + n, line, (size_t)k); n += (unsigned)k; }
+    }
+    if (!n || g_diag_file == INVALID_HANDLE_VALUE) return;
+    {
+        DWORD w = 0;
+        if (WriteFile(g_diag_file, g_diag_wbuf, n, &w, NULL)) g_diag_written += w;
+        if (flush) FlushFileBuffers(g_diag_file);
+    }
+}
+
+/* ---- the switch file ---------------------------------------------------- */
+static void diag_copy_token(char* out, size_t cap, const char* v, int strict)
+{
+    size_t n = 0;
+    while (*v && *v != '\r' && *v != '\n' && n + 1 < cap) {
+        char c = *v++;
+        if (strict && !((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') ||
+                        c == '-' || c == '_' || c == '.'))
+            continue;
+        if (!strict && (unsigned char)c < 0x20) continue;
+        out[n++] = c;
+    }
+    while (n && out[n - 1] == ' ') n--;
+    out[n] = 0;
+}
+/* 1 = armed, 0 = off or absent. Reads <exe dir>\bros_diag.txt once. */
+static int diag_read_switch(void)
+{
+    char path[MAX_PATH], buf[2048];
+    HANDLE h;
+    DWORD got = 0;
+    int on = 0;
+    char* line;
+    exe_dir_path("bros_diag.txt", path, sizeof(path));
+    h = CreateFileA(path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+    if (h == INVALID_HANDLE_VALUE) return 0;
+    if (!ReadFile(h, buf, sizeof(buf) - 1, &got, NULL)) got = 0;
+    CloseHandle(h);
+    buf[got] = 0;
+    line = buf;
+    while (line && *line) {
+        char* next = strchr(line, '\n');
+        char key[24];
+        const char* v;
+        size_t k = 0;
+        if (next) *next++ = 0;
+        while (*line == ' ' || *line == '\t') line++;
+        if (*line == '#' || !*line) { line = next; continue; }
+        while (line[k] && line[k] != ' ' && line[k] != '\t' && line[k] != '\r' && k + 1 < sizeof(key)) {
+            key[k] = line[k]; k++;
+        }
+        key[k] = 0;
+        v = line + k;
+        while (*v == ' ' || *v == '\t') v++;
+        if (!strcmp(key, "on"))              on = atoi(v) != 0;
+        else if (!strcmp(key, "tournament")) diag_copy_token(g_diag_tour, sizeof(g_diag_tour), v, 1);
+        else if (!strcmp(key, "salt"))       diag_copy_token(g_diag_salt, sizeof(g_diag_salt), v, 0);
+        else if (!strcmp(key, "commit"))     diag_copy_token(g_diag_commit, sizeof(g_diag_commit), v, 1);
+        else if (!strcmp(key, "from"))       g_diag_from = diag_parse_utc(v);
+        else if (!strcmp(key, "until"))      g_diag_until = diag_parse_utc(v);
+        line = next;
+    }
+    return on;
+}
+
+/* ---- the operating system (diag_thread only) ----------------------------- */
+/* Offsets in the structures below are zig 0.16's mingw-w64 headers' (the toolchain this file is built
+   with), read by probe.c in the 2026-10-12 build folder: MIB_IF_ROW2 1352 B, InterfaceIndex +8,
+   Description +542 (WCHAR[257]), Type +1128, MediaConnectState +1164, TransmitLinkSpeed +1192,
+   ReceiveLinkSpeed +1200, InOctets +1208, OutOctets +1280; MIB_UDPSTATS dwInErrors +8; WLAN_INTERFACE_INFO
+   532 B, list +8, isState +528; WLAN_CONNECTION_ATTRIBUTES: association +520, PhyType +48, SignalQuality +56,
+   RxRate +60, TxRate +64; opcodes current_connection 7, channel_number 8; state connected 1. */
+#define DIAG_IFROW_SIZE  1352
+typedef DWORD (WINAPI *diag_GetBestInterface_t)(DWORD, PDWORD);
+typedef DWORD (WINAPI *diag_GetIfEntry2_t)(void*);
+typedef DWORD (WINAPI *diag_GetUdpStatistics_t)(void*);
+typedef LONG  (WINAPI *diag_NtQueryTimerResolution_t)(PULONG, PULONG, PULONG);
+typedef LONG  (WINAPI *diag_RtlGetVersion_t)(OSVERSIONINFOW*);
+typedef DWORD (WINAPI *diag_WlanOpenHandle_t)(DWORD, PVOID, PDWORD, PHANDLE);
+typedef DWORD (WINAPI *diag_WlanEnumInterfaces_t)(HANDLE, PVOID, void**);
+typedef DWORD (WINAPI *diag_WlanQueryInterface_t)(HANDLE, const GUID*, int, PVOID, PDWORD, PVOID*, int*);
+typedef VOID  (WINAPI *diag_WlanFreeMemory_t)(PVOID);
+
+static diag_GetBestInterface_t   p_GetBestInterface;
+static diag_GetIfEntry2_t        p_GetIfEntry2;
+static diag_GetUdpStatistics_t   p_GetUdpStatistics;
+static diag_WlanOpenHandle_t     p_WlanOpenHandle;
+static diag_WlanEnumInterfaces_t p_WlanEnumInterfaces;
+static diag_WlanQueryInterface_t p_WlanQueryInterface;
+static diag_WlanFreeMemory_t     p_WlanFreeMemory;
+static HANDLE                    g_diag_wlan = NULL;
+static DWORD                     g_diag_ifidx = 0;      /* the interface the default route uses */
+static unsigned long             g_diag_iftype = 0;
+static __attribute__((aligned(16))) unsigned char g_diag_row[DIAG_IFROW_SIZE];
+
+static int diag_if_read(void)       /* fills g_diag_row for g_diag_ifidx; 1 on success */
+{
+    if (!p_GetIfEntry2 || !g_diag_ifidx) return 0;
+    memset(g_diag_row, 0, sizeof(g_diag_row));
+    memcpy(g_diag_row + 8, &g_diag_ifidx, 4);
+    return p_GetIfEntry2(g_diag_row) == 0;
+}
+static unsigned long long diag_row_u64(int off)
+{
+    unsigned long long v;
+    memcpy(&v, g_diag_row + off, 8);
+    return v;
+}
+static unsigned long diag_row_u32(int off)
+{
+    unsigned long v;
+    memcpy(&v, g_diag_row + off, 4);
+    return v;
+}
+static void diag_net_init(void)
+{
+    HMODULE ip = LoadLibraryA("iphlpapi.dll");
+    if (ip) {
+        p_GetBestInterface  = (diag_GetBestInterface_t)GetProcAddress(ip, "GetBestInterface");
+        p_GetIfEntry2       = (diag_GetIfEntry2_t)GetProcAddress(ip, "GetIfEntry2");
+        p_GetUdpStatistics  = (diag_GetUdpStatistics_t)GetProcAddress(ip, "GetUdpStatistics");
+    }
+    if (p_GetBestInterface) {
+        DWORD idx = 0;
+        /* 1.1.1.1 as a destination only picks the route table's answer: nothing is sent. */
+        if (p_GetBestInterface(0x01010101u, &idx) == 0) g_diag_ifidx = idx;
+    }
+    if (diag_if_read()) g_diag_iftype = diag_row_u32(1128);
+}
+/* Wi-Fi: the first connected interface's signal quality (0-100), PHY type, rates (kbit/s) and channel. */
+static int diag_wifi(unsigned long* q, unsigned long* phy, unsigned long* rx, unsigned long* tx, unsigned long* ch)
+{
+    void* list = NULL;
+    unsigned char* L;
+    DWORD n, i;
+    int found = 0;
+    if (!g_diag_wlan) {
+        static int tried = 0;          /* one attempt per session: no WLAN service is an answer too */
+        HMODULE w;
+        DWORD ver = 0;
+        HANDLE h = NULL;
+        if (tried) return 0;
+        tried = 1;
+        w = LoadLibraryA("wlanapi.dll");
+        if (!w) return 0;
+        p_WlanOpenHandle     = (diag_WlanOpenHandle_t)GetProcAddress(w, "WlanOpenHandle");
+        p_WlanEnumInterfaces = (diag_WlanEnumInterfaces_t)GetProcAddress(w, "WlanEnumInterfaces");
+        p_WlanQueryInterface = (diag_WlanQueryInterface_t)GetProcAddress(w, "WlanQueryInterface");
+        p_WlanFreeMemory     = (diag_WlanFreeMemory_t)GetProcAddress(w, "WlanFreeMemory");
+        if (!p_WlanOpenHandle || !p_WlanEnumInterfaces || !p_WlanQueryInterface || !p_WlanFreeMemory) return 0;
+        if (p_WlanOpenHandle(2, NULL, &ver, &h) != 0 || !h) return 0;
+        g_diag_wlan = h;
+    }
+    if (p_WlanEnumInterfaces(g_diag_wlan, NULL, &list) != 0 || !list) return 0;
+    L = (unsigned char*)list;
+    memcpy(&n, L, 4);
+    for (i = 0; i < n && i < 8 && !found; i++) {
+        unsigned char* info = L + 8 + (size_t)i * 532;
+        GUID g;
+        DWORD st, sz = 0;
+        void* data = NULL;
+        int vt = 0;
+        memcpy(&st, info + 528, 4);
+        if (st != 1) continue;                               /* wlan_interface_state_connected */
+        memcpy(&g, info, sizeof(g));
+        if (p_WlanQueryInterface(g_diag_wlan, &g, 7, NULL, &sz, &data, &vt) == 0 && data && sz >= 604) {
+            unsigned char* a = (unsigned char*)data + 520;
+            memcpy(phy, a + 48, 4); memcpy(q, a + 56, 4); memcpy(rx, a + 60, 4); memcpy(tx, a + 64, 4);
+            found = 1;
+        }
+        if (data) p_WlanFreeMemory(data);
+        data = NULL; sz = 0;
+        if (found && p_WlanQueryInterface(g_diag_wlan, &g, 8, NULL, &sz, &data, &vt) == 0 && data && sz >= 4)
+            memcpy(ch, data, 4);
+        if (data) p_WlanFreeMemory(data);
+    }
+    p_WlanFreeMemory(list);
+    return found;
+}
+/* Is the route's adapter a VPN or virtual tunnel? Only the answer is kept, never the name. */
+static int diag_if_vpn(void)
+{
+    static const char* const kw[] = { "tap-", "tap ", "wireguard", "wintun", "vpn", "nordlynx", "hamachi",
+                                       "zerotier", "radmin", "mullvad", "tailscale", "openvpn", "anyconnect",
+                                       "fortinet", "surfshark", "windscribe", "proton" };
+    char d[258];
+    int i, k;
+    for (i = 0; i < 257; i++) {
+        unsigned short w;
+        memcpy(&w, g_diag_row + 542 + i * 2, 2);
+        if (!w) break;
+        d[i] = (char)((w >= 'A' && w <= 'Z') ? w + 32 : (w < 128 ? w : '?'));
+    }
+    d[i] = 0;
+    for (k = 0; k < (int)(sizeof(kw) / sizeof(kw[0])); k++) if (strstr(d, kw[k])) return 1;
+    return 0;
+}
+
+/* ---- program flags (a fixed list of kinds; the names are never written) ---- */
+static const struct { const char* exe; int kind; } DIAG_APPS[] = {
+    { "obs64.exe", 0 }, { "obs32.exe", 0 }, { "obs.exe", 0 }, { "streamlabs obs.exe", 0 },
+    { "streamlabs desktop.exe", 0 }, { "xsplit.core.exe", 0 },
+    { "discord.exe", 1 }, { "discordptb.exe", 1 }, { "discordcanary.exe", 1 },
+    { "chrome.exe", 2 }, { "msedge.exe", 2 }, { "firefox.exe", 2 }, { "opera.exe", 2 }, { "brave.exe", 2 },
+    { "vivaldi.exe", 2 },
+    { "parsecd.exe", 3 },
+    { "qbittorrent.exe", 4 }, { "utorrent.exe", 4 }, { "bittorrent.exe", 4 }, { "deluge.exe", 4 },
+    { "transmission-qt.exe", 4 },
+    { "onedrive.exe", 5 }, { "dropbox.exe", 5 }, { "googledrivefs.exe", 5 },
+    { "nvsphelper64.exe", 6 }, { "nvidia share.exe", 6 }, { "medal.exe", 6 }, { "gamebar.exe", 6 },
+    { "gamebarftserver.exe", 6 }, { "overwolf.exe", 6 },
+    { "nordvpn.exe", 7 }, { "expressvpn.exe", 7 }, { "protonvpn.exe", 7 }, { "openvpn.exe", 7 },
+    { "openvpn-gui.exe", 7 }, { "wireguard.exe", 7 }, { "mullvad vpn.exe", 7 }, { "surfshark.exe", 7 },
+    { "hamachi-2-ui.exe", 7 }, { "radminvpn.exe", 7 }, { "zerotier_desktop_ui.exe", 7 },
+    { "tailscale-ipn.exe", 7 }, { "windscribe.exe", 7 },
+    { "epicgameslauncher.exe", 8 }, { "eadesktop.exe", 8 }, { "battle.net.exe", 8 },
+    { "ubisoftconnect.exe", 8 }, { "galaxyclient.exe", 8 },
+    { "spotify.exe", 9 },
+    { "wallpaper64.exe", 10 }, { "wallpaper32.exe", 10 },
+};
+static const char* const DIAG_KIND[11] = { "stream", "discord", "browser", "remoteplay", "torrent", "cloudsync",
+                                           "recorder", "vpn", "launcher", "music", "wallpaper" };
+static void diag_apps(int battle)
+{
+    HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    PROCESSENTRY32 pe;
+    int seen[11], i, at = 0, total = 0;
+    char line[512];
+    memset(seen, 0, sizeof(seen));
+    if (snap == INVALID_HANDLE_VALUE) return;
+    pe.dwSize = sizeof(pe);
+    if (Process32First(snap, &pe)) {
+        do {
+            char low[MAX_PATH];
+            int k;
+            total++;
+            for (k = 0; pe.szExeFile[k] && k < MAX_PATH - 1; k++) {
+                char c = pe.szExeFile[k];
+                low[k] = (c >= 'A' && c <= 'Z') ? (char)(c + 32) : c;
+            }
+            low[k] = 0;
+            for (k = 0; k < (int)(sizeof(DIAG_APPS) / sizeof(DIAG_APPS[0])); k++)
+                if (!strcmp(low, DIAG_APPS[k].exe)) seen[DIAG_APPS[k].kind] = 1;
+        } while (Process32Next(snap, &pe));
+    }
+    CloseHandle(snap);
+    {
+        LARGE_INTEGER q;
+        QueryPerformanceCounter(&q);
+        at = snprintf(line, sizeof(line), "{\"t\":\"a\",\"b\":%d,\"ts\":%lld,\"procs\":%d,\"apps\":{",
+                      battle, diag_ms(q.QuadPart), total);
+    }
+    for (i = 0; i < 11 && at > 0 && at < (int)sizeof(line) - 32; i++)
+        at += snprintf(line + at, sizeof(line) - at, "%s\"%s\":%d", i ? "," : "", DIAG_KIND[i], seen[i]);
+    if (at > 0 && at < (int)sizeof(line) - 4) {
+        line[at++] = '}'; line[at++] = '}'; line[at] = 0;
+        diag_put(line, at);
+    }
+}
+
+/* ---- the session header (diag_thread, once) ------------------------------ */
+static void diag_header(void)
+{
+    char cpu[49], cpuj[100], gpu[128], gpuj[260], plug[600], pj[700], line[DIAG_LINE];
+    unsigned int r[4];
+    int i, at = 0, threads = 0, cores = 0;
+    unsigned long long ram_mb = 0;
+    unsigned long tmin = 0, tmax = 0, tcur = 0, osmaj = 0, osmin = 0, osbuild = 0, hz = 0;
+    int ac = -1, batt = -1, pacing_off, pacing_txt;
+    unsigned long wq = 0, wphy = 0, wrx = 0, wtx = 0, wch = 0;
+    int wifi = 0, vpn = 0;
+    unsigned long long ltx = 0, lrx = 0;
+    unsigned long media = 0;
+    char path[MAX_PATH];
+
+    /* CPU: the brand string from CPUID, the thread and core counts from Windows */
+    memset(cpu, 0, sizeof(cpu));
+    if (__get_cpuid(0x80000000u, &r[0], &r[1], &r[2], &r[3]) && r[0] >= 0x80000004u) {
+        for (i = 0; i < 3; i++) {
+            __get_cpuid(0x80000002u + (unsigned)i, &r[0], &r[1], &r[2], &r[3]);
+            memcpy(cpu + i * 16, r, 16);
+        }
+    }
+    {   char* s = cpu; while (*s == ' ') s++; diag_json_str(cpuj, sizeof(cpuj), s); }
+    threads = (int)GetActiveProcessorCount(0xFFFF);
+    {
+        DWORD len = 0;
+        SYSTEM_LOGICAL_PROCESSOR_INFORMATION buf[256];
+        len = sizeof(buf);
+        if (GetLogicalProcessorInformation(buf, &len)) {
+            for (i = 0; i < (int)(len / sizeof(buf[0])); i++)
+                if (buf[i].Relationship == RelationProcessorCore) cores++;
+        }
+    }
+    {
+        MEMORYSTATUSEX ms;
+        ms.dwLength = sizeof(ms);
+        if (GlobalMemoryStatusEx(&ms)) ram_mb = ms.ullTotalPhys >> 20;
+    }
+    {   /* the primary display adapter's name, and the display's refresh rate */
+        DISPLAY_DEVICEA dd;
+        DEVMODEA dm;
+        gpu[0] = 0;
+        for (i = 0; i < 16; i++) {
+            memset(&dd, 0, sizeof(dd));
+            dd.cb = sizeof(dd);
+            if (!EnumDisplayDevicesA(NULL, (DWORD)i, &dd, 0)) break;
+            if (dd.StateFlags & DISPLAY_DEVICE_PRIMARY_DEVICE) {
+                snprintf(gpu, sizeof(gpu), "%s", dd.DeviceString);
+                break;
+            }
+        }
+        diag_json_str(gpuj, sizeof(gpuj), gpu);
+        memset(&dm, 0, sizeof(dm));
+        dm.dmSize = sizeof(dm);
+        if (EnumDisplaySettingsA(NULL, ENUM_CURRENT_SETTINGS, &dm)) hz = dm.dmDisplayFrequency;
+    }
+    {
+        SYSTEM_POWER_STATUS ps;
+        if (GetSystemPowerStatus(&ps)) { ac = ps.ACLineStatus; batt = ps.BatteryLifePercent; }
+    }
+    {
+        HMODULE nt = GetModuleHandleA("ntdll.dll");
+        diag_NtQueryTimerResolution_t qtr = nt ? (diag_NtQueryTimerResolution_t)GetProcAddress(nt, "NtQueryTimerResolution") : NULL;
+        diag_RtlGetVersion_t rgv = nt ? (diag_RtlGetVersion_t)GetProcAddress(nt, "RtlGetVersion") : NULL;
+        if (qtr) qtr(&tmin, &tmax, &tcur);
+        if (rgv) {
+            OSVERSIONINFOW v;
+            memset(&v, 0, sizeof(v));
+            v.dwOSVersionInfoSize = sizeof(v);
+            if (rgv(&v) == 0) { osmaj = v.dwMajorVersion; osmin = v.dwMinorVersion; osbuild = v.dwBuildNumber; }
+        }
+    }
+    /* the plugins beside the loader, by file name (they are the patch's own files) */
+    plug[0] = 0;
+    {
+        WIN32_FIND_DATAA fd;
+        HANDLE fh;
+        int pat = 0;
+        exe_dir_path("ReBalanceOfSouls\\*.dll", path, sizeof(path));
+        fh = FindFirstFileA(path, &fd);
+        if (fh != INVALID_HANDLE_VALUE) {
+            do {
+                char nm[80];
+                diag_json_str(nm, sizeof(nm), fd.cFileName);
+                if (pat + (int)strlen(nm) + 4 < (int)sizeof(plug))
+                    pat += snprintf(plug + pat, sizeof(plug) - pat, "%s\"%s\"", pat ? "," : "", nm);
+            } while (FindNextFileA(fh, &fd));
+            FindClose(fh);
+        }
+        snprintf(pj, sizeof(pj), "[%s]", plug);
+    }
+    exe_dir_path("pacing_off.txt", path, sizeof(path));
+    pacing_off = GetFileAttributesA(path) != INVALID_FILE_ATTRIBUTES;
+    exe_dir_path("pacing.txt", path, sizeof(path));
+    pacing_txt = GetFileAttributesA(path) != INVALID_FILE_ATTRIBUTES;
+    /* the route's adapter: its kind, link speed and media state, and whether it is a VPN */
+    if (diag_if_read()) {
+        g_diag_iftype = diag_row_u32(1128);
+        media = diag_row_u32(1164);
+        ltx = diag_row_u64(1192);
+        lrx = diag_row_u64(1200);
+        vpn = diag_if_vpn();
+    }
+    if (g_diag_iftype == 71) wifi = diag_wifi(&wq, &wphy, &wrx, &wtx, &wch);
+
+    {
+        char tour[100], commit[100];
+        diag_json_str(tour, sizeof(tour), g_diag_tour);
+        diag_json_str(commit, sizeof(commit), g_diag_commit);
+        at = snprintf(line, sizeof(line),
+            "{\"t\":\"h\",\"v\":\"%s\",\"build\":\"%s\",\"tour\":\"%s\",\"commit\":\"%s\",\"utc\":%llu,"
+            "\"from\":%lld,\"until\":%lld,\"qpf\":%lld,"
+            "\"net\":{\"file\":%d,\"lock\":%d,\"sleep\":%d,\"window\":%d,\"delay\":%d,\"probe\":%d,\"capture\":%d},"
+            "\"plugins\":%s,\"pacing_off\":%d,\"pacing_txt\":%d,"
+            "\"os\":\"%lu.%lu.%lu\",\"cpu\":\"%s\",\"threads\":%d,\"cores\":%d,\"ram_mb\":%llu,\"gpu\":\"%s\","
+            "\"hz\":%lu,\"ac\":%d,\"batt\":%d,\"tres\":[%lu,%lu,%lu],"
+            "\"nic\":{\"ift\":%lu,\"media\":%lu,\"tx_mbps\":%llu,\"rx_mbps\":%llu,\"vpn\":%d},"
+            "\"wifi\":%s}",
+            DIAG_VERSION, PATCH_BUILD_ID, tour, commit, g_diag_utc0, g_diag_from, g_diag_until,
+            (long long)g_net_qpf.QuadPart,
+            g_net_cfg_file, g_net_on_lock, g_net_on_sleep ? g_net_on_sleep : 8, g_net_window_live,
+            g_net_cfg_delay, g_net_on_probe, g_net_on_capture,
+            pj, pacing_off, pacing_txt,
+            osmaj, osmin, osbuild, cpuj, threads, cores, ram_mb, gpuj,
+            hz, ac, batt, tmin, tmax, tcur,
+            g_diag_iftype, media, ltx / 1000000ULL, lrx / 1000000ULL, vpn,
+            wifi ? "" : "null");
+        if (wifi && at > 0 && at < (int)sizeof(line) - 128) {
+            at--;                       /* replace the closing brace */
+            at += snprintf(line + at, sizeof(line) - at,
+                           "{\"q\":%lu,\"phy\":%lu,\"rx_kbps\":%lu,\"tx_kbps\":%lu,\"ch\":%lu}}",
+                           wq, wphy, wrx, wtx, wch);
+        }
+        if (at > 0 && at < (int)sizeof(line)) diag_put(line, at);
+    }
+}
+
+/* ---- the operating system's counters, once a second in a battle --------- */
+static struct {
+    unsigned long long idle, kern, user, pk, pu, inb, outb, wall;
+    unsigned long udperr;
+    int have_sys, have_if, have_udp;
+} g_dos;
+static unsigned long long diag_ft(FILETIME f)
+{
+    ULARGE_INTEGER u;
+    u.LowPart = f.dwLowDateTime; u.HighPart = f.dwHighDateTime;
+    return u.QuadPart;
+}
+static void diag_os_line(LONG64 now, int battle, int wifi_due)
+{
+    FILETIME fi, fk, fu, fc, fe, pk, pu;
+    unsigned long long idle = 0, kern = 0, user = 0, pkern = 0, puser = 0, wall;
+    int sys = -1, proc = -1, wq = -1;
+    long long nin = -1, nout = -1, udpe = -1;
+    LARGE_INTEGER q;
+    QueryPerformanceCounter(&q);
+    wall = (unsigned long long)q.QuadPart;
+    if (GetSystemTimes(&fi, &fk, &fu)) { idle = diag_ft(fi); kern = diag_ft(fk); user = diag_ft(fu); }
+    if (GetProcessTimes(GetCurrentProcess(), &fc, &fe, &pk, &pu)) { pkern = diag_ft(pk); puser = diag_ft(pu); }
+    if (g_dos.have_sys) {
+        unsigned long long dk = kern - g_dos.kern, du = user - g_dos.user, di = idle - g_dos.idle;
+        unsigned long long dw = (wall - g_dos.wall) * 10000000ULL / (unsigned long long)g_net_qpf.QuadPart;
+        unsigned long long dp = (pkern - g_dos.pk) + (puser - g_dos.pu);
+        int th = (int)GetActiveProcessorCount(0xFFFF);
+        if (dk + du > 0 && dk + du >= di) sys = (int)(1000ULL * (dk + du - di) / (dk + du));
+        if (dw > 0 && th > 0) proc = (int)(1000ULL * dp / (dw * (unsigned long long)th));
+    }
+    g_dos.idle = idle; g_dos.kern = kern; g_dos.user = user; g_dos.pk = pkern; g_dos.pu = puser;
+    if (diag_if_read()) {
+        unsigned long long in = diag_row_u64(1208), out = diag_row_u64(1280);
+        if (g_dos.have_if && wall > g_dos.wall) {
+            unsigned long long dt = wall - g_dos.wall;
+            nin  = (long long)((in - g_dos.inb) * (unsigned long long)g_net_qpf.QuadPart / dt);
+            nout = (long long)((out - g_dos.outb) * (unsigned long long)g_net_qpf.QuadPart / dt);
+        }
+        g_dos.inb = in; g_dos.outb = out; g_dos.have_if = 1;
+    } else {
+        g_dos.have_if = 0;
+    }
+    if (p_GetUdpStatistics) {
+        unsigned char st[20];
+        unsigned long e;
+        memset(st, 0, sizeof(st));
+        if (p_GetUdpStatistics(st) == 0) {
+            memcpy(&e, st + 8, 4);
+            if (g_dos.have_udp) udpe = (long long)(e - g_dos.udperr);
+            g_dos.udperr = e; g_dos.have_udp = 1;
+        }
+    }
+    if (wifi_due && g_diag_iftype == 71) {
+        unsigned long qv = 0, phy = 0, rx = 0, tx = 0, ch = 0;
+        if (diag_wifi(&qv, &phy, &rx, &tx, &ch)) wq = (int)qv;
+    }
+    g_dos.wall = wall; g_dos.have_sys = 1;
+    diag_putf("{\"t\":\"o\",\"b\":%d,\"ts\":%lld,\"cpu\":%d,\"pcpu\":%d,\"nin\":%lld,\"nout\":%lld,\"udpe\":%lld,\"wq\":%d}",
+              battle, diag_ms(now), sys, proc, nin, nout, udpe, wq);
+}
+
+/* ---- events from diag_thread -------------------------------------------- */
+static void diag_p2p_changes(LONG64 now, LONG* seen)
+{
+    int i;
+    for (i = 0; i < 8; i++) {
+        LONG s1 = g_diag_p2p[i].stamp, s2;
+        room3_p2p_t st;
+        unsigned char ok;
+        if (s1 == seen[i] || (s1 & 1)) continue;
+        st = g_diag_p2p[i].st;
+        ok = g_diag_p2p[i].ok;
+        s2 = g_diag_p2p[i].stamp;
+        if (s2 != s1) continue;                        /* changed while copied: next round */
+        seen[i] = s1;
+        diag_putf("{\"t\":\"e\",\"k\":\"p2p\",\"b\":%ld,\"ts\":%lld,\"slot\":%d,\"ok\":%d,\"act\":%d,\"conn\":%d,"
+                  "\"err\":%d,\"relay\":%d,\"qb\":%d,\"qp\":%d}",
+                  (long)g_diag_battle, diag_ms(now), i, ok, st.active, st.connecting, st.err, st.relay,
+                  st.queued_bytes, st.queued_packets);
+    }
+}
+
+static DWORD WINAPI diag_thread(LPVOID unused)
+{
+    LONG64 last_os = 0, last_write = 0, last_flush = 0, last_wifi = 0;
+    LONG members_seen = -2, seen[8];
+    (void)unused;
+    memset(seen, 0, sizeof(seen));
+    diag_net_init();
+    diag_header();
+    diag_apps(0);
+    diag_write(1);
+    for (;;) {
+        LARGE_INTEGER q;
+        LONG64 now, qpf = g_net_qpf.QuadPart;
+        int battle, flush;
+        Sleep(50);
+        QueryPerformanceCounter(&q);
+        now = q.QuadPart;
+        battle = (int)g_diag_battle;
+        if (InterlockedExchange(&g_diag_newbattle, 0)) diag_apps(battle);
+        if (g_diag_members != members_seen) {
+            members_seen = g_diag_members;
+            if (members_seen >= 0)
+                diag_putf("{\"t\":\"e\",\"k\":\"members\",\"b\":%d,\"ts\":%lld,\"n\":%ld}",
+                          battle, diag_ms(now), (long)members_seen);
+        }
+        diag_p2p_changes(now, seen);
+        if (now - last_os >= (battle ? 1 : 10) * qpf) {
+            int wifi_due = now - last_wifi >= 5 * qpf;
+            if (wifi_due) last_wifi = now;
+            last_os = now;
+            diag_os_line(now, battle, wifi_due);
+        }
+        flush = InterlockedExchange(&g_diag_flush, 0);
+        if (flush || now - last_write >= 2 * qpf) {
+            int hard = flush || now - last_flush >= 10 * qpf;
+            if (hard) last_flush = now;
+            last_write = now;
+            diag_write(hard);
+        }
+    }
+    return 0;
+}
+
+/* ---- arming (net_watch, before its loop; not under the loader lock) ------ */
+static void diag_start(void)
+{
+    char dir[MAX_PATH], name[96];
+    SYSTEMTIME st;
+    HANDLE t;
+    if (!diag_read_switch()) return;
+    exe_dir_path("BROS_Diagnostics", dir, sizeof(dir));
+    if (!CreateDirectoryA(dir, NULL) && GetLastError() != ERROR_ALREADY_EXISTS) {
+        log_line("NETDIAG: bros_diag.txt is on, but the folder could not be made (error %lu) -- not armed",
+                 GetLastError());
+        return;
+    }
+    GetSystemTime(&st);
+    snprintf(name, sizeof(name), "BROS_Diagnostics\\diag_%04d%02d%02d-%02d%02d%02dZ_%lu.jsonl", st.wYear,
+             st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond, GetCurrentProcessId());
+    exe_dir_path(name, g_diag_path, sizeof(g_diag_path));
+    g_diag_file = CreateFileA(g_diag_path, FILE_APPEND_DATA, FILE_SHARE_READ, NULL, CREATE_ALWAYS,
+                              FILE_ATTRIBUTE_NORMAL, NULL);
+    if (g_diag_file == INVALID_HANDLE_VALUE) {
+        log_line("NETDIAG: bros_diag.txt is on, but %s could not be created (error %lu) -- not armed",
+                 g_diag_path, GetLastError());
+        return;
+    }
+    InitializeCriticalSection(&g_diag_cs);
+    if (!g_net_qpf.QuadPart) QueryPerformanceFrequency(&g_net_qpf);
+    QueryPerformanceCounter(&g_diag_t0);
+    g_diag_utc0 = diag_utc_ms();
+    InterlockedExchange(&g_diag_on, 1);
+    t = CreateThread(NULL, 0, diag_thread, NULL, 0, NULL);
+    if (t) CloseHandle(t);
+    else log_line("NETDIAG: the writer thread could not start -- lines queue but are not written");
+    log_line("NETDIAG: ARMED [%s] tournament '%s' -- recording to %s (no time window, no size cap)", DIAG_VERSION,
+             g_diag_tour, g_diag_path);
+}
+
+/* ---- the battle, from net_watch ----------------------------------------- */
+static struct {
+    LONG64 t0;                         /* qpc: this second began                     */
+    int    F0, have;                   /* the frame it began at                      */
+    LONG64 fgap;                       /* qpc: longest interval between frame advances */
+    LONG64 cnt, ms, cn[3], cm[3];      /* g_nm's stall totals when it began          */
+    LONG64 longest;                    /* ms: the longest stall closed in it         */
+    LONG64 ahead[17], tempo[7];
+    LONG64 period[NET_PB];
+    LONG64 met, gave;
+    LONG64 txp[8], rxp[8], txb[8], rxb[8];
+    int    nak_last, naks;
+} g_ds;
+static struct {                        /* the battle's own baselines, for b1          */
+    LONG64 txp[8], rxp[8], txb[8], rxb[8];
+    unsigned long long lobby;
+    int    lobby_battle;
+} g_db;
+
+static void diag_second_base(LONG64 now, int F)
+{
+    int i;
+    g_ds.t0 = now; g_ds.F0 = F; g_ds.fgap = 0; g_ds.longest = 0; g_ds.naks = 0;
+    g_ds.cnt = g_nm.count; g_ds.ms = g_nm.total_ms;
+    for (i = 0; i < 3; i++) { g_ds.cn[i] = g_nm.cls_n[i]; g_ds.cm[i] = g_nm.cls_ms[i]; }
+    memcpy(g_ds.ahead, g_nm.ahead, sizeof(g_ds.ahead));
+    memcpy(g_ds.tempo, g_nm.tempo, sizeof(g_ds.tempo));
+    for (i = 0; i < NET_PB; i++) g_ds.period[i] = g_net_period[i];
+    g_ds.met = g_net_lock_met; g_ds.gave = g_net_lock_gaveup;
+    for (i = 0; i < 8; i++) {
+        g_ds.txp[i] = g_p2p_sent[i]; g_ds.rxp[i] = g_p2p_recv[i];
+        g_ds.txb[i] = g_diag_txb[i]; g_ds.rxb[i] = g_diag_rxb[i];
+        InterlockedExchange64(&g_diag_gap[i], 0);
+    }
+    g_ds.have = 1;
+}
+
+static void diag_battle_begin(LONG64 now)
+{
+    char key[160];
+    unsigned long long lobby = g_room3_lobby;
+    int i;
+    const char* role;
+    if (lobby && lobby == g_db.lobby) g_db.lobby_battle++;
+    else { g_db.lobby = lobby; g_db.lobby_battle = 1; }
+    snprintf(key, sizeof(key), "%s|%llu", g_diag_salt, lobby);
+    for (i = 0; i < 8; i++) {
+        g_db.txp[i] = g_p2p_sent[i]; g_db.rxp[i] = g_p2p_recv[i];
+        g_db.txb[i] = g_diag_txb[i]; g_db.rxb[i] = g_diag_rxb[i];
+    }
+    role = g_room3_is_spectator ? "spec" : g_nm.mode == 0 ? "host" : g_nm.mode == 1 ? "guest" : "?";
+    diag_putf("{\"t\":\"b0\",\"b\":%d,\"ts\":%lld,\"utc\":%llu,\"role\":\"%s\",\"D\":%ld,\"D0\":%ld,\"rtt\":%ld,"
+              "\"W\":%ld,\"mk\":\"%016llx\",\"lb\":%d,\"mem\":%ld,\"lock\":%d,\"sleep\":%d,\"capture\":%d}",
+              g_nm.seq, diag_ms(now), diag_utc_ms(), role, (long)g_nm.D, (long)g_nm.D0, (long)g_nm.lat,
+              (long)g_nm.W, lobby ? diag_fnv(key) : 0ULL, g_db.lobby_battle, (long)g_diag_members,
+              g_net_on_lock, g_net_on_sleep ? g_net_on_sleep : 8, g_net_on_capture);
+    g_ds.have = 0;
+    g_ds.nak_last = -1;
+    g_diag_battle = g_nm.seq;
+    InterlockedExchange(&g_diag_newbattle, 1);
+}
+
+/* p50, p90 and the largest bucket of a quarter-millisecond histogram delta; -1 when empty */
+static void diag_period(const LONG64* now_h, const LONG64* base, int* p50, int* p90, int* mx)
+{
+    LONG64 c[NET_PB], total = 0, run = 0;
+    int i;
+    *p50 = *p90 = *mx = -1;
+    for (i = 0; i < NET_PB; i++) {
+        c[i] = now_h[i] - base[i];
+        if (c[i] < 0) c[i] = 0;
+        total += c[i];
+        if (c[i]) *mx = i + 1;
+    }
+    if (!total) return;
+    for (i = 0; i < NET_PB; i++) {
+        run += c[i];
+        if (*p50 < 0 && run * 2 >= total) *p50 = i + 1;
+        if (*p90 < 0 && run * 10 >= total * 9) *p90 = i + 1;
+    }
+}
+
+static void diag_second_line(LONG64 now, int F, int frozen)
+{
+    char pp[700];
+    int i, at = 0, amin = -1, tp = -1, p50, p90, mx;
+    LONG64 an = 0, asum = 0, cur[NET_PB];
+    long long longest = g_ds.longest;
+    for (i = 0; i < 17; i++) {
+        LONG64 d = g_nm.ahead[i] - g_ds.ahead[i];
+        if (d > 0) { if (amin < 0) amin = i; an += d; asum += d * i; }
+    }
+    for (i = 0; i < 7; i++) if (g_nm.tempo[i] - g_ds.tempo[i] > 0) tp = i;
+    for (i = 0; i < NET_PB; i++) cur[i] = g_net_period[i];
+    diag_period(cur, g_ds.period, &p50, &p90, &mx);
+    pp[0] = 0;
+    for (i = 0; i < 8; i++) {
+        LONG64 txp = g_p2p_sent[i] - g_ds.txp[i], rxp = g_p2p_recv[i] - g_ds.rxp[i];
+        LONG64 txb = g_diag_txb[i] - g_ds.txb[i], rxb = g_diag_rxb[i] - g_ds.rxb[i];
+        LONG64 gap = InterlockedExchange64(&g_diag_gap[i], 0);
+        if (!txp && !rxp) continue;
+        if (at < (int)sizeof(pp) - 80)
+            at += snprintf(pp + at, sizeof(pp) - at, "%s[%d,%lld,%lld,%lld,%lld,%lld]", at ? "," : "", i,
+                           (long long)txp, (long long)txb, (long long)rxp, (long long)rxb,
+                           (long long)(gap * 1000 / g_net_qpf.QuadPart));
+    }
+    diag_putf("{\"t\":\"s\",\"b\":%d,\"ts\":%lld,\"F\":%d,\"df\":%d,\"fmx\":%lld,\"st\":[%lld,%lld,%lld],"
+              "\"sn\":[%lld,%lld],\"sc\":[%lld,%lld],\"sk\":[%lld,%lld],\"fz\":%d,\"am\":%d,\"aa\":%lld,\"tp\":%d,"
+              "\"nk\":%d,\"np\":[%d,%d,%d],\"lk\":[%lld,%lld],\"pp\":[%s]}",
+              g_nm.seq, diag_ms(now), F, F - g_ds.F0, (long long)(g_ds.fgap * 1000 / g_net_qpf.QuadPart),
+              (long long)(g_nm.count - g_ds.cnt), (long long)(g_nm.total_ms - g_ds.ms), longest,
+              (long long)(g_nm.cls_n[NET_CLS_NET] - g_ds.cn[NET_CLS_NET]),
+              (long long)(g_nm.cls_ms[NET_CLS_NET] - g_ds.cm[NET_CLS_NET]),
+              (long long)(g_nm.cls_n[NET_CLS_CUT] - g_ds.cn[NET_CLS_CUT]),
+              (long long)(g_nm.cls_ms[NET_CLS_CUT] - g_ds.cm[NET_CLS_CUT]),
+              (long long)(g_nm.cls_n[NET_CLS_KO] - g_ds.cn[NET_CLS_KO]),
+              (long long)(g_nm.cls_ms[NET_CLS_KO] - g_ds.cm[NET_CLS_KO]),
+              frozen, amin, an ? (long long)(asum * 10 / an) : -1LL, tp, g_ds.naks, p50, p90, mx,
+              (long long)(g_net_lock_met - g_ds.met), (long long)(g_net_lock_gaveup - g_ds.gave), pp);
+}
+
+/* Every net_watch sample of a live battle (m = the manager's first 0x100 bytes). */
+static void diag_sample(LONG64 now, const unsigned char* m, int F, int flag)
+{
+    int nak;
+    if (!g_diag_battle || g_diag_battle != g_nm.seq || !g_nm.started) return;
+    if (!g_ds.have) { diag_second_base(now, F); return; }
+    /* the frame the other side asked us to resend (+0xC0, -1 when none: 02 §4.2) */
+    memcpy(&nak, m + 0xC0, 4);
+    if (nak >= 0 && nak != g_ds.nak_last) g_ds.naks++;
+    g_ds.nak_last = nak;
+    if (now - g_ds.t0 >= g_net_qpf.QuadPart) {
+        diag_second_line(now, F, flag);
+        diag_second_base(now, F);
+    }
+}
+static void diag_frame_gap(LONG64 dq)
+{
+    if (g_diag_battle && dq > g_ds.fgap) g_ds.fgap = dq;
+}
+static void diag_on_stall(LONG64 ms, int cls, int F)
+{
+    if (!g_diag_battle) return;
+    if (ms > g_ds.longest) g_ds.longest = ms;
+    if (ms >= 100) {
+        LARGE_INTEGER q;
+        QueryPerformanceCounter(&q);
+        diag_putf("{\"t\":\"e\",\"k\":\"stall\",\"b\":%d,\"ts\":%lld,\"ms\":%lld,\"cls\":\"%s\",\"F\":%d}",
+                  g_nm.seq, diag_ms(q.QuadPart), (long long)ms,
+                  cls == NET_CLS_CUT ? "cut" : cls == NET_CLS_KO ? "ko" : "net", F);
+    }
+}
+static void diag_battle_end(const char* why, LONG64 now)
+{
+    char w[96], nh[160], ah[260], th[120], pp[600];
+    int i, a = 0, b = 0, c = 0, d = 0;
+    if (!g_diag_battle || g_diag_battle != g_nm.seq) return;
+    if (g_ds.have && now - g_ds.t0 >= g_net_qpf.QuadPart / 5)
+        diag_second_line(now, g_nm.last_F, g_nm.in_fz);
+    diag_json_str(w, sizeof(w), why);
+    nh[0] = ah[0] = th[0] = pp[0] = 0;
+    for (i = 0; i < NET_FZB; i++) a += snprintf(nh + a, sizeof(nh) - a, "%s%lld", i ? "," : "", (long long)g_nm.net_hist[i]);
+    for (i = 0; i < 17; i++) b += snprintf(ah + b, sizeof(ah) - b, "%s%lld", i ? "," : "", (long long)g_nm.ahead[i]);
+    for (i = 0; i < 7; i++) c += snprintf(th + c, sizeof(th) - c, "%s%lld", i ? "," : "", (long long)g_nm.tempo[i]);
+    for (i = 0; i < 8; i++) {
+        LONG64 txp = g_p2p_sent[i] - g_db.txp[i], rxp = g_p2p_recv[i] - g_db.rxp[i];
+        LONG64 txb = g_diag_txb[i] - g_db.txb[i], rxb = g_diag_rxb[i] - g_db.rxb[i];
+        if (!txp && !rxp) continue;
+        if (d < (int)sizeof(pp) - 80)
+            d += snprintf(pp + d, sizeof(pp) - d, "%s[%d,%lld,%lld,%lld,%lld]", d ? "," : "", i,
+                          (long long)txp, (long long)txb, (long long)rxp, (long long)rxb);
+    }
+    diag_putf("{\"t\":\"b1\",\"b\":%d,\"ts\":%lld,\"utc\":%llu,\"why\":\"%s\",\"run_ms\":%lld,\"tail_ms\":%lld,"
+              "\"w0_ms\":%lld,\"all\":[%lld,%lld,%lld,%lld],\"net\":[%lld,%lld,%lld,%lld],\"cut\":[%lld,%lld,%lld,%lld],"
+              "\"ko\":[%lld,%lld,%lld,%lld],\"nh\":[%s],\"ah\":[%s],\"th\":[%s],\"pp\":[%s]}",
+              g_nm.seq, diag_ms(now), diag_utc_ms(), w, (long long)(g_nm.run * 1000 / g_net_qpf.QuadPart),
+              (long long)g_nm.tail_ms, (long long)g_nm.first_wait_ms,
+              (long long)g_nm.count, (long long)g_nm.felt, (long long)g_nm.total_ms, (long long)g_nm.longest_ms,
+              (long long)g_nm.cls_n[NET_CLS_NET], (long long)g_nm.cls_felt[NET_CLS_NET],
+              (long long)g_nm.cls_ms[NET_CLS_NET], (long long)g_nm.cls_longest[NET_CLS_NET],
+              (long long)g_nm.cls_n[NET_CLS_CUT], (long long)g_nm.cls_felt[NET_CLS_CUT],
+              (long long)g_nm.cls_ms[NET_CLS_CUT], (long long)g_nm.cls_longest[NET_CLS_CUT],
+              (long long)g_nm.cls_n[NET_CLS_KO], (long long)g_nm.cls_felt[NET_CLS_KO],
+              (long long)g_nm.cls_ms[NET_CLS_KO], (long long)g_nm.cls_longest[NET_CLS_KO],
+              nh, ah, th, pp);
+    g_diag_battle = 0;
+    g_ds.have = 0;
+    InterlockedExchange(&g_diag_flush, 1);
+}
+/* ===================== end of PART 43 ===================== */
+
 static void net_fz_close(LONG64 now)
 {
     LONG64 ms = (now - g_nm.fz_t0) * 1000 / g_net_qpf.QuadPart;
@@ -18670,6 +19652,7 @@ static void net_fz_close(LONG64 now)
                  g_nm.fz_class == NET_CLS_CUT ? "after a cutscene" :
                  g_nm.fz_class == NET_CLS_KO  ? "at a KO (the game plays on)" : "network",
                  g_nm.last_F);
+    if (g_diag_on) diag_on_stall(ms, g_nm.fz_class, g_nm.last_F);   /* PART 43 */
 }
 
 /* Is a fighter down? The sync step's own KO test (exe+0x801C10): hp at
@@ -18893,6 +19876,7 @@ static void net_match_end(const char* why, LONG64 now)
     net_stalls_line();
     net_ahead_line();
     net_snap_line();
+    if (g_diag_on) diag_battle_end(why, now);   /* PART 43 */
     g_nm.active = 0;
 }
 
@@ -18926,6 +19910,7 @@ static DWORD WINAPI net_watch(LPVOID unused)
              ? "~1 kHz during battles on a high-resolution timer (no effect on the game's timer)"
              : "only at the system tick (~64 Hz): stalls under ~16 ms will be missed");
     if (!tm) { log_line("NET: no timer at all -- freeze sampling is off"); return 0; }
+    diag_start();   /* PART 43: armed only by bros_diag.txt beside the exe */
 
     memset(&g_nm, 0, sizeof(g_nm));
     for (;;) {
@@ -18956,6 +19941,7 @@ static DWORD WINAPI net_watch(LPVOID unused)
                      (long)(g_nm.D - g_nm.D0), (long)g_nm.lat,
                      (long)g_nm.W, g_net_on_lock ? "on" : "off",
                      g_net_on_sleep ? g_net_on_sleep : 8);
+            if (g_diag_on) diag_battle_begin(now.QuadPart);   /* PART 43 */
         }
 
         mgr = g_net_mgr;
@@ -18990,6 +19976,8 @@ static DWORD WINAPI net_watch(LPVOID unused)
                 int quiet = g_nm.quiet_t0 &&
                             (now.QuadPart - g_nm.quiet_t0) * 10 >= g_net_qpf.QuadPart * 7;
                 if (F != g_nm.last_F) {
+                    if (g_diag_on && g_nm.started && g_nm.last_F_t && !quiet)   /* PART 43 */
+                        diag_frame_gap(now.QuadPart - g_nm.last_F_t);
                     if (quiet) g_nm.resume_t = now.QuadPart;
                     g_nm.quiet_t0 = now.QuadPart;
                     quiet = 0;
@@ -19038,6 +20026,7 @@ static DWORD WINAPI net_watch(LPVOID unused)
                 if (g_nm.started &&
                     (flag || (now.QuadPart - g_nm.last_F_t) * 4 < g_net_qpf.QuadPart))
                     g_nm.run += dt;
+                if (g_diag_on) diag_sample(now.QuadPart, m, F, flag);   /* PART 43 */
                 if (!flag && g_nm.in_fz) {
                     net_fz_close(now.QuadPart);
                 } else if (g_nm.in_fz && !g_nm.fz_pre &&

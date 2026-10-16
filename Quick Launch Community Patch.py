@@ -25,6 +25,14 @@ try:
 except Exception:
     _netcode_mode = None
 
+# The tournament recorder's switches (launcher/diagnostics.py): bros_diag.txt beside the exe at every launch, from
+# the repository's Diagnostics/tournament.txt and the player's Game Modes switch. Optional: without it nothing is
+# recorded.
+try:
+    from launcher import diagnostics as _diagnostics
+except Exception:
+    _diagnostics = None
+
 # The online match pool (launcher/match_pool.py, 2026-10-04): derived from what the
 # game loads, not from the commit, so a push that changes nothing the game loads no
 # longer splits the players. Required -- without it a launch has no pool to join.
@@ -441,6 +449,9 @@ def launch(gameVersion):
             _ask_netcode_once()
             _netcode_mode.launch_step(BASE_DIR, game_path, [gameVersion],
                                       os.path.join(game_path, "dinput8.dll"))
+        # The tournament recorder's switches (launcher/diagnostics.py): never stops a launch.
+        if _diagnostics:
+            print("[diagnostics] " + _diagnostics.sync_switch_safe(BASE_DIR, game_path))
         launch_patched(game_path)
 
     except Exception as e:
