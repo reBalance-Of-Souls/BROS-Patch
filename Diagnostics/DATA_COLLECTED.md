@@ -12,8 +12,9 @@ against them.
   again by pushing `on 0`. The launcher copies it beside the game as
   `bros_diag.txt` when you start the game. Without that file, the recorder does nothing at all. There is no time
   window: while the switch is on, every game you start records, for as long as it runs.
-- **Only if you turn it on.** The launcher's **Game Modes** page has an **Online Match Diagnostics** switch, **OFF
-  unless you turn it on**. OFF means nothing is recorded on your PC: the launcher removes `bros_diag.txt` at once,
+- **Your own switch.** The launcher's **Game Modes** page has an **Online Match Diagnostics** switch. For the event
+  of 2026-10-17 it is **ON unless you turn it off**; after that event it goes back to **OFF unless you turn it
+  on**. OFF means nothing is recorded on your PC: the launcher removes `bros_diag.txt` at once,
   whenever it opens and at every launch. Your choice is kept in the launcher's `Json/diagnostics.json`.
 - **Only online battles get battle data.** A game that records writes the session header and the program flags below
   as it starts, and the PC counters below every 10 seconds outside battles.
@@ -200,5 +201,4 @@ The upload goes over HTTPS to our relay (a Cloudflare Worker) with the headers `
 - the name of your PC, your Windows user name, your folders and paths, your time zone;
 - your Wi-Fi network's name, or your adapters' names;
 - which programs you run (only the yes/no per kind above), your files, your chat, your screen, your keyboard or mouse;
-- anything at all while recording is switched off, or while your own Game Modes switch is OFF (as it is unless you
-  turn it on).
+- anything at all while recording is switched off, or while your own Game Modes switch is OFF.

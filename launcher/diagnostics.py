@@ -3,6 +3,8 @@
 2026-10-17: the player's switch is OFF unless the player turns it on, and the launcher calls it "Online Match
 Diagnostics" (Berg, 2026-10-17; it was "Tournament diagnostics", ON by default). The internal names stay:
 Diagnostics/tournament.txt, bros_diag.txt, the `tournament` key, the upload format.
+Version 3 r3 (Berg, 2026-10-17 evening): DEFAULT_ON is True again for that evening's event, and goes back to
+False after it.
 
 WHY. Players report more connection trouble in the tournaments Berg hosts than in normal play. The loader records
 how each battle ran (freezes, network timing, the PC's load and traffic, which kinds of program were open), and the
@@ -17,9 +19,10 @@ TWO SWITCHES. The loader records only when both are on:
      It has no time window: recording runs while it says `on 1`, and stops when Berg pushes `on 0` or removes the
      file (version 1 also had `from`/`until`; they are no longer passed to the loader).
   2. The player's own, on the Game Modes page ("Online Match Diagnostics"): kept in Json/diagnostics.json
-     ({"DIAGNOSTICS": "ON"} or "OFF"), OFF when the file is missing (version 3; versions 1-2 read a missing file as
-     ON). Only the player's own click writes the file, so a player who never touched the switch is OFF, and one who
-     turned it ON stays ON. OFF means nothing runs on this PC: the launcher removes bros_diag.txt at once, as it
+     ({"DIAGNOSTICS": "ON"} or "OFF"); a missing file reads as DEFAULT_ON: ON in versions 1-2 and in version 3 r3
+     (the event of 2026-10-17), OFF in version 3 r2. Only the player's own click writes the file, so a player who
+     never touched the switch follows DEFAULT_ON, one who turned it ON stays ON, and one who turned it OFF stays
+     OFF. OFF means nothing runs on this PC: the launcher removes bros_diag.txt at once, as it
      opens (remove_if_off, version 3) and at every launch, and the loader never arms.
 At every launch that installs the loader, sync_switch() writes <game>/bros_diag.txt from Berg's switch (everything
 but `upload`, plus `commit <HEAD>`), or removes it when either switch is off. The loader reads bros_diag.txt once,
@@ -78,7 +81,7 @@ CHOICE_NAME = "diagnostics.json"       # Json/diagnostics.json: {"DIAGNOSTICS": 
 DIALOG_WIDTH = 600                     # the Send window's fixed size (version 3); its page scrolls
 DIALOG_HEIGHT = 640                    # at most this tall, or the screen's height less 140 px
 DIALOG_MIN_HEIGHT = 420
-DEFAULT_ON = False                     # version 3 (2026-10-17): OFF unless the player turns it on
+DEFAULT_ON = True                      # version 3 r3 (Berg, 2026-10-17): ON for the evening's event; False after it
 
 
 class DiagnosticsError(Exception):
@@ -612,7 +615,7 @@ def status_text(base_dir, game_path):
 
 # ---------------------------------------------------------------- the dialog
 CONSENT = (
-    "While Online Match Diagnostics is on (Game Modes page; it is off unless you turn it on), the patch records "
+    "While Online Match Diagnostics is on (Game Modes page; it is on unless you turn it off), the patch records "
     "how your online matches run, so we can find and fix lag, freezes and disconnects. You can turn it off again "
     "at any time.\n\n"
     "What is included: per second of each battle, freezes, frame timing, network timing and packet counts; "

@@ -17,8 +17,10 @@ Recording is **off** unless this folder holds `tournament.txt` with `on 1`. Noth
      for as long as it runs. Berg turns it off by pushing `on 0` (or deleting the file).
    - Version 1 (2026-10-12) also had `from` and `until`. The launcher no longer passes them to the loader, and the
      loader no longer limits anything by them.
-2. **The player's own switch.** The launcher's **Game Modes** page has **Online Match Diagnostics**, **OFF unless the
-   player turns it on** (since 2026-10-17; before, it was called Tournament diagnostics and was ON by default).
+2. **The player's own switch.** The launcher's **Game Modes** page has **Online Match Diagnostics**, **ON unless the
+   player turns it off**, for the event of 2026-10-17 (Berg). After that event it goes back to **OFF unless the
+   player turns it on**, as it was earlier on 2026-10-17. Before 2026-10-17 it was called Tournament diagnostics
+   and was ON by default.
    OFF means nothing runs on that PC: the launcher removes `bros_diag.txt` at once, whenever it opens and at every
    launch, and the loader never arms. The choice is kept in `Json/diagnostics.json` (not committed); only the
    player's own click writes it.
