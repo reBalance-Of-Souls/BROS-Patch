@@ -1,5 +1,8 @@
-"""diagnostics.py -- the launcher side of the tournament recorder (PART 43 "NETDIAG" of
-Files/Matchmaking/dinput8.dll). Version 1 2026-10-12; version 2 2026-10-16.
+"""diagnostics.py -- the launcher side of the online match recorder, "Online Match Diagnostics" in the launcher
+(PART 43 "NETDIAG" of Files/Matchmaking/dinput8.dll). Version 1 2026-10-12; version 2 2026-10-16; version 3
+2026-10-17: the player's switch is OFF unless the player turns it on, and the launcher calls it "Online Match
+Diagnostics" (Berg, 2026-10-17; it was "Tournament diagnostics", ON by default). The internal names stay:
+Diagnostics/tournament.txt, bros_diag.txt, the `tournament` key, the upload format.
 
 WHY. Players report more connection trouble in the tournaments Berg hosts than in normal play. The loader records
 how each battle ran (freezes, network timing, the PC's load and traffic, which kinds of program were open), and the
@@ -13,9 +16,11 @@ TWO SWITCHES. The loader records only when both are on:
          upload https://<relay>/upload              (where "Send diagnostics" posts the zip)
      It has no time window: recording runs while it says `on 1`, and stops when Berg pushes `on 0` or removes the
      file (version 1 also had `from`/`until`; they are no longer passed to the loader).
-  2. The player's own, on the Game Modes page ("Tournament diagnostics"): kept in Json/diagnostics.json
-     ({"DIAGNOSTICS": "ON"} or "OFF"), ON when the file is missing. OFF means nothing runs on this PC: the launcher
-     removes bros_diag.txt at once and at every launch, and the loader never arms.
+  2. The player's own, on the Game Modes page ("Online Match Diagnostics"): kept in Json/diagnostics.json
+     ({"DIAGNOSTICS": "ON"} or "OFF"), OFF when the file is missing (version 3; versions 1-2 read a missing file as
+     ON). Only the player's own click writes the file, so a player who never touched the switch is OFF, and one who
+     turned it ON stays ON. OFF means nothing runs on this PC: the launcher removes bros_diag.txt at once, as it
+     opens (remove_if_off, version 3) and at every launch, and the loader never arms.
 At every launch that installs the loader, sync_switch() writes <game>/bros_diag.txt from Berg's switch (everything
 but `upload`, plus `commit <HEAD>`), or removes it when either switch is off. The loader reads bros_diag.txt once,
 at game start, so a game started before a change keeps what it read.
@@ -70,7 +75,10 @@ CHUNK_LIMIT = 16 * 1024 * 1024         # the compressed size of one cut piece of
 SWITCH_KEYS = ("tournament", "salt")   # version 1 also passed from/until; there is no time window any more
 LOG_KEEP = ("] NET/", "] NET:", "] PACING:", "] NETDIAG:", "] PATCHSTAMP")
 CHOICE_NAME = "diagnostics.json"       # Json/diagnostics.json: {"DIAGNOSTICS": "ON"} or {"DIAGNOSTICS": "OFF"}
-DEFAULT_ON = True
+DIALOG_WIDTH = 600                     # the Send window's fixed size (version 3); its page scrolls
+DIALOG_HEIGHT = 640                    # at most this tall, or the screen's height less 140 px
+DIALOG_MIN_HEIGHT = 420
+DEFAULT_ON = False                     # version 3 (2026-10-17): OFF unless the player turns it on
 
 
 class DiagnosticsError(Exception):
@@ -175,7 +183,7 @@ def sync_switch(base_dir, game_path):
     """Put Berg's switch beside the game exe, or take it away when either switch is off. Returns what it did."""
     target = os.path.join(game_path, SWITCH_GAME)
     if not load_choice(base_dir):
-        return _remove_game_switch(target, "switched off on this PC (Game Modes)")
+        return _remove_game_switch(target, "Online Match Diagnostics is off on this PC (Game Modes)")
     sw = read_switch(base_dir)
     if not switch_is_on(sw):
         return _remove_game_switch(target, "no tournament is on")
@@ -199,6 +207,23 @@ def sync_switch_safe(base_dir, game_path):
         return sync_switch(base_dir, game_path)
     except Exception as e:
         return "the switch could not be synced (%s); this game records nothing" % e
+
+
+def remove_if_off(base_dir, game_path):
+    """Version 3: when the player's switch reads OFF, take away a bros_diag.txt left beside the game. A PC updated
+    from version 2, which read a missing choice as ON, still holds the file of its last launch, and the loader
+    would arm from it in a game started straight from the exe. The main page calls this as the launcher opens, so
+    its "nothing is recorded" holds from then on, not only from the next launch. It only removes, never writes,
+    and never raises."""
+    try:
+        if load_choice(base_dir):
+            return "Online Match Diagnostics is on: bros_diag.txt is left to the next launch"
+        if not game_path or not os.path.isdir(game_path):
+            return "no game folder: nothing to remove"
+        return _remove_game_switch(os.path.join(game_path, SWITCH_GAME),
+                                   "Online Match Diagnostics is off on this PC (Game Modes)")
+    except Exception as e:
+        return "bros_diag.txt could not be checked (%s)" % e
 
 
 def set_choice(base_dir, game_path, on):
@@ -467,7 +492,7 @@ def upload(bundle, url, tournament=""):
     import urllib.error
     import urllib.request
     if not url or not url.lower().startswith("https://"):
-        raise DiagnosticsError("No upload address is set for this tournament.")
+        raise DiagnosticsError("No upload address is set.")
     if len(bundle) > MAX_UPLOAD:
         raise DiagnosticsError("The diagnostics are too large to upload (%.1f MB). Save the zip instead."
                                % (len(bundle) / 1048576.0))
@@ -577,17 +602,19 @@ def status_text(base_dir, game_path):
         return ("%d recorded session%s waiting to be sent -- thank you for helping!" % (n, "" if n == 1 else "s"),
                 True)
     if not mine:
-        return "Tournament diagnostics are OFF on this PC (Game Modes): nothing is recorded.", False
+        return "Online Match Diagnostics are OFF on this PC: nothing is recorded. You can turn them on in " \
+               "Game Modes.", False
     if switch_is_on(sw):
-        return "Recording is ON for tournament '%s'. Nothing leaves your PC until you click Send." \
+        return "Recording is ON ('%s'). Nothing leaves your PC until you click Send." \
                % sw.get("tournament", "?"), False
-    return "Nothing recorded. Recording is only switched on for tournaments.", False
+    return "Nothing is being recorded: recording is switched off for now.", False
 
 
 # ---------------------------------------------------------------- the dialog
 CONSENT = (
-    "During tournaments the patch records how your online matches run, so we can find out why tournaments lag "
-    "more than normal play. You can switch this off on the Game Modes page (Tournament diagnostics).\n\n"
+    "While Online Match Diagnostics is on (Game Modes page; it is off unless you turn it on), the patch records "
+    "how your online matches run, so we can find and fix lag, freezes and disconnects. You can turn it off again "
+    "at any time.\n\n"
     "What is included: per second of each battle, freezes, frame timing, network timing and packet counts; "
     "your PC's CPU load and total network traffic; your hardware (CPU, GPU, RAM, Windows version, Wi-Fi or "
     "cable and its signal); yes/no flags for kinds of programs that were open (streaming, Discord, browsers, "
@@ -616,29 +643,93 @@ def open_send_dialog(parent, base_dir, game_path, theme=None, on_done=None):
     win.transient(parent)
     win.resizable(False, False)
     pad = {"padx": 14}
+    # A fixed size (version 3): the window no longer grows with the number of sessions. Its page scrolls; the
+    # status line and the buttons below it stay in view.
+    win_w = DIALOG_WIDTH                 # widened at the end if the page asks for more (large fonts, high DPI)
+    try:
+        win_h = max(DIALOG_MIN_HEIGHT, min(DIALOG_HEIGHT, win.winfo_screenheight() - 140))
+    except Exception:
+        win_h = DIALOG_HEIGHT
 
     tk.Label(win, text="Send diagnostics", font=th["title"], bg=th["bg"], fg=th["gold"]).pack(anchor="w", pady=(12, 4), **pad)
-    tk.Label(win, text=CONSENT, font=th["small"], bg=th["bg"], fg=th["fg"], wraplength=520,
+
+    body = tk.Frame(win, bg=th["bg"])
+    page_canvas = tk.Canvas(body, bg=th["bg"], highlightthickness=0, borderwidth=0, yscrollincrement=20)
+    page_bar = tk.Scrollbar(body, orient="vertical", command=page_canvas.yview)
+    page_canvas.configure(yscrollcommand=page_bar.set)
+    page = tk.Frame(page_canvas, bg=th["bg"])
+    page_item = page_canvas.create_window((0, 0), window=page, anchor="nw")
+    page_canvas.pack(side="left", fill="both", expand=True)
+    page_state = {"bar": False}
+
+    def page_layout(_event=None):
+        page_canvas.itemconfigure(page_item, width=page_canvas.winfo_width())
+        page_canvas.configure(scrollregion=(0, 0, page.winfo_reqwidth(), page.winfo_reqheight()))
+        need = page.winfo_reqheight() > page_canvas.winfo_height() + 1
+        if need and not page_state["bar"]:
+            page_bar.pack(side="right", fill="y")
+            page_state["bar"] = True
+        elif not need and page_state["bar"]:
+            page_bar.pack_forget()
+            page_state["bar"] = False
+            page_canvas.yview_moveto(0)
+
+    page.bind("<Configure>", page_layout)
+    page_canvas.bind("<Configure>", page_layout)
+
+    def wheel_units(event):
+        # Tk's own step for a scroll bar (scrlbar.tcl): -delta/30 units, rounded away from zero, so a notch (delta
+        # 120) is 4 units of 20 px. X11 sends buttons 4 and 5 instead.
+        num = getattr(event, "num", None)
+        if num == 4:
+            return -4
+        if num == 5:
+            return 4
+        d = int(getattr(event, "delta", 0) or 0)
+        return (-d) // 30 if d >= 0 else (29 - d) // 30
+
+    wheel_box = {"y": None}
+
+    def wheel_mark(event):
+        wheel_box["y"] = event.widget.yview()    # the comment box before its own class binding scrolls it
+        return None
+
+    def page_wheel(event):
+        # Always "break": nothing behind the dialog may scroll (the launcher's main window binds the wheel for all
+        # widgets with bind_all). The comment box scrolls itself while it can; then the page takes over.
+        if isinstance(event.widget, tk.Text) and event.widget.yview() != wheel_box["y"]:
+            return "break"
+        if page_state["bar"]:
+            page_canvas.yview_scroll(wheel_units(event), "units")
+        return "break"
+
+    # Bound on the window itself: every widget of the dialog carries the window in its bind tags, so the wheel
+    # scrolls the page wherever the pointer is in the dialog, and the binding goes with the window (no global
+    # binding to undo). The bar gets it as its own binding, which replaces its class binding's step (no double
+    # scroll); the comment box notes where it stood (wheel_mark, below), so page_wheel can tell whether it moved.
+    for seq in ("<MouseWheel>", "<Button-4>", "<Button-5>"):
+        win.bind(seq, page_wheel)
+        page_bar.bind(seq, page_wheel)
+
+    tk.Label(page, text=CONSENT, font=th["small"], bg=th["bg"], fg=th["fg"], wraplength=520,
              justify="left").pack(anchor="w", **pad)
 
-    box = tk.Frame(win, bg=th["panel"], padx=10, pady=6)
+    box = tk.Frame(page, bg=th["panel"], padx=10, pady=6)
     box.pack(fill="x", pady=(10, 6), **pad)
     if infos:
-        tk.Label(box, text="Sessions to send:", font=th["small"], bg=th["panel"], fg=th["gold"]).pack(anchor="w")
-        for i in infos[:12]:
+        tk.Label(box, text="Sessions to send (%d):" % len(infos), font=th["small"], bg=th["panel"],
+                 fg=th["gold"]).pack(anchor="w")
+        for i in infos:                      # every session: the page scrolls (version 2 listed 12)
             line = "  %s   %d battle%s   %d KB%s" % (i["start"] or i["name"], i["battles"],
                                                     "" if i["battles"] == 1 else "s", max(1, i["bytes"] // 1024),
                                                     ("   (" + i["tournament"] + ")") if i["tournament"] else "")
             tk.Label(box, text=line, font=th["small"], bg=th["panel"], fg=th["fg"]).pack(anchor="w")
-        if len(infos) > 12:
-            tk.Label(box, text="  ... and %d more" % (len(infos) - 12), font=th["small"], bg=th["panel"],
-                     fg=th["muted"]).pack(anchor="w")
     else:
         tk.Label(box, text="No recorded sessions are waiting to be sent.", font=th["small"], bg=th["panel"],
                  fg=th["muted"]).pack(anchor="w")
 
-    form = tk.Frame(win, bg=th["bg"])
-    form.pack(fill="x", **pad)
+    form = tk.Frame(page, bg=th["bg"])
+    form.pack(fill="x", pady=(0, 6), **pad)
     tk.Label(form, text="Pseudonym (optional -- leave empty to stay anonymous):", font=th["small"], bg=th["bg"],
              fg=th["muted"]).pack(anchor="w")
     name_var = tk.StringVar()
@@ -647,13 +738,17 @@ def open_send_dialog(parent, base_dir, game_path, theme=None, on_done=None):
              bg=th["bg"], fg=th["muted"]).pack(anchor="w")
     comment = tk.Text(form, height=4, width=64, font=th["small"], wrap="word")
     comment.pack(anchor="w")
+    for seq in ("<MouseWheel>", "<Button-4>", "<Button-5>"):
+        comment.bind(seq, wheel_mark)         # runs before the box's class binding; page_wheel runs after it
 
+    # The buttons and the status line are packed from the bottom first, so the scrolling page takes only the
+    # height left over and the buttons are never pushed out of the window.
+    buttons = tk.Frame(win, bg=th["bg"])
+    buttons.pack(side="bottom", fill="x", pady=(4, 12), **pad)
     status = tk.Label(win, text="" if url else "No upload address is set: you can save the zip and send it by hand.",
                       font=th["small"], bg=th["bg"], fg=th["muted"], wraplength=520, justify="left")
-    status.pack(anchor="w", pady=(8, 2), **pad)
-
-    buttons = tk.Frame(win, bg=th["bg"])
-    buttons.pack(fill="x", pady=(4, 12), **pad)
+    status.pack(side="bottom", anchor="w", pady=(8, 2), **pad)
+    body.pack(side="top", fill="both", expand=True)
     state = {"busy": False, "result": None, "progress": ""}
 
     def files():
@@ -748,11 +843,14 @@ def open_send_dialog(parent, base_dir, game_path, theme=None, on_done=None):
     set_busy(False)
     win.protocol("WM_DELETE_WINDOW", close)
     win.update_idletasks()
+    win_w = max(win_w, page.winfo_reqwidth() + page_bar.winfo_reqwidth() + 4)
     try:
-        x = parent.winfo_rootx() + max(0, (parent.winfo_width() - win.winfo_reqwidth()) // 2)
-        y = parent.winfo_rooty() + 30
-        win.geometry("+%d+%d" % (x, y))
+        x = parent.winfo_rootx() + max(0, (parent.winfo_width() - win_w) // 2)
+        y = max(0, min(parent.winfo_rooty() + 30, win.winfo_screenheight() - win_h - 60))
+        win.geometry("%dx%d+%d+%d" % (win_w, win_h, x, y))
     except Exception:
-        pass
+        win.geometry("%dx%d" % (win_w, win_h))
+    win.update_idletasks()
+    page_layout()
     win.grab_set()
     return win

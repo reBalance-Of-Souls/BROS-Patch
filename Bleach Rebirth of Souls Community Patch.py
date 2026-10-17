@@ -156,9 +156,10 @@ try:
     except Exception:
         _netcode_mode = None
 
-    # The tournament recorder (launcher/diagnostics.py): bros_diag.txt beside the exe at every launch, from the
-    # repository's Diagnostics/tournament.txt (Berg's switch) and Json/diagnostics.json (the player's, on the Game
-    # Modes page); the "Send diagnostics" window. Optional: without the module nothing is recorded.
+    # The online match recorder, "Online Match Diagnostics" (launcher/diagnostics.py): bros_diag.txt beside the exe
+    # at every launch, from the repository's Diagnostics/tournament.txt (Berg's switch) and Json/diagnostics.json
+    # (the player's, on the Game Modes page, OFF unless the player turns it on); the "Send diagnostics" window.
+    # Optional: without the module nothing is recorded.
     try:
         from launcher import diagnostics as _diagnostics
     except Exception:
@@ -1046,7 +1047,7 @@ try:
                         return
                 else:
                     print("[netcode] launcher/netcode_mode.py is missing: bros_net.txt is left as it is")
-                # The tournament recorder's switches (launcher/diagnostics.py): never stops a launch.
+                # The online match recorder's switches (launcher/diagnostics.py): never stops a launch.
                 if _diagnostics:
                     print("[diagnostics] " + _diagnostics.sync_switch_safe(BASE_DIR, game_path))
                 launch_patched(game_path)
@@ -1169,7 +1170,7 @@ try:
                     f"The New netcode switch could not be applied:\n\n{e}\n\n"
                     "The game was NOT started. Fix the cause and launch again.")
                 return
-        # The tournament recorder's switches, as for every patched launch: never stops a launch.
+        # The online match recorder's switches, as for every patched launch: never stops a launch.
         if _diagnostics:
             print("[diagnostics] " + _diagnostics.sync_switch_safe(BASE_DIR, game_path))
         launch_patched(game_path)
@@ -1571,9 +1572,9 @@ try:
     launchButton.pack(fill=X)
     playOuter.pack(fill=X, pady=(0,7))
 
-    # Tournament diagnostics (launcher/diagnostics.py): a status line -- sessions waiting to be sent, or whether
+    # Online Match Diagnostics (launcher/diagnostics.py): a status line -- sessions waiting to be sent, or whether
     # recording is on -- and the Send button. Its border turns gold while sessions wait.
-    diagOuter, diagInner = make_card(mainPage, "Tournament diagnostics")
+    diagOuter, diagInner = make_card(mainPage, "Online Match Diagnostics")
     diagStatus = Label(diagInner, text="", font=FONT_SMALL, bg=PANEL, fg=TEXT_MUTED, wraplength=480,
                        justify="left")
     diagStatus.pack(anchor="w", pady=(0,4))
@@ -1598,11 +1599,16 @@ try:
             on_done=refreshDiagnosticsStatus)
 
     sendDiagnosticsButton = mkbutton(diagInner, "Send diagnostics", openSendDiagnostics, icon="📡",
-                                      tooltip="After a tournament: send the recorded match diagnostics to the patch "
+                                      tooltip="Send the recorded online match diagnostics to the patch "
                                               "developers. You see what is sent, and nothing leaves your PC until "
                                               "you click Send.")
     sendDiagnosticsButton.pack(fill=X)
     diagOuter.pack(fill=X, pady=(0,7))
+    # Version 3: OFF unless the player turns it on. A recorder switch file left beside the game by an older
+    # launcher's default ON is taken away as the launcher opens, so the status line's "nothing is recorded" holds
+    # even for a game started straight from the exe.
+    if _diagnostics:
+        print("[diagnostics] " + _diagnostics.remove_if_off(BASE_DIR, game_path))
     refreshDiagnosticsStatus()
 
     quickLaunchOuter, quickLaunchInner = make_card(mainPage, "Quick Launch")
@@ -1817,14 +1823,14 @@ try:
     netcodeOuter.pack(fill=X, pady=(0,7))
     set_toggle_visual(netcodeButton, netcodeOn)
 
-    # Tournament diagnostics -- the player's own switch for the tournament recorder (launcher/diagnostics.py,
-    # 2026-10-16). ON unless the player switched it OFF. OFF means nothing runs on this PC: bros_diag.txt is
-    # removed at once and at every launch, so the loader never arms. Kept in Json/diagnostics.json.
-    diagModesOuter, diagModesInner = make_card(gameModesPage, "Tournament diagnostics")
+    # Online Match Diagnostics -- the player's own switch for the online match recorder (launcher/diagnostics.py,
+    # 2026-10-16; version 3 2026-10-17). OFF unless the player turns it on. OFF means nothing runs on this PC:
+    # bros_diag.txt is removed at once and at every launch, so the loader never arms. Kept in Json/diagnostics.json.
+    diagModesOuter, diagModesInner = make_card(gameModesPage, "Online Match Diagnostics")
     diagnosticsOn = _diagnostics.load_choice(BASE_DIR) if _diagnostics else False
 
     def actualiseDiagnosticsButton():
-        diagnosticsButton.config(text=f'Tournament diagnostics : (Currently {"ON" if diagnosticsOn else "OFF"})')
+        diagnosticsButton.config(text=f'Online Match Diagnostics : (Currently {"ON" if diagnosticsOn else "OFF"})')
         set_toggle_visual(diagnosticsButton, diagnosticsOn)
 
     def diagnosticsFunc():
@@ -1834,7 +1840,7 @@ try:
         try:
             print("[diagnostics] " + _diagnostics.set_choice(BASE_DIR, game_path, not diagnosticsOn))
         except _diagnostics.DiagnosticsError as e:
-            messagebox.showerror("Tournament diagnostics", f"The switch could not be saved:\n\n{e}")
+            messagebox.showerror("Online Match Diagnostics", f"The switch could not be saved:\n\n{e}")
             return
         diagnosticsOn = not diagnosticsOn
         actualiseDiagnosticsButton()
@@ -1845,9 +1851,9 @@ try:
 
     diagnosticsButton = mkbutton(
         diagModesInner,
-        text=f'Tournament diagnostics : (Currently {"ON" if diagnosticsOn else "OFF"})',
+        text=f'Online Match Diagnostics : (Currently {"ON" if diagnosticsOn else "OFF"})',
         command=diagnosticsFunc,
-        tooltip="ON (the default): while a tournament is switched on, the patch records how your online matches run -- freezes, network timing, your PC's load -- so the tournament lag can be found and fixed. Nothing leaves your PC until you click Send diagnostics on the main page. OFF: nothing is recorded on this PC."
+        tooltip="OFF (the default): nothing is recorded on this PC. ON: while recording is switched on, the patch records how your online matches run -- freezes, network timing, your PC's load -- so lag, freezes and disconnects can be found and fixed. Nothing leaves your PC until you click Send diagnostics on the main page."
     )
     diagnosticsButton.pack(pady=(paddingYvalue,0), fill=X)
     if not _diagnostics:

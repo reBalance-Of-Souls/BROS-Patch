@@ -1,4 +1,4 @@
-# Diagnostics — the tournament recorder's switch
+# Diagnostics — Online Match Diagnostics (the online match recorder) and its switch
 
 Recording is **off** unless this folder holds `tournament.txt` with `on 1`. Nothing is recorded in normal play.
 
@@ -17,9 +17,11 @@ Recording is **off** unless this folder holds `tournament.txt` with `on 1`. Noth
      for as long as it runs. Berg turns it off by pushing `on 0` (or deleting the file).
    - Version 1 (2026-10-12) also had `from` and `until`. The launcher no longer passes them to the loader, and the
      loader no longer limits anything by them.
-2. **The player's own switch.** The launcher's **Game Modes** page has **Tournament diagnostics**, ON by default.
-   OFF means nothing runs on that PC: the launcher removes `bros_diag.txt` at once and at every launch, and the loader
-   never arms. The choice is kept in `Json/diagnostics.json` (not committed).
+2. **The player's own switch.** The launcher's **Game Modes** page has **Online Match Diagnostics**, **OFF unless the
+   player turns it on** (since 2026-10-17; before, it was called Tournament diagnostics and was ON by default).
+   OFF means nothing runs on that PC: the launcher removes `bros_diag.txt` at once, whenever it opens and at every
+   launch, and the loader never arms. The choice is kept in `Json/diagnostics.json` (not committed); only the
+   player's own click writes it.
 3. **Every launch** that installs the loader copies the switch beside the game exe as `bros_diag.txt`, when both
    switches are on. This happens in the main launcher (also for the beta) and in the Community Patch, Room Match and
    Training Mode quick launchers (`launcher/diagnostics.py`).
@@ -31,7 +33,7 @@ Recording is **off** unless this folder holds `tournament.txt` with `on 1`. Noth
      file at 64 MB).
    - It adds no packets, no game memory writes and no timing changes.
    - Without the file it starts nothing.
-5. **After the event**, players open the launcher and click **Send diagnostics** in the "Tournament diagnostics"
+5. **After the event**, players open the launcher and click **Send diagnostics** in the "Online Match Diagnostics"
    card.
    - The dialog shows what is included. Players can give an optional pseudonym and a comment.
    - It uploads the recordings to the relay, which files each upload in a private repository. The relay takes at

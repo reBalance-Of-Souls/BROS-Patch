@@ -1,19 +1,20 @@
-# What the tournament diagnostics collect
+# What Online Match Diagnostics collect
 
-This file lists **everything** the tournament recorder writes on your PC, everything the **Send diagnostics** button
+This file lists **everything** the online match recorder ("Online Match Diagnostics" in the launcher) writes on
+your PC, everything the **Send diagnostics** button
 uploads, and what is stored afterwards. The names in `code` are the field names in the files: the session files are
 plain text (one JSON object per line, its kind in `t`), so you can open them in any text editor and check this list
 against them.
 
 ## When anything is recorded
 
-- **Only while a tournament switch is on.** We turn recording on for events by pushing
-  `Diagnostics/tournament.txt`, and off again by pushing `on 0`. The launcher copies it beside the game as
+- **Only while recording is switched on.** We switch recording on by pushing `Diagnostics/tournament.txt`, and off
+  again by pushing `on 0`. The launcher copies it beside the game as
   `bros_diag.txt` when you start the game. Without that file, the recorder does nothing at all. There is no time
   window: while the switch is on, every game you start records, for as long as it runs.
-- **Only if you leave it on.** The launcher's **Game Modes** page has a **Tournament diagnostics** switch, ON unless
-  you turn it off. OFF means nothing is recorded on your PC: the launcher removes `bros_diag.txt` at once and at every
-  launch. Your choice is kept in the launcher's `Json/diagnostics.json`.
+- **Only if you turn it on.** The launcher's **Game Modes** page has an **Online Match Diagnostics** switch, **OFF
+  unless you turn it on**. OFF means nothing is recorded on your PC: the launcher removes `bros_diag.txt` at once,
+  whenever it opens and at every launch. Your choice is kept in the launcher's `Json/diagnostics.json`.
 - **Only online battles get battle data.** A game that records writes the session header and the program flags below
   as it starts, and the PC counters below every 10 seconds outside battles.
 - **Nothing leaves your PC by itself.** Recording writes files on your own disk. They are only sent if you click
@@ -189,8 +190,8 @@ The upload goes over HTTPS to our relay (a Cloudflare Worker) with the headers `
   while the upload is in transit; the relay does not write it anywhere.
 - The dialog shows you a **receipt** after sending. Keep it if you want your upload deleted later: give Berg the
   receipt and that file is removed.
-- The repository is private to the patch team. The data is used to find the cause of tournament lag, and it is
-  deleted after the analysis.
+- The repository is private to the patch team. The data is used to find the causes of lag, freezes and disconnects
+  in online matches, and it is deleted after the analysis.
 
 ## Never recorded or sent
 
@@ -199,4 +200,5 @@ The upload goes over HTTPS to our relay (a Cloudflare Worker) with the headers `
 - the name of your PC, your Windows user name, your folders and paths, your time zone;
 - your Wi-Fi network's name, or your adapters' names;
 - which programs you run (only the yes/no per kind above), your files, your chat, your screen, your keyboard or mouse;
-- anything at all while no tournament switch is on, or while your own Game Modes switch is OFF.
+- anything at all while recording is switched off, or while your own Game Modes switch is OFF (as it is unless you
+  turn it on).
