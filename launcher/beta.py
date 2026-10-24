@@ -23,8 +23,9 @@ WHAT A LAUNCH INSTALLS (the Dev launcher's install of the version, captured by t
            Dev launcher already share, so choosing any other version afterwards puts the game back. Files the beta
            creates (no stock copy existed) are listed under "beta_created", and the revert deletes exactly those.
   loader   <game>/dinput8.dll;  plugins  <game>/ReBalanceOfSouls/*.dll (mirrored: any other DLL there is removed)
-  then the Dev launcher's sweep of stray effect banks, and the match code: the Dev Environment's Community Patch
-  pool (SHARED_POOL_CODE), so beta players and that version's Dev players meet.
+  then the Dev launcher's sweep of stray effect banks, and the match code: the content pool (launcher/content_pool.py,
+  the same file as the Dev Environment's), made from what is installed, so beta players and that version's Dev
+  players meet when their games hold the same content, and only then.
 """
 
 import hashlib
@@ -44,17 +45,21 @@ try:
     from launcher import beta_crypto as bc
 except ImportError:                                   # run from the folder itself (tests)
     import beta_crypto as bc
+try:
+    from launcher import content_pool as cpool
+except ImportError:                                   # run from the folder itself (tests)
+    import content_pool as cpool
 
 BETA_NAME = "Zangetsu Beta (dev build)"
 RELEASE_BASE = "https://github.com/reBalance-Of-Souls/BROS-Patch/releases/download/lb-data/"
 SOURCE_ENV = "BROS_BETA_SOURCE"                         # tests: a local folder or another URL instead of the release
-# The beta's online pool (Berg, 2026-10-16). The beta IS the Dev Environment's "Bleach Rebirth of Souls Community
-# Patch" version (a build is the Dev launcher's install of it), so it plays in that version's shared pool, which the
-# Dev launcher writes for it too (SHARED_POOLS in its main launcher): the two numbers must stay equal. 603966 is the
-# code the first build (3f19ecf4, 2026-10-14) carries in its manifest. A build's own code is no longer used, so a later
-# build cannot leave the pool by carrying another one. One pool means a build made before a change to that version
-# meets the changed version too: their matches can desync where they differ, so a new build follows each change.
-SHARED_POOL_CODE = 603966
+# The beta's online pool (Berg, 2026-10-24: "make sure that there would be no chance of desync between public beta and
+# dev patch CP"). The beta IS the Dev Environment's "Bleach Rebirth of Souls Community Patch" version (a build is the
+# Dev launcher's install of it). Its code is made after the install from the installed game by launcher/content_pool.py,
+# the same file and rule the Dev launcher uses for that version (CONTENT_POOLS in its main launcher): the same content
+# gives the same pool, any difference another one, so a beta build and a Dev build that differ never meet. This
+# replaces the fixed 603966 of 2026-10-16 (SHARED_POOL_CODE), which paired different builds. A build's own
+# "match_code" is not used.
 # The key sequence that opens the Beta page, kept only as the sha256 of its Tk key names joined by spaces.
 SEQUENCE_LEN = 7
 SEQUENCE_SHA256 = "f735a52b8c73fb48da687778de81a3d14d51217dd908fd7117e600214e249daa"
@@ -952,16 +957,15 @@ def _install(base_dir, game, m, log, progress):
         raise BetaError("%d beta file(s) did not install, first: %s. An antivirus scanning the game folder is the "
                         "usual cause; allow it and launch again." % (len(bad), bad[0]))
 
-    # 6. the match code: the Dev Community Patch's shared pool (SHARED_POOL_CODE), not the build's own
-    code = SHARED_POOL_CODE
-    if str(m.get("match_code")) != str(code):
-        log("[beta] match code %d (the Dev Community Patch's pool); the build's own %s is not used"
-            % (code, m.get("match_code")))
+    # 6. the match code: the content pool, made from what is installed now (launcher/content_pool.py, the Dev
+    #    launcher's rule for its Community Patch). If it cannot be made, the launch stops here.
     try:
-        from launcher import match_pool
-        match_pool.write_code(game, code)
-    except ImportError:
-        _atomic_write(os.path.join(game, "patch_ranked.txt"), b"%d\n" % code)
+        code, n_counted, digest = cpool.write_code(game)
+    except cpool.PoolError as e:
+        raise BetaError("The online pool could not be made from the installed game (%s). The game was not started."
+                        % e)
+    log("[beta] content pool %d (%d files, %s); the Dev Community Patch meets it on the same build"
+        % (code, n_counted, digest[:12]))
 
     _atomic_write(rec_path, json.dumps({"game": os.path.abspath(game), "build": m["build"]["id"],
                                         "files": now}).encode())
