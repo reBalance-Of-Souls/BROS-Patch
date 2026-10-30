@@ -1049,6 +1049,36 @@ static void*            g_room3_stw_this  = 0;
 #endif
 static void* volatile   g_room3_mm    = NULL;   /* the ISteamMatchmaking object   */
 static uint64_t volatile g_room3_lobby = 0;     /* the lobby the room is in       */
+/* F4 (2026-10-28; NETCODE TOURNAMENT_DIAG_2026-10-12 analysis_20261017/STEAM_DUMPS.md). The P2P watch below calls
+   Steam from a thread of its own every 2 s, and it kept doing so with the cached lobby after the game had left the
+   room: on 10-17, 13 s after LeaveLobby, one of those calls tripped Steam's "Bad thread local" assert and then faulted
+   in steamclient64 on that thread (the same assert from the same call on 10-12). So the watch's session checks run
+   only while the game is in a room (before the first room it only looks up the networking interface). LeaveLobby
+   stops them and remembers that lobby, so the room UI's last polls of it do not start them again; NumMembers on
+   another lobby, or a JoinLobby of the same one, starts them; SteamAPI_Shutdown stops them for good. A pass holds
+   g_room3_steam_lk shared around its Steam calls, checks both flags under it and again before every call; the leave
+   and shutdown hooks take the lock exclusively, waiting a short, bounded time for a pass already in Steam
+   (room3_pass_wait). Once a hook has run, the watch starts no further Steam call; one already under way may finish. */
+static uint64_t volatile g_room3_left       = 0;  /* the lobby this client last left                */
+static volatile LONG     g_room3_steam_down = 0;  /* 1 once the game called SteamAPI_Shutdown        */
+static SRWLOCK           g_room3_steam_lk   = SRWLOCK_INIT;
+static volatile LONG     g_room3_wait_gaveup = 0; /* leave/shutdown waits that ran out (each logged)   */
+static void* iat_swap(unsigned char* mod, const char* want, void* repl);   /* PART 17, further down */
+/* F4: wait for a watch pass that is inside Steam, but never for long. The leave and shutdown hooks run on the game's
+   thread, possibly inside a Steam callback, and nothing proves Steam never makes the watch's call wait for that very
+   thread -- an unbounded wait there could hang the game. A pass is a handful of local Steam calls, so it is normally
+   over in well under a millisecond. Returns 1 holding the lock exclusively, or 0 after `ms` without it; the caller
+   sets its flags either way, and a pass still inside Steam then finishes the one call it is in and makes no other
+   (it checks the flags before each call). */
+static int room3_pass_wait(DWORD ms)
+{
+    ULONGLONG t0 = GetTickCount64();
+    for (;;) {
+        if (TryAcquireSRWLockExclusive(&g_room3_steam_lk)) return 1;
+        if (GetTickCount64() - t0 >= ms) { InterlockedIncrement(&g_room3_wait_gaveup); return 0; }
+        Sleep(1);
+    }
+}
 static CreateLobby_t    o_CreateLobby    = NULL;
 static NumMembers_t     o_NumMembers     = NULL;
 static SlotsFilter_t    o_SlotsFilter    = NULL;
@@ -1083,7 +1113,11 @@ static int hk_NumMembers(void* self, uint64_t lobby)
     static int last = -1;
     int n = o_NumMembers(self, lobby);
     if (g_diag_on) g_diag_members = n;   /* PART 43 */
-    g_room3_mm = self; g_room3_lobby = lobby;   /* what the P2P watch needs */
+    if (lobby && lobby != g_room3_left && !g_room3_steam_down) {   /* F4: not the room just left */
+        if (!g_room3_lobby)
+            log_line("ROOM3/p2p: in a room -- the session watch calls Steam");
+        g_room3_mm = self; g_room3_lobby = lobby;   /* what the P2P watch needs */
+    }
     if (n != last) {
         last = n;
         log_line("ROOM3: member count now %d (lobby %llu, limit %d)",
@@ -1475,19 +1509,29 @@ static DWORD WINAPI room3_p2p_watch(LPVOID unused)
             if (ROOM3_RIP_SAMPLER) room3_rip_sample();
             Sleep(100);
         }
+        if (g_room3_steam_down) {                    /* F4: Steam is shut down -- nothing left to watch */
+            log_line("ROOM3/p2p: Steam has shut down -- the session watch ends");
+            return 0;
+        }
         if (!net) {
-            net = getnet();
+            AcquireSRWLockShared(&g_room3_steam_lk);   /* F4 */
+            if (!g_room3_steam_down) net = getnet();
+            if (net) {
+                nvt = *(void***)net;
+                if (!nvt) net = NULL;
+                else if (patch_slot(nvt, VT_NET_SEND, (void*)&hk_SendP2P, (void**)&o_SendP2P) &&
+                         patch_slot(nvt, VT_NET_READ, (void*)&hk_ReadP2P, (void**)&o_ReadP2P))
+                    log_line("ROOM3/p2p: watching peer sessions every 2 s, and counting packets "
+                             "both ways (pass-through)");
+                else
+                    log_line("ROOM3/p2p: session watch only -- the packet counters did not install");
+            }
+            ReleaseSRWLockShared(&g_room3_steam_lk);
             if (!net) continue;
-            nvt = *(void***)net;
-            if (!nvt) { net = NULL; continue; }
-            if (patch_slot(nvt, VT_NET_SEND, (void*)&hk_SendP2P, (void**)&o_SendP2P) &&
-                patch_slot(nvt, VT_NET_READ, (void*)&hk_ReadP2P, (void**)&o_ReadP2P))
-                log_line("ROOM3/p2p: watching peer sessions every 2 s, and counting packets "
-                         "both ways (pass-through)");
-            else
-                log_line("ROOM3/p2p: session watch only -- the packet counters did not install");
         }
         if (!g_vt || !g_room3_mm || !g_room3_lobby) continue;
+        AcquireSRWLockShared(&g_room3_steam_lk);       /* F4: LeaveLobby and shutdown wait for this pass */
+        if (g_room3_steam_down || !g_room3_lobby) { ReleaseSRWLockShared(&g_room3_steam_lk); continue; }
         {
             void*    mm    = (void*)g_room3_mm;
             uint64_t lobby = g_room3_lobby;
@@ -1498,9 +1542,11 @@ static DWORD WINAPI room3_p2p_watch(LPVOID unused)
                 room3_p2p_t st;
                 int slot = -1;
                 unsigned char ok;
+                if (g_room3_steam_down || g_room3_lobby != lobby) break;   /* F4: no new call once a hook ran */
                 ((MemberByIndex_t)g_vt[VT_MEMBER_BY_IDX])(mm, &id, lobby, i);
                 if (!id) continue;
                 memset(&st, 0, sizeof(st));
+                if (g_room3_steam_down || g_room3_lobby != lobby) break;   /* F4: nor between the two calls */
                 ok = ((GetP2PSessionState_t)nvt[VT_NET_P2P_STATE])(net, id, &st);
                 if (g_diag_on) diag_p2p_publish(id, ok, &st);   /* PART 43 */
                 for (j = 0; j < nseen; j++) if (seen_id[j] == id) { slot = j; break; }
@@ -1533,6 +1579,7 @@ static DWORD WINAPI room3_p2p_watch(LPVOID unused)
                          "that never goes ACTIVE is one the others never opened a session "
                          "with", nseen); }
         }
+        ReleaseSRWLockShared(&g_room3_steam_lk);       /* F4 */
     }
 }
 
@@ -1592,9 +1639,37 @@ static void room3_backtrace(const char* tag);   /* defined next to alloc_backtra
 static LeaveLobby_t o_LeaveLobby = NULL;
 static void hk_LeaveLobby(void* self, uint64_t lobby)
 {
+    int stopped = 0, held = 1;
     room3_state(self, lobby, "LeaveLobby -- this client is leaving the room");
     room3_backtrace("leave");
+    if (lobby) {                                    /* F4: a LeaveLobby(0) leaves no room and changes nothing */
+        held = room3_pass_wait(50);                 /* F4: a watch pass already in Steam finishes first */
+        g_room3_left = lobby;
+        stopped = (g_room3_lobby == lobby);
+        if (stopped) g_room3_lobby = 0;
+        if (held) ReleaseSRWLockExclusive(&g_room3_steam_lk);
+    }
+    if (stopped)
+        log_line("ROOM3/p2p: left the room -- the session watch makes no Steam call until the next one%s",
+                 held ? "" : " (a call still inside Steam after 50 ms was not waited for: it is the last)");
+    else if (!held)
+        log_line("ROOM3/p2p: LeaveLobby -- a watch call still inside Steam after 50 ms was not waited for");
     o_LeaveLobby(self, lobby);
+}
+
+/* F4: SteamAPI_Shutdown, through the game's own import. After it Steam is gone, so the watch's last call should be
+   over before it runs: room3_pass_wait gives a pass in flight up to 250 ms, and the flag stops every later one. */
+typedef void (*SteamAPI_Shutdown_t)(void);
+static SteamAPI_Shutdown_t o_SteamAPI_Shutdown = NULL;
+static void hk_SteamAPI_Shutdown(void)
+{
+    int held = room3_pass_wait(250);
+    InterlockedExchange(&g_room3_steam_down, 1);
+    g_room3_lobby = 0;
+    if (held) ReleaseSRWLockExclusive(&g_room3_steam_lk);
+    log_line("ROOM3/p2p: SteamAPI_Shutdown -- the session watch makes no further Steam call%s",
+             held ? "" : " (a call still inside Steam after 250 ms was not waited for: it is the last)");
+    if (o_SteamAPI_Shutdown) o_SteamAPI_Shutdown();
 }
 
 /* The state the battle is actually in on this client, printed by the 30 s
@@ -1724,6 +1799,7 @@ static uint64_t hk_JoinLobby(void* self, uint64_t lobby)
            means the game's own UI refused before Steam was ever asked. */
         if (ENABLE_ROOM3) room3_state(self, lobby, "JoinLobby requested");
     }
+    if (lobby && lobby == g_room3_left) g_room3_left = 0;   /* F4: a re-join of the room it left */
     return o_JoinLobby(self, lobby);
 }
 static uint64_t hk_RequestLobbyList(void* self)
@@ -1800,6 +1876,16 @@ static int try_install(void)
                      "force-joinable %s. Every capacity call is logged from here on.",
                      ROOM3_MEMBERS, ROOM3_FORCE_JOINABLE ? "ON" : "off");
             CreateThread(NULL, 0, room3_p2p_watch, NULL, 0, NULL);
+        {   /* F4: the original first, then the swap, so the hook never runs without it */
+            void* prev;
+            o_SteamAPI_Shutdown = (SteamAPI_Shutdown_t)GetProcAddress(steam, "SteamAPI_Shutdown");
+            prev = o_SteamAPI_Shutdown ? iat_swap((unsigned char*)GetModuleHandleA(NULL), "SteamAPI_Shutdown",
+                                                  (void*)hk_SteamAPI_Shutdown) : NULL;
+            if (prev && prev != (void*)hk_SteamAPI_Shutdown && prev != (void*)o_SteamAPI_Shutdown)
+                o_SteamAPI_Shutdown = (SteamAPI_Shutdown_t)prev;    /* somebody hooked it first: chain to them */
+            log_line(prev ? "ROOM3/p2p: SteamAPI_Shutdown hooked -- the session watch stops before Steam does"
+                          : "ROOM3/p2p: SteamAPI_Shutdown not in the game's imports -- the watch stops at LeaveLobby only");
+        }
     }
     return 1;
 }
@@ -17968,6 +18054,10 @@ static DWORD WINAPI worker(LPVOID u)
  *  Build 3.2, 2026-10-08: `capture` -- the guest no longer throws away the
  *  input it sampled right after a freeze (a bug in the game's own capture,
  *  NETCODE_INPUTDROP_2026-10-08; see `capture` below).
+ *  2026-10-28, the 10-01 review's F1/F1b fix (c2b0ec4a, reviewed on 3.2 in
+ *  REVIEW_31): a Send that gives up waiting no longer writes the game's queues
+ *  unlocked; it leaves a copy that the next holder of the lock sends first
+ *  (NET/defer). See `lock` below.
  * ---------------------------------------------------------------------
  *  Research (static analysis of the live exe, md5 7b213566):
  *      D:\Development Log\NETCODE\00_OVERVIEW.md      <- start here
@@ -18035,11 +18125,17 @@ static DWORD WINAPI worker(LPVOID u)
  *              share the send queues with no lock in the shipped game
  *              (01 §2.6), so a record appended while Update resets a queue can
  *              be lost or corrupt it. The main thread waits at most 4 ms for
- *              the lock; past that it goes ahead unlocked -- exactly what the
- *              stock game does every time -- and the log counts it. So the
- *              lock can neither hitch a frame by more than that nor deadlock,
- *              whatever the network thread is stuck in. Required before
- *              `sleep` changes.
+ *              the lock; past that it hands a COPY of the record to whoever
+ *              holds the lock next -- the network thread first thing in its
+ *              next pass -- and while copies wait it does not wait again.
+ *              (Review 2026-10-01, F1/F1b: build 3 went ahead UNLOCKED here,
+ *              i.e. inside Update, and waited 4 ms per Send, not per stall.)
+ *              So the queues are never touched unlocked, the main thread waits
+ *              ~4 ms per stall of the network thread, and nothing can
+ *              deadlock. The copies keep each queue's order; when they run
+ *              out of room they behave as the game's own queues do (the
+ *              unreliable one drops its oldest, the reliable one refuses with
+ *              -4). NET/defer counts it all. Required before `sleep` changes.
  *    sleep  1  NetworkUpdateThread's sleep between passes in ms -- stock 8,
  *              the literal at 0x8900A6, written once before the thread's loop
  *              (0x8900C0) and read by sleep_for (0xED630) on every pass.
@@ -18111,12 +18207,54 @@ static DWORD WINAPI worker(LPVOID u)
  *              changes; an unpatched host is unaffected. Not in the file:
  *              on whenever `lock` is on (every New netcode file), off with the
  *              game's own settings (CLASSIC writes lock 0).
+ *    demodt 1  (2026-10-28) Cutscene frames step one frame on every PC.
+ *              Online, a battle frame moves the world by the host's step, the
+ *              same on both PCs (02 s3.6). A cutscene inside the battle
+ *              (Kikon, Evolve, a finisher, a revive, the intro: a "demo") does
+ *              not: the sync step's demo branch (0x80248A) moves it by THIS
+ *              PC's measured frame time m (60 Hz frames, unclamped; at least
+ *              the floor 60/max(rate,60), 1.0 at the usual rate, but none in
+ *              mode 2 or at rate 0), capped only by the demo's remaining time
+ *              (03 H3; N19 v4 s2). That is the one place a tick can move more
+ *              than 5 frames. After a stall (a shader compiled, an asset
+ *              loaded) one tick covers it -- 1 s is 60 frames -- on that PC
+ *              alone: the cutscene's timeline probably still visits each of
+ *              its events, but the rest of the world ticks once for the whole
+ *              stretch, and what that leaves behind (a KO'd fighter's fall, a
+ *              revive) stays as each PC played it; the end handshake resyncs
+ *              one value per fighter and the snapshots resync positions. That
+ *              fits the Linux report (rc80). `demodt 1` gives the demo branch,
+ *              at exe+0x802493 (its only read of m), a step s instead of m and
+ *              writes s to the tick's step cell 0x18D7630 (read once a frame,
+ *              by the root task at 0x8575C3 after the sync step; reset to -1.0
+ *              at every sync-step entry and at teardown), so the tick takes
+ *              min(s, remaining). s is 1.0 while this cutscene is at most
+ *              `demolag` seconds behind the clock: a stall or a slow PC then
+ *              plays every frame, later, and the other PC waits that long at
+ *              the cutscene's end handshake. Past the limit s takes the excess
+ *              at once, as the stock step does, so that wait stays well inside
+ *              the game's own no-progress check (0x807320, called by every
+ *              handshake wait: at 10 s it starts a lost-peer check that can
+ *              end the match up to 5 s later). Spectators run the same branch.
+ *              Battle frames, KO stalls (a fighter down and the inputs late:
+ *              the local clock, at most 5 frames a tick, 02 s3.3), offline
+ *              play and the other readers of m (cameras, effects, UI timers, a
+ *              per-character update: they stay on the clock) are untouched.
+ *              NET/demo reports it per battle. Not in the file: on whenever
+ *              `lock` is (every New netcode file), off with the game's own
+ *              settings.
+ *    demolag 3 (2026-10-28) Seconds, 0 to 5: how far one cutscene may fall
+ *              behind the clock before `demodt` catches up as stock does.
+ *              0 steps as stock but never below one frame.
  *
- *  Nothing here changes the simulation or the match code, and every packet
- *  stays readable by an unpatched peer, so there is no matchmaking pool shift
- *  and patched and unpatched players still meet. `delay` changes when each
- *  side's own input applies and nothing on the wire: a side with a shorter
- *  delay only leaves the other side less margin.
+ *  Nothing here changes the match code, and every packet stays readable by an
+ *  unpatched peer, so there is no matchmaking pool shift and patched and
+ *  unpatched players still meet. `delay` changes when each side's own input
+ *  applies and nothing on the wire: a side with a shorter delay only leaves
+ *  the other side less margin. `demodt` is the one change to the simulation:
+ *  cutscene frames step one frame where the game took the measured time.
+ *  Both PCs need it to agree; a pair where only one has it is no worse off
+ *  than two stock PCs, which each step cutscenes by their own clock.
  *
  *  INSTALLED FROM DllMain. DINPUT8.dll is a static import of the exe, so this
  *  runs during process start-up, before the exe's entry point and before any
@@ -18126,7 +18264,7 @@ static DWORD WINAPI worker(LPVOID u)
  *  written by net_watch.
  *
  *  CLAIMED. Every exe byte written here is declared in the master's claim
- *  registry first, under "dinput8.dll (master)" -- seven rows, see the Dev
+ *  registry first, under "dinput8.dll (master)" -- eight rows, see the Dev
  *  Environment's BERG_CLAIMS.md (CLAIMS.md there is another dev's file since
  *  2026-10-03 and has only the first six).
  *  From DllMain the table is still empty, so a claim cannot be refused, and
@@ -18168,6 +18306,12 @@ static DWORD WINAPI worker(LPVOID u)
 #define NET_RVA_FWK_PTR     0x1CFCB40u  /* FrameworkFullAsync singleton, read at 0x9E751F                  */
 /* build 3.2 */
 #define NET_RVA_CAPTURE_JNE 0x80725Eu   /* jne after find(map78, seq) in SOnlineAction's capture 0x807190    */
+/* 2026-10-28, demodt */
+#define NET_RVA_DEMO_CTX    0x80248Au   /* the demo branch's first 30 bytes, the site among them (NET_DEMO_CTX)     */
+#define NET_RVA_DEMO_READ   0x802493u   /* movss xmm7,[rcx+0x70]: the demo branch reads the measured delta (5 bytes) */
+#define NET_RVA_DT_OVR      0x18D7630u  /* f32 .data, initial -1.0: the tick's step when >= 0, else the measured one */
+#define NET_RVA_OVR_RESET   0x801856u   /* movss [rip+d32],xmm0: the sync step's per-entry reset of it to -1.0      */
+#define NET_RVA_OVR_READ    0x8575C3u   /* movss xmm0,[rip+d32]: the root task's read of it, before the tick        */
 
 /* The stock bytes each change replaces. A mismatch means a different exe or
    somebody else got there first: the change is refused, never forced. */
@@ -18186,6 +18330,14 @@ static const unsigned char NET_CAPTURE_STOCK[27] = { 0x4C,0x8D,0x58,0x78, 0x48,0
                                                      0x48,0x8B,0xD7, 0x49,0x8B,0xCB, 0xE8,0xA5,0x6A,0x9A,0xFF,
                                                      0x48,0x85,0xC0, 0x75,0x22 };
 static const unsigned char NET_CAPTURE_NOP[2]    = { 0x66, 0x90 };
+/* demodt: exe+0x80248A..0x8024A7 -- call 0x9DFAB0 (the SwapChainVideo) / mov rcx,[rax+8] / the site, movss
+   xmm7,[rcx+0x70] / movss [rbp+0x2D0],xmm7 / mov eax,[rcx+0x78] / cmp eax,2 / je: what makes rax and the flags free
+   after the site (VX_DT1 F8) -- and the two instructions that must name the step cell */
+static const unsigned char NET_DEMO_CTX[30] = { 0xE8,0x21,0xD6,0x1D,0x00, 0x48,0x8B,0x48,0x08,
+                                                0xF3,0x0F,0x10,0x79,0x70, 0xF3,0x0F,0x11,0xBD,0xD0,0x02,0x00,0x00,
+                                                0x8B,0x41,0x78, 0x83,0xF8,0x02, 0x74,0x56 };
+static const unsigned char NET_OVR_RESET_OP[4]  = { 0xF3,0x0F,0x11,0x05 };        /* movss [rip+d32],xmm0  */
+static const unsigned char NET_OVR_READ_OP[4]   = { 0xF3,0x0F,0x10,0x05 };        /* movss xmm0,[rip+d32]  */
 
 static int  g_net_cfg_lock = 1, g_net_cfg_sleep = 1, g_net_cfg_window = 8, g_net_cfg_file = 0;
 static int  g_net_on_lock = 0, g_net_on_sleep = 0, g_net_on_setup = 0, g_net_on_update = 0;
@@ -18195,6 +18347,21 @@ static int  g_net_on_probe = 0;
 static const char* g_net_why_probe = "off (probe 0)";
 static int  g_net_cfg_capture = -1, g_net_on_capture = 0;   /* build 3.2; -1 = not in the file */
 static const char* g_net_why_capture = "off";
+static int  g_net_cfg_demodt = -1, g_net_on_demodt = 0;     /* 2026-10-28; -1 = not in the file */
+static int  g_net_cfg_demolag = 3;                          /* seconds, 0..5 */
+static const char* g_net_why_demodt = "off";
+/* demodt's state. The watch thread writes g_net_dd_F (the battle frame counter as it last sampled it, -1 outside a
+   battle: a demo pass that finds it moved starts a new cutscene) and g_net_dd_epoch (the battle's number); all the
+   rest is the game thread's, in net_demo_tick. The counts are aligned 64-bit and read by the watch for NET/demo:
+   demo-branch passes, cutscenes, passes after a hitch (m over 1.5), frames played late instead of skipped (the
+   lag's rises), passes past the limit and the frames they skipped, and this battle's largest lag in one cutscene --
+   frames in thousandths. */
+static volatile LONG   g_net_dd_F = -1, g_net_dd_epoch = 0;
+static volatile LONG g_net_dd_Fseen = -1, g_net_dd_epoch_seen = 0;
+static LONG64 g_net_dd_qpc = 0;                                   /* QPC at the previous demo pass */
+static float  g_net_dd_lag = 0.0f, g_net_dd_limit = 180.0f;       /* frames behind the clock; demolag * 60 */
+static volatile LONG64 g_net_dd_pass = 0, g_net_dd_cuts = 0, g_net_dd_hitch = 0, g_net_dd_late_milli = 0,
+                       g_net_dd_over = 0, g_net_dd_skip_milli = 0, g_net_dd_bmax_milli = 0;
 static char g_net_early[768];
 static unsigned char* g_net_mod;
 
@@ -18207,7 +18374,44 @@ static net_fn4_t o_net_setup;
 static CRITICAL_SECTION g_net_cs;
 static volatile LONG64  g_net_lock_entries = 0;
 static volatile LONG64  g_net_lock_met     = 0;   /* the other thread was already inside  */
-static volatile LONG64  g_net_lock_gaveup  = 0;   /* main thread waited 4 ms, went ahead  */
+static volatile LONG64  g_net_lock_gaveup  = 0;   /* main thread waited 4 ms, deferred    */
+
+/* Review F1 (2026-10-01). Transmission::Update rebuilds a send queue's `used` record by record
+   (unreliable: 0xA7939B used = 0, 0xA7940E used = end of each kept record) and clears peer bits with
+   plain read-modify-writes (0xA79271). Send reads `used` twice -- 0xA79B89 for its duplicate scan
+   (which ORs peer bits into queued headers, 0xA79C4E / 0xA79CD7) and its full-queue path (which
+   memmoves the buffer and stores `used`, 0xA79D76), 0xA79DB3 for the append point -- and stores it
+   at 0xA79E1F after a memcpy. So a Send that runs while Update compacts can lose its own record or
+   an older one, duplicate one, or leave bytes the next compaction reads as a record size. A Send that gave up waiting therefore leaves a COPY here, and
+   whoever next holds g_net_cs sends the copies first, in order, under the lock. One ring per game
+   queue: the game keeps no order between its reliable and unreliable queues (it flushes all
+   reliable records first, 0xA7908E before 0xA792BB), and each ring keeps its own queue's order. The
+   callers only log a negative return (0x675EEC, 0x6768B2) or ignore it (0x67DF02).
+   D1 (verifier v3_f1): a copy is only ever sent through the transport it was made for -- the drain
+   compares the stored impl with the impl of the call that drains (Send's and Update's first argument)
+   and drops any other. The exe has ONE transport per process: every reference to its wrapper
+   (exe+0x1CFCE90, nine inlined get-or-create accessors, e.g. 0x8900EC..0x890136) stores it only when
+   it is null and nothing clears it, and Update's only caller passes [wrapper+8] (0x89013D). So the
+   check never fires in this exe; it keeps a stale copy away from a freed or different transport if
+   that ever changes. The rings are deliberately NOT cleared at a battle's setup: the transport
+   outlives battles, and a copy waiting there may be a live reliable record. */
+#define NET_DQ_U_SLOTS 128      /* ~1 s of sends in play: 110-165/s in the 09-29 logs (entries - passes). In a
+                                   freeze the loop resends every pass at ~10 kHz, so a 10-20 ms network stall then
+                                   fills it and the oldest go, as in the game's own queue (REVIEW_31 R1). */
+#define NET_DQ_R_SLOTS 32
+#define NET_DQ_U_MAX   1198     /* unreliable cap: impl+0x274 = min(.., 0x4AE), 0xA78B23      */
+#define NET_DQ_R_MAX   4096     /* reliable cap:   impl+0x270, 0xA78AE8..0xA78B01             */
+typedef struct { uintptr_t impl, peer, id, size, rel; } net_dq_hdr;
+#define NET_DQ_ROW(max) ((sizeof(net_dq_hdr) + (size_t)(max) + 15) & ~(size_t)15)
+typedef struct { unsigned char* mem; size_t row; int slots, max, head, n; } net_dq_ring;
+static __attribute__((aligned(16))) unsigned char g_net_dq_umem[NET_DQ_U_SLOTS * NET_DQ_ROW(NET_DQ_U_MAX)];
+static __attribute__((aligned(16))) unsigned char g_net_dq_rmem[NET_DQ_R_SLOTS * NET_DQ_ROW(NET_DQ_R_MAX)];
+static net_dq_ring g_net_dq_u = { g_net_dq_umem, NET_DQ_ROW(NET_DQ_U_MAX), NET_DQ_U_SLOTS, NET_DQ_U_MAX, 0, 0 };
+static net_dq_ring g_net_dq_r = { g_net_dq_rmem, NET_DQ_ROW(NET_DQ_R_MAX), NET_DQ_R_SLOTS, NET_DQ_R_MAX, 0, 0 };
+static volatile LONG    g_net_dq_n = 0;     /* copies waiting, both rings; a hint without the lock  */
+static CRITICAL_SECTION g_net_dq_cs;         /* lock order: g_net_cs, then g_net_dq_cs -- never back */
+static volatile LONG64  g_net_dq_deferred = 0, g_net_dq_dropped = 0, g_net_dq_failed = 0;
+static volatile LONG64  g_net_dq_stale = 0;  /* D1: copies made for another transport, dropped */
 
 /* NetworkUpdateThread's period, quarter-millisecond buckets; the last is overflow. */
 #define NET_PB 129
@@ -18223,6 +18427,7 @@ static volatile LONG      g_net_D0      = -1;  /* D as the game chose it, before
 static volatile LONG      g_net_lat     = -1;
 static volatile LONG      g_net_W       = -1;  /* the window this manager was built with */
 static volatile LONG      g_net_newgame = 0;
+static volatile LONG      g_net_setup_seq = 0;  /* review F3: +1 per setup (main thread) */
 static int                g_net_match_seq = 0;
 
 /* ---- the detours ------------------------------------------------------ */
@@ -18257,14 +18462,88 @@ static void net_lock_net(void)
     }
 }
 
+/* Review F1. With g_net_cs held: sends every waiting copy made for transport `cur`, oldest first;
+   a copy made for any other transport is dropped and counted (D1). */
+static void net_dq_drain_ring_locked(net_dq_ring* q, uintptr_t cur)
+{
+    while (q->n > 0) {
+        net_dq_hdr* h = (net_dq_hdr*)(q->mem + (size_t)q->head * q->row);
+        if (h->impl != cur)
+            InterlockedIncrement64(&g_net_dq_stale);
+        else if ((int)o_net_send(h->impl, h->peer, h->id, (uintptr_t)(h + 1), h->size, h->rel) < 0)
+            InterlockedIncrement64(&g_net_dq_failed);
+        q->head = (q->head + 1) % q->slots;
+        q->n--;
+        InterlockedDecrement(&g_net_dq_n);
+    }
+}
+
+static void net_dq_drain_locked(uintptr_t cur)
+{
+    if (!g_net_dq_n) return;
+    EnterCriticalSection(&g_net_dq_cs);
+    net_dq_drain_ring_locked(&g_net_dq_r, cur);
+    net_dq_drain_ring_locked(&g_net_dq_u, cur);
+    LeaveCriticalSection(&g_net_dq_cs);
+}
+
+/* Review F1. Keeps a copy of one Send. Returns 0 when kept, else the code Send itself returns for
+   that case: -1 when [impl] is null (0xA79A86..0xA79AA4: D2, checked here as Send checks it first),
+   -2 when the record is larger than Send accepts (0xA79B23..0xA79B28), -4 when the reliable ring is
+   full (Send's reliable-queue-full code, 0xA79D2B). A full unreliable ring loses its OLDEST copy,
+   as the game's unreliable queue does (0xA79D39..0xA79DA4): the newest input record carries the
+   window. Send's -3 (a 65th peer, 0xA79B57..0xA79B5C) is only seen when the copy is sent: it is
+   counted as "refused when sent" (D2; a 2-3 player room never has 64 peers). */
+static int net_dq_push(uintptr_t a, uintptr_t b, uintptr_t c, uintptr_t d, uintptr_t e, uintptr_t f)
+{
+    int rel  = (unsigned)c != 0 || (unsigned char)f != 0;            /* Send: 0xA79ABE..0xA79AD8 */
+    int size = (int)e, ok = 0;
+    int cap;
+    net_dq_ring* q = rel ? &g_net_dq_r : &g_net_dq_u;
+    net_dq_hdr* h;
+    if (!*(volatile uintptr_t*)a) return -1;
+    cap = *(volatile int*)(a + (rel ? 0x270 : 0x274));               /* Send: 0xA79AF3 / 0xA79AFB */
+    if (size > cap) return -2;
+    if (size < 0 || size > q->max) return -4;  /* never seen: refuse rather than write unlocked */
+    EnterCriticalSection(&g_net_dq_cs);
+    if (q->n == q->slots) {
+        if (rel) { ok = -4; goto out; }
+        q->head = (q->head + 1) % q->slots;
+        q->n--;
+        InterlockedDecrement(&g_net_dq_n);
+        InterlockedIncrement64(&g_net_dq_dropped);
+    }
+    h = (net_dq_hdr*)(q->mem + (size_t)((q->head + q->n) % q->slots) * q->row);
+    h->impl = a; h->peer = b; h->id = c; h->size = e; h->rel = f;   /* impl kept for D1 */
+    if (size > 0) memcpy(h + 1, (const void*)d, (size_t)size);
+    q->n++;
+    InterlockedIncrement(&g_net_dq_n);
+out:
+    LeaveCriticalSection(&g_net_dq_cs);
+    return ok;
+}
+
 static uintptr_t net_send(uintptr_t a, uintptr_t b, uintptr_t c,
                           uintptr_t d, uintptr_t e, uintptr_t f)
 {
     uintptr_t r;
-    int held = net_lock_main();
-    r = o_net_send(a, b, c, d, e, f);
-    if (held) LeaveCriticalSection(&g_net_cs);
-    return r;
+    int got, kept;
+    if (g_net_dq_n) {          /* F1b: copies wait, so the network thread is still in its pass: */
+        InterlockedIncrement64(&g_net_lock_entries);          /* one try, no second 4 ms wait */
+        got = TryEnterCriticalSection(&g_net_cs);
+        if (!got) InterlockedIncrement64(&g_net_lock_met);
+    } else
+        got = net_lock_main();
+    if (got) {
+        net_dq_drain_locked(a);                    /* the copies first: each queue keeps its order */
+        r = o_net_send(a, b, c, d, e, f);
+        LeaveCriticalSection(&g_net_cs);
+        return r;
+    }
+    kept = net_dq_push(a, b, c, d, e, f);          /* F1: never append unlocked */
+    if (kept == 0) { InterlockedIncrement64(&g_net_dq_deferred); return 0; }
+    if (kept == -4) InterlockedIncrement64(&g_net_dq_dropped);
+    return (uintptr_t)(unsigned)kept;
 }
 
 static uintptr_t net_update(uintptr_t a, uintptr_t b, uintptr_t c, uintptr_t d)
@@ -18279,7 +18558,7 @@ static uintptr_t net_update(uintptr_t a, uintptr_t b, uintptr_t c, uintptr_t d)
         InterlockedIncrement64(&g_net_period[q]);
     }
     g_net_last_upd = t.QuadPart;
-    if (g_net_on_lock) net_lock_net();
+    if (g_net_on_lock) { net_lock_net(); net_dq_drain_locked(a); }  /* review F1, D1: a = impl */
     r = o_net_update(a, b, c, d);
     if (g_net_on_lock) LeaveCriticalSection(&g_net_cs);
     return r;
@@ -18300,6 +18579,7 @@ static uintptr_t net_setup(uintptr_t mgr, uintptr_t mode, uintptr_t st, uintptr_
     g_net_W    = *(volatile int*)(mgr + 0x14);                      /* entries per packet  */
     g_net_mode = (LONG)(mode & 0xFF);
     g_net_mgr  = mgr;
+    InterlockedIncrement(&g_net_setup_seq);   /* review F3: a new battle even at a reused address */
     InterlockedExchange(&g_net_newgame, 1);
     return r;
 }
@@ -18311,7 +18591,7 @@ static uintptr_t net_setup(uintptr_t mgr, uintptr_t mode, uintptr_t st, uintptr_
 #define NET_SNB 6
 static const char* NET_SN_NAME[NET_SNB] = { "0", "<1e-5", "<1e-3", "<0.01", "<0.1", ">=0.1" };
 static struct {
-    uintptr_t mgr;             /* the battle these counts belong to          */
+    LONG   seq;                /* the setup these counts belong to (review F3) */
     LONG64 n, pos_same, rot_same, b2_seen, b2_diff;
     LONG64 bin[NET_SNB];       /* the largest of |dx|,|dy|,|dz|, by size     */
     double max_dpos, max_drot;
@@ -18338,7 +18618,7 @@ static void net_snap_probe(const unsigned char* s, unsigned char* fighter, uintp
     const unsigned char* bb;
     int b;
     if (!s || !fighter || !mgr) return;
-    if (g_ns.mgr != mgr) { memset(&g_ns, 0, sizeof(g_ns)); g_ns.mgr = mgr; }
+    if (g_ns.seq != g_net_setup_seq) { memset(&g_ns, 0, sizeof(g_ns)); g_ns.seq = g_net_setup_seq; }
     ((net_get4_t)(g_net_mod + NET_RVA_GETPOS))(fighter, pos);
     ((net_get4_t)(g_net_mod + NET_RVA_GETROT))(fighter, rot);
     memcpy(&sx, s + 0x1C, 4); memcpy(&sy, s + 0x20, 4); memcpy(&sz, s + 0x24, 4);
@@ -18489,6 +18769,142 @@ static const char* net_snap_install(void)
     return "on (exe+0x80202C, guest only)";
 }
 
+/* demodt (2026-10-28; `demodt` and `demolag` in the header). Called by the demo stub on every pass of the sync
+   step's demo branch -- a cutscene's frames and its end handshake -- on the game thread. impl is the game's
+   SwapChainVideo (rcx at exe+0x802493), whose +0x70 is this frame's measured time m in 60 Hz frames. Returns the step
+   s for the branch, as float bits (the stub puts them in xmm7, where the displaced load put m), and writes s to the
+   tick's step cell: 1.0 while this cutscene is at most the limit behind the clock, else 1.0 plus the excess. No
+   logging, no locks, nothing that can fail: it runs inside the sync step. */
+static unsigned int net_demo_tick(const unsigned char* impl)
+{
+    float m = *(const float*)(impl + 0x70), L, s = 1.0f;
+    LONG F = g_net_dd_F;
+    LARGE_INTEGER now;
+    unsigned int bits;
+    QueryPerformanceCounter(&now);
+    if (!(m >= 0.0f)) m = (m != m) ? 1.0f : 0.0f;      /* NaN: one frame; a negative time: none */
+    if (m > 100000.0f) m = 100000.0f;                   /* a debugger stop is not a measurement */
+    /* A new cutscene: battle frames ran since the last demo pass (the frame counter moved), or -- with no battle
+       being watched -- more time passed since it than this frame's own measured time and 2.5 frames. */
+    if (F >= 0 && g_net_dd_Fseen >= 0 ? F != g_net_dd_Fseen
+            : (double)(now.QuadPart - g_net_dd_qpc) * 60.0 > (double)g_net_qpf.QuadPart * ((double)m + 2.5)) {
+        g_net_dd_lag = 0.0f;
+        g_net_dd_cuts++;
+    }
+    g_net_dd_Fseen = F;
+    g_net_dd_qpc = now.QuadPart;
+    if (g_net_dd_epoch_seen != g_net_dd_epoch) {        /* a new battle: its largest lag starts at 0 */
+        g_net_dd_epoch_seen = g_net_dd_epoch;
+        g_net_dd_bmax_milli = 0;
+    }
+    g_net_dd_pass++;
+    if (m > 1.5f) g_net_dd_hitch++;
+    L = g_net_dd_lag + (m - 1.0f);
+    if (L < 0.0f) L = 0.0f;                             /* ahead of the clock: no credit */
+    if (L > g_net_dd_limit) {                           /* past the limit: the excess at once, as stock steps */
+        s = 1.0f + (L - g_net_dd_limit);
+        L = g_net_dd_limit;
+        g_net_dd_over++;
+        g_net_dd_skip_milli += (LONG64)((s - 1.0f) * 1000.0f);
+    }
+    if (L > g_net_dd_lag) g_net_dd_late_milli += (LONG64)((L - g_net_dd_lag) * 1000.0f);
+    g_net_dd_lag = L;
+    if ((LONG64)(L * 1000.0f) > g_net_dd_bmax_milli) g_net_dd_bmax_milli = (LONG64)(L * 1000.0f);
+    *(volatile float*)(g_net_mod + NET_RVA_DT_OVR) = s;
+    memcpy(&bits, &s, 4);
+    return bits;
+}
+
+/* The demo stub. exe+0x802493 (movss xmm7,[rcx+0x70], 5 bytes) becomes a call to it. The stub saves what the branch
+   may hold -- rax rcx rdx r8-r11, the flags, xmm0-5; rbx keeps the unaligned rsp, and the stack is realigned rather
+   than assumed (the snapshot stub's shape) -- calls net_demo_tick(rcx), puts the step it returns in the low half of
+   rax's saved slot, restores everything, sets xmm7 = eax (the displaced load's register, upper lanes zeroed as movss
+   zeroes them) and returns to exe+0x802498 (movss [rbp+0x2D0],xmm7). Only rax and xmm7 change: rax is free there --
+   0x8024A0 loads eax before anything reads it -- and the flags come back as they were (0x8024A3 sets them anyway);
+   NET_DEMO_CTX holds the code that makes it so. The cap then comes out min(s, remaining) (s >= 1.0 >= the floor) and
+   the tick, which takes d = the cell's s, steps min(s, the cap). The cell is reset to -1.0 at every sync-step entry
+   (0x801856) and written with the host's step only by a consumed frame (0x80244C); five more places reset it, one of
+   them at teardown (0x805B20). No unwind data, like the snapshot stub's. Returns the status text. */
+static const char* net_demodt_install(void)
+{
+    static const unsigned char save[] = {
+        0x50, 0x51, 0x52, 0x41,0x50, 0x41,0x51, 0x41,0x52, 0x41,0x53,   /* push rax rcx rdx r8-r11 */
+        0x9C, 0x53,                                                      /* pushfq; push rbx        */
+        0x48,0x89,0xE3,                                                  /* mov  rbx, rsp           */
+        0x48,0x83,0xE4,0xF0,                                             /* and  rsp, -16           */
+        0x48,0x81,0xEC,0x80,0x00,0x00,0x00,                              /* sub  rsp, 0x80          */
+        0xF3,0x0F,0x7F,0x44,0x24,0x20, 0xF3,0x0F,0x7F,0x4C,0x24,0x30,    /* movdqu [rsp+..], xmm0-5 */
+        0xF3,0x0F,0x7F,0x54,0x24,0x40, 0xF3,0x0F,0x7F,0x5C,0x24,0x50,
+        0xF3,0x0F,0x7F,0x64,0x24,0x60, 0xF3,0x0F,0x7F,0x6C,0x24,0x70,
+        0x48,0xB8 };                                                     /* mov  rax, imm64 ...     */
+    static const unsigned char restore[] = {
+        0xFF,0xD0,                                                       /* call rax  (rcx = impl)  */
+        0x89,0x43,0x40,                                                  /* mov  [rbx+0x40], eax    */
+        0xF3,0x0F,0x6F,0x44,0x24,0x20, 0xF3,0x0F,0x6F,0x4C,0x24,0x30,    /* movdqu xmm0-5, [rsp+..] */
+        0xF3,0x0F,0x6F,0x54,0x24,0x40, 0xF3,0x0F,0x6F,0x5C,0x24,0x50,
+        0xF3,0x0F,0x6F,0x64,0x24,0x60, 0xF3,0x0F,0x6F,0x6C,0x24,0x70,
+        0x48,0x89,0xDC,                                                  /* mov  rsp, rbx           */
+        0x5B, 0x9D,                                                      /* pop rbx; popfq          */
+        0x41,0x5B, 0x41,0x5A, 0x41,0x59, 0x41,0x58, 0x5A, 0x59, 0x58,    /* pop r11-r8 rdx rcx rax  */
+        0x66,0x0F,0x6E,0xF8,                                             /* movd xmm7, eax          */
+        0xC3 };                                                          /* ret                     */
+    static char on[48];
+    unsigned char* site = g_net_mod + NET_RVA_DEMO_READ;
+    unsigned char* stub;
+    unsigned char  b[sizeof(save) + 8 + sizeof(restore)];
+    void* fn = (void*)net_demo_tick;
+    IMAGE_NT_HEADERS* nt = (IMAGE_NT_HEADERS*)(g_net_mod + ((IMAGE_DOS_HEADER*)g_net_mod)->e_lfanew);
+    long long rel;
+    int d32, n = 0;
+    float init;
+    DWORD old;
+    if (memcmp(g_net_mod + NET_RVA_DEMO_CTX, NET_DEMO_CTX, sizeof(NET_DEMO_CTX)) != 0)
+        return "REFUSED, exe+0x80248A is not the stock code";
+    /* the step cell lies above the 24 MB net_host_is_the_game vouches for */
+    if (nt->OptionalHeader.SizeOfImage < NET_RVA_DT_OVR + 8)
+        return "REFUSED, the image ends before exe+0x18D7638";
+    /* the cell: -1.0 as loaded, and the very cell the sync step resets and the root task reads */
+    memcpy(&init, g_net_mod + NET_RVA_DT_OVR, 4);
+    if (init != -1.0f)
+        return "REFUSED, exe+0x18D7630 does not hold -1.0";
+    memcpy(&d32, g_net_mod + NET_RVA_OVR_RESET + 4, 4);
+    if (memcmp(g_net_mod + NET_RVA_OVR_RESET, NET_OVR_RESET_OP, 4) != 0 ||
+        NET_RVA_OVR_RESET + 8 + (long long)d32 != (long long)NET_RVA_DT_OVR)
+        return "REFUSED, exe+0x801856 does not reset exe+0x18D7630";
+    memcpy(&d32, g_net_mod + NET_RVA_OVR_READ + 4, 4);
+    if (memcmp(g_net_mod + NET_RVA_OVR_READ, NET_OVR_READ_OP, 4) != 0 ||
+        NET_RVA_OVR_READ + 8 + (long long)d32 != (long long)NET_RVA_DT_OVR)
+        return "REFUSED, exe+0x8575C3 does not read exe+0x18D7630";
+    stub = (unsigned char*)gauge_alloc_near(site, 256);
+    if (!stub) return "REFUSED, no stub within +/-2 GB";
+    rel = (long long)stub - (long long)(site + 5);
+    if (rel > 0x7FFFFFFFLL || rel < -0x80000000LL) {
+        VirtualFree(stub, 0, MEM_RELEASE);
+        return "REFUSED, the stub is out of rel32 reach";
+    }
+    if (!bros_claim(BROS_MASTER_OWNER, NET_RVA_DEMO_READ, 5,
+                    "PART 41 NETTEST demodt: cutscene frames step one frame (the demo branch's read of the "
+                    "measured delta -> call to the demo stub, which also sets the tick's step)")) {
+        VirtualFree(stub, 0, MEM_RELEASE);
+        return "REFUSED, the bytes are claimed by another owner";
+    }
+    memcpy(b + n, save, sizeof(save));       n += (int)sizeof(save);
+    memcpy(b + n, &fn, 8);                   n += 8;
+    memcpy(b + n, restore, sizeof(restore)); n += (int)sizeof(restore);
+    memcpy(stub, b, (size_t)n);
+    FlushInstructionCache(GetCurrentProcess(), stub, (SIZE_T)n);
+    if (!VirtualProtect(site, 5, PAGE_EXECUTE_READWRITE, &old)) {        /* the claim stays, unwritten */
+        VirtualFree(stub, 0, MEM_RELEASE);
+        return "REFUSED, VirtualProtect failed";
+    }
+    site[0] = 0xE8; memcpy(site + 1, &rel, 4);                           /* call stub               */
+    VirtualProtect(site, 5, old, &old);
+    FlushInstructionCache(GetCurrentProcess(), site, 5);
+    g_net_on_demodt = 1;
+    snprintf(on, sizeof(on), "on (exe+0x802493, %d s behind at most)", g_net_cfg_demolag);
+    return on;
+}
+
 /* bros_net.txt: `key value` per line, `#` starts a comment. Missing file ->
    the defaults. Read with kernel32 only, because this runs in DllMain. */
 static void net_read_cfg(void)
@@ -18524,6 +18940,8 @@ static void net_read_cfg(void)
         else if (!strcmp(key, "delay"))  g_net_cfg_delay  = val;
         else if (!strcmp(key, "probe"))  g_net_cfg_probe  = val ? 1 : 0;
         else if (!strcmp(key, "capture")) g_net_cfg_capture = val ? 1 : 0;
+        else if (!strcmp(key, "demodt"))  g_net_cfg_demodt  = val ? 1 : 0;
+        else if (!strcmp(key, "demolag")) g_net_cfg_demolag = val;
         while (*p && *p != '\n') p++;
     }
     if (g_net_cfg_sleep  < 1)  g_net_cfg_sleep  = 1;
@@ -18532,12 +18950,16 @@ static void net_read_cfg(void)
     if (g_net_cfg_window > 10) g_net_cfg_window = 10;
     if (g_net_cfg_delay  > 0)  g_net_cfg_delay  = 0;      /* reductions only -- see `delay` */
     if (g_net_cfg_delay  < -6) g_net_cfg_delay  = -6;
+    if (g_net_cfg_demolag < 0) g_net_cfg_demolag = 0;
+    if (g_net_cfg_demolag > 5) g_net_cfg_demolag = 5;     /* the game's check: 10 s, then up to 5 s more */
 }
 
 /* Every RVA this part reads or writes lies inside the game's image, and none
    of them may be read in a host that is not the game: a process whose image
    is smaller would fault on the first memcmp, inside DllMain. 24 MB is the C
-   track's EXE_MIN_IMAGE for the same check; the game's image is ~28 MB. */
+   track's EXE_MIN_IMAGE for the same check; the game's image is ~28 MB. The one
+   read above it, demodt's step cell (exe+0x18D7630), is made only after its
+   installer has checked the image size itself. */
 static int net_host_is_the_game(void)
 {
     IMAGE_DOS_HEADER* dos = (IMAGE_DOS_HEADER*)g_net_mod;
@@ -18558,6 +18980,7 @@ static int net_early_install(void)
     if (!net_host_is_the_game()) return 0;
     QueryPerformanceFrequency(&g_net_qpf);
     InitializeCriticalSectionAndSpinCount(&g_net_cs, 4000);
+    InitializeCriticalSectionAndSpinCount(&g_net_dq_cs, 4000);   /* review F1 */
     net_read_cfg();
 
     if (g_net_cfg_window != 3) {
@@ -18626,10 +19049,17 @@ static int net_early_install(void)
             g_net_why_capture = "REFUSED, VirtualProtect failed";
     }
 
+    /* 2026-10-28: cutscene frames step one frame (`demodt`, `demolag` in the header). Not in the file: with the New
+       netcode, like capture. */
+    if (g_net_cfg_demodt < 0) g_net_cfg_demodt = g_net_cfg_lock ? 1 : 0;
+    g_net_dd_limit = 60.0f * (float)g_net_cfg_demolag;
+    if (g_net_cfg_demodt) g_net_why_demodt = net_demodt_install();
+    else g_net_why_demodt = "off (the game's own clock)";
+
     snprintf(g_net_early, sizeof(g_net_early),
              "NET: bros_net.txt %s -> lock %d, sleep %d ms, window %d, delay %d | lock %s | "
              "sleep %s | window %s (%d, stock 3) | delay %s | period probe %s | battle probe %s | "
-             "snapshot check %s | capture %s",
+             "snapshot check %s | capture %s | demo frames %s",
              g_net_cfg_file ? "read" : "absent, defaults",
              g_net_cfg_lock, g_net_cfg_sleep, g_net_cfg_window, g_net_cfg_delay,
              g_net_on_lock ? "ON (Send + Update share one lock)"
@@ -18639,7 +19069,7 @@ static int net_early_install(void)
                                   : (g_net_on_setup ? "applied (D lowered at every battle's setup)"
                                                     : "NOT applied: the battle probe is off"),
              g_net_on_update ? "on" : "FAILED", g_net_on_setup ? "on" : "FAILED",
-             g_net_why_probe, g_net_why_capture);
+             g_net_why_probe, g_net_why_capture, g_net_why_demodt);
     return 1;
 }
 
@@ -18662,8 +19092,12 @@ static struct {
     LONG64 fz_run0;            /* battle time when the open freeze began        */
     LONG64 period0[NET_PB];    /* the period histogram when the battle began    */
     LONG64 lk_e0, lk_m0, lk_g0;
+    LONG64 dq_d0, dq_p0, dq_x0, dq_s0;   /* review F1: deferred, dropped, failed, stale -- at start */
+    LONG64 dd_p0, dd_c0, dd_h0, dd_l0, dd_o0, dd_s0;   /* demodt: its counts at start            */
+    LONG   dd_epoch;                     /* demodt: this battle's number                            */
     /* build 3 */
-    uintptr_t mgr;             /* this battle's manager (for the snapshot check) */
+    uintptr_t mgr;             /* this battle's manager                          */
+    LONG   setup_seq;          /* review F3: the setup this report belongs to    */
     LONG   D0;                 /* D as the game chose it, before `delay`        */
     LONG64 quiet_t0;           /* frame counter still, flag down, since (0: no) */
     LONG64 resume_t;           /* the frame counter moved after a quiet stretch */
@@ -19774,6 +20208,25 @@ static void net_match_line(const char* why, LONG64 now)
              g_net_on_sleep ? g_net_on_sleep : 8, g_net_on_capture ? "on" : "off");
     snprintf(who, sizeof(who), "#%d", g_nm.seq);
     net_loop_line(who, g_nm.period0, g_nm.lk_e0, g_nm.lk_m0, g_nm.lk_g0);
+    if (g_net_dq_deferred - g_nm.dq_d0 || g_net_dq_dropped - g_nm.dq_p0 ||
+        g_net_dq_failed - g_nm.dq_x0 || g_net_dq_stale - g_nm.dq_s0)
+        log_line("NET/defer %s: %lld send(s) handed to the network thread instead of being written "
+                 "unlocked | %lld dropped for want of room (as the game's own queues drop) | %lld "
+                 "refused by Send when sent | %lld made for another transport, dropped", who,
+                 (long long)(g_net_dq_deferred - g_nm.dq_d0), (long long)(g_net_dq_dropped - g_nm.dq_p0),
+                 (long long)(g_net_dq_failed - g_nm.dq_x0), (long long)(g_net_dq_stale - g_nm.dq_s0));
+    if (g_net_on_demodt && g_net_dd_pass - g_nm.dd_p0) {
+        LONG64 late = (g_net_dd_late_milli - g_nm.dd_l0) / 60, skip = g_net_dd_skip_milli - g_nm.dd_s0;
+        LONG64 mx = g_net_dd_epoch_seen == g_nm.dd_epoch ? g_net_dd_bmax_milli / 60 : 0;   /* ms */
+        log_line("NET/demo %s %s: %lld pass(es) of the cutscene branch in %lld cutscene(s), their end handshakes "
+                 "included | %lld after a hitch (measured over 1.5 frames) | played late instead of skipped: "
+                 "%lld.%03lld s in all, at most %lld.%03lld s behind in one cutscene | past the %d s limit: %lld "
+                 "pass(es), %lld.%03lld frame(s) skipped as stock does", who, net_side(g_nm.mode),
+                 (long long)(g_net_dd_pass - g_nm.dd_p0), (long long)(g_net_dd_cuts - g_nm.dd_c0),
+                 (long long)(g_net_dd_hitch - g_nm.dd_h0), (long long)(late / 1000), (long long)(late % 1000),
+                 (long long)(mx / 1000), (long long)(mx % 1000), g_net_cfg_demolag,
+                 (long long)(g_net_dd_over - g_nm.dd_o0), (long long)(skip / 1000), (long long)(skip % 1000));
+    }
 }
 
 /* The other two classes, and the totals build 2 printed (for comparisons). */
@@ -19835,7 +20288,7 @@ static void net_snap_line(void)
     char h[160], ex[160];
     int at = 0, i;
     if (g_nm.mode != 1 || !g_net_on_probe) return;
-    if (g_ns.mgr != g_nm.mgr || !g_ns.n) {
+    if (g_ns.seq != g_nm.setup_seq || !g_ns.n) {
         log_line("NET/snap #%d guest: no host snapshot was adopted in this battle", g_nm.seq);
         return;
     }
@@ -19928,12 +20381,19 @@ static DWORD WINAPI net_watch(LPVOID unused)
             g_nm.seq  = ++g_net_match_seq;
             g_nm.mode = g_net_mode; g_nm.D = g_net_D; g_nm.lat = g_net_lat; g_nm.W = g_net_W;
             g_nm.D0   = g_net_D0;  g_nm.mgr = g_net_mgr;
+            g_nm.setup_seq = g_net_setup_seq;   /* review F3 */
             g_nm.last_t = now.QuadPart;
             g_nm.last_F = -1;
             g_nm.quiet_t0 = now.QuadPart;   /* build 3: still since the battle was set up */
             for (i = 0; i < NET_PB; i++) g_nm.period0[i] = g_net_period[i];
             g_nm.lk_e0 = g_net_lock_entries; g_nm.lk_m0 = g_net_lock_met;
             g_nm.lk_g0 = g_net_lock_gaveup;
+            g_nm.dq_d0 = g_net_dq_deferred; g_nm.dq_p0 = g_net_dq_dropped;   /* review F1 */
+            g_nm.dq_x0 = g_net_dq_failed; g_nm.dq_s0 = g_net_dq_stale;
+            g_nm.dd_p0 = g_net_dd_pass; g_nm.dd_c0 = g_net_dd_cuts; g_nm.dd_h0 = g_net_dd_hitch;   /* demodt */
+            g_nm.dd_l0 = g_net_dd_late_milli; g_nm.dd_o0 = g_net_dd_over; g_nm.dd_s0 = g_net_dd_skip_milli;
+            g_net_dd_F = -1;
+            g_nm.dd_epoch = InterlockedIncrement(&g_net_dd_epoch);
             last_report = now.QuadPart;
             log_line("NET/match #%d %s -- starts | D %ld ticks (game %ld, delay %ld) from RTT' "
                      "%ld ms (host plays D+1, guest D+2) | window %ld, lock %s, sleep %d ms",
@@ -19965,11 +20425,13 @@ static DWORD WINAPI net_watch(LPVOID unused)
                 if (ok) {
                     flag = m[0xD8];
                     memcpy(&F, m + 0xB8, 4);
+                    g_net_dd_F = F;                     /* demodt: battle frames ran -> a new cutscene */
                 }
             }
             if (!ok) {
+                g_net_dd_F = -1;
                 net_match_end("the battle ended", now.QuadPart);
-                if (g_net_mgr == mgr) g_net_mgr = 0;
+                InterlockedCompareExchangePointer((PVOID volatile*)&g_net_mgr, NULL, (PVOID)mgr);  /* review F5 */
             } else {
                 /* build 3: a quiet stretch is 700 ms or more with the frame counter
                    still and the stall flag down -- a cutscene (02 §3.7). */
@@ -20033,8 +20495,9 @@ static DWORD WINAPI net_watch(LPVOID unused)
                            (now.QuadPart - g_nm.fz_t0) > 20 * g_net_qpf.QuadPart) {
                     /* 20 s is past the game's own give-up (10 s + 5 s): the battle
                        is over or the other side is gone -- the tail, not a freeze. */
+                    g_net_dd_F = -1;                     /* demodt: outside a battle (VX_DT1_v2 F4) */
                     net_match_end("no frame for 20 s", now.QuadPart);
-                    if (g_net_mgr == mgr) g_net_mgr = 0;
+                    InterlockedCompareExchangePointer((PVOID volatile*)&g_net_mgr, NULL, (PVOID)mgr);  /* review F5 */
                 }
             }
         }
