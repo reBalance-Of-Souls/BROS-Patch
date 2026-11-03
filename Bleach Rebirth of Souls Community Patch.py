@@ -1957,7 +1957,7 @@ try:
             _beta_add_to_list()
             _beta_refresh()
             messagebox.showinfo("Beta", f"Activated (tester slot {slot}).\n\nPick '{_beta.BETA_NAME}' in the version "
-                                        "list and launch. The first launch downloads about 2 GB.")
+                                        "list and launch. The first launch downloads about 4 GB.")
 
         def _beta_download_now():
             if not _beta.is_active(BASE_DIR):

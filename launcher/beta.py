@@ -50,7 +50,7 @@ try:
 except ImportError:                                   # run from the folder itself (tests)
     import content_pool as cpool
 
-BETA_NAME = "Zangetsu Beta (dev build)"
+BETA_NAME = "ReBalance of Souls V1.5 (beta)"
 RELEASE_BASE = "https://github.com/reBalance-Of-Souls/BROS-Patch/releases/download/lb-data/"
 SOURCE_ENV = "BROS_BETA_SOURCE"                         # tests: a local folder or another URL instead of the release
 # The beta's online pool (Berg, 2026-10-24: "make sure that there would be no chance of desync between public beta and
@@ -964,7 +964,7 @@ def _install(base_dir, game, m, log, progress):
     except cpool.PoolError as e:
         raise BetaError("The online pool could not be made from the installed game (%s). The game was not started."
                         % e)
-    log("[beta] content pool %d (%d files, %s); the Dev Community Patch meets it on the same build"
+    log("[beta] content pool %d (%d files, %s); Dev ReBalance of Souls V1.5 meets it on the same build"
         % (code, n_counted, digest[:12]))
 
     _atomic_write(rec_path, json.dumps({"game": os.path.abspath(game), "build": m["build"]["id"],
