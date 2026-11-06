@@ -184,6 +184,73 @@ try:
     except Exception:
         _beta = None
 
+    # Quick Launch, inside this launcher (launcher/quick_menu.py, the same file as the Dev Environment's; MATCHFIND
+    # 2026-11-06): the right-click menu's entries start this file with --quick "<version>" --boot title|roommatch|
+    # training -- the launch below, this window never shown. The four Quick Launch scripts are gone.
+    try:
+        from launcher import quick_menu as _quick_menu
+    except Exception:
+        _quick_menu = None
+    _QUICK = None
+    if len(sys.argv) > 1:
+        try:
+            if _quick_menu is None:
+                raise RuntimeError("launcher/quick_menu.py is missing from this checkout. Start the launcher without "
+                                   "arguments once (it updates the checkout), then try again.")
+            _QUICK = _quick_menu.parse_args(sys.argv[1:])
+            if _QUICK["cmd"] == "prepare":
+                raise RuntimeError("--prepare belongs to the Dev Environment's launcher")
+        except Exception as e:
+            try:
+                from tkinter import Tk as _Tk
+                _r = _Tk()
+                _r.withdraw()
+                messagebox.showerror("Quick Launch", "This start was not understood, so nothing was done:\n\n%s" % e)
+                _r.destroy()
+            except Exception:
+                print("Quick Launch: this start was not understood, so nothing was done: %s" % e)
+            sys.exit(2)
+        print("[quick] " + _quick_menu.describe(_QUICK))
+
+        class _QuickTail:
+            """stdout / stderr as they were, and the last lines of both kept for this start's failure screen: the
+            console is hidden and this repository keeps no log file (the Dev Environment's launcher/update_window.py)."""
+            text = [""]
+
+            def __init__(self, stream):
+                self.stream = stream
+
+            def write(self, s):
+                _QuickTail.text[0] = (_QuickTail.text[0] + s)[-6000:]
+                try:
+                    if self.stream is not None:
+                        self.stream.write(s)
+                except Exception:
+                    pass
+                return len(s)
+
+            def flush(self):
+                try:
+                    if self.stream is not None:
+                        self.stream.flush()
+                except Exception:
+                    pass
+
+            def __getattr__(self, name):
+                return getattr(self.stream, name)
+
+            @staticmethod
+            def tail(n=18):
+                return "\n".join(_QuickTail.text[0].splitlines()[-n:])
+        sys.stdout, sys.stderr = _QuickTail(sys.stdout), _QuickTail(sys.stderr)
+
+    # The careful return to vanilla (launcher/stock_revert.py): the code of Quick Launch Bros Vanilla.py, baked in
+    # with the Quick Launch scripts (MATCHFIND 2026-11-06). Optional for the same reason as the imports above.
+    try:
+        from launcher import stock_revert as _stock_revert
+    except Exception:
+        _stock_revert = None
+
     class MatchmakingError(Exception):
         """setup_matchmaking() could not put the loader or the pool code in place: no launch."""
 
@@ -240,8 +307,13 @@ try:
         # `git pull` after it always answers "Already up to date.": only a DevToken user's
         # update shows in that text. The commit moving is what tells an update landed.
         _head_before = get_snapshot()
-        result = pulling_from_git()
-        output = result.stdout.strip()
+        if _QUICK is not None and (_QUICK["cmd"] == "menu" or not _QUICK["pull"]):
+            print("[quick] no update before this start (%s)" % ("--quick-menu" if _QUICK["cmd"] == "menu"
+                                                                 else "--no-pull"))
+            output = "Already up to date."
+        else:
+            result = pulling_from_git()
+            output = result.stdout.strip()
         if "Already up to date." in output and get_snapshot() == _head_before:
             pass
 
@@ -266,6 +338,8 @@ try:
                         cmd = [sys.executable]
                     else:
                         cmd = [sys.executable, os.path.abspath(__file__)]
+                    # a Quick Launch stays a Quick Launch after the update (MATCHFIND 2026-11-06)
+                    cmd += sys.argv[1:]
                     subprocess.Popen(cmd, env=child_env, cwd=BASE_DIR)
                     exit()
                 except Exception as relaunch_error:
@@ -827,7 +901,7 @@ try:
         except Exception as e:
             print(f"[matchmaking] could not remove dinput8.dll: {e}")
 
-        # The plugins too, as Quick Launch Bros Vanilla does: inert without the
+        # The plugins too (as Quick Launch Bros Vanilla did, until 2026-11-06): inert without the
         # loader, but a vanilla game folder should not keep them.
         try:
             pdst = os.path.join(target_path, "ReBalanceOfSouls")
@@ -863,17 +937,25 @@ try:
         if platform.system() != "Windows":
             try:
                 open_file("steam://rungameid/1689620")
+                if _QUICK is not None:
+                    _QUICK["done"] = True
             except Exception as e:
                 print(f"Error launching patched game: {e}")
             return
         try:
-            subprocess.Popen([exe], cwd=target_path)
+            _proc = subprocess.Popen([exe], cwd=target_path)
+            if _QUICK is not None:
+                _QUICK["done"] = True
+            if os.environ.get("BROS_FOCUS") and _quick_menu:
+                _quick_menu.focus_game_window(_proc.pid)
         except OSError as e:
             if getattr(e, "winerror", None) == 740:
                 # exe's manifest requires elevation — Popen/CreateProcess can't
                 # trigger the UAC prompt itself, ShellExecuteW with "runas" can.
                 try:
-                    ctypes.windll.shell32.ShellExecuteW(None, "runas", exe, None, target_path, 1)
+                    if ctypes.windll.shell32.ShellExecuteW(None, "runas", exe, None, target_path, 1) > 32 \
+                            and _QUICK is not None:
+                        _QUICK["done"] = True
                 except Exception as e2:
                     print(f"Error launching patched game (elevated): {e2}")
             else:
@@ -897,7 +979,8 @@ try:
 
         It now travels as BROS_BOOT_MODE, which the normal loader reads at
         startup -- the way the standalone Quick Launch scripts at the repo root
-        have sent it since they were fixed for the same reason."""
+        sent it too, from their fix for the same reason until they were baked into
+        this launcher (2026-11-06: the right-click menu's entries come through here)."""
         global bootMode
         bootMode = {"TrainingBoot": "training", "RoomMatchBoot": "roommatch"}.get(boot_mode)
         try:
@@ -910,12 +993,14 @@ try:
         # build already downloaded.
         if _beta and gameVersion == _beta.BETA_NAME:
             try:
-                pulling_from_git()
+                if _QUICK is None or _QUICK["pull"]:
+                    pulling_from_git()
             except Exception as e:
                 print(f"[beta] launcher update skipped ({e}); the beta starts with what is on disk")
             _launch_beta()
             return
-        pulling_from_git()
+        if _QUICK is None or _QUICK["pull"]:
+            pulling_from_git()
         if not os.path.exists(os.path.join(BASE_DIR,"GameModes","TeamBattle","TokenOpen.txt")):
             config["TEAM_BATTLE"] = "OFF"
         try:
@@ -927,17 +1012,24 @@ try:
             #folder injection
             revert_foreign_overlay(game_path, gameVersion)
             revert_foreign_exe(game_path)
-            injectFolder(gameVersion,"Script")
-            injectFolder(gameVersion,"Motion")
-            injectFolder(gameVersion,"00HIGH",False)
-            injectFolder(gameVersion,"01MIDDLE",False)
-            # Demo/ carries the shortened match intros and stage opening cameras.
-            # MERGE only (fullFolder=False): the game's Demo folder holds ~1000
-            # packages and a /MIR would delete every one this version does not
-            # ship. Guarded on the folder existing, because the versions that do
-            # not carry it must still launch.
-            if os.path.isdir(os.path.join(BASE_DIR,"GameVersions",gameVersion,"Demo")):
-                injectFolder(gameVersion,"Demo",False)
+            if vanilla and _stock_revert:
+                # Vanilla: the game back to stock without touching what is not ours -- two passes guided by
+                # Files/Stock/stock_manifest_sha256.txt (launcher/stock_revert.py, Quick Launch Bros Vanilla.py's own
+                # code). A mirror of the vanilla snapshot deleted the player's own files in Script/ and Motion/, and a
+                # merge of it put the snapshot's dev leftovers into the game and left the patch's files there.
+                _stock_revert.restore_stock(BASE_DIR, game_path, gameVersion)
+            else:
+                injectFolder(gameVersion,"Script")
+                injectFolder(gameVersion,"Motion")
+                injectFolder(gameVersion,"00HIGH",False)
+                injectFolder(gameVersion,"01MIDDLE",False)
+                # Demo/ carries the shortened match intros and stage opening cameras.
+                # MERGE only (fullFolder=False): the game's Demo folder holds ~1000
+                # packages and a /MIR would delete every one this version does not
+                # ship. Guarded on the folder existing, because the versions that do
+                # not carry it must still launch.
+                if os.path.isdir(os.path.join(BASE_DIR,"GameVersions",gameVersion,"Demo")):
+                    injectFolder(gameVersion,"Demo",False)
 
 
 
@@ -1055,6 +1147,8 @@ try:
                 remove_matchmaking(game_path)
                 try:
                     open_file("steam://rungameid/1689620")
+                    if _QUICK is not None:
+                        _QUICK["done"] = True
                 except:
                     print("Error launching game")
         except Exception as e:
@@ -1088,7 +1182,11 @@ try:
         dlg = Toplevel(window)
         dlg.title("Beta")
         dlg.config(bg=bgcolor)
-        dlg.transient(window)
+        # Transient and modal over a VISIBLE window only: a Quick Launch keeps the window hidden, and a transient
+        # window takes its master's state -- it would never appear (MATCHFIND 2026-11-06).
+        _over = bool(window.winfo_viewable())
+        if _over:
+            dlg.transient(window)
         lab = Label(dlg, text=first_text, font=FONT_BODY, bg=bgcolor, fg=labelcolor,
                     padx=24, pady=18, wraplength=420, justify="left")
         lab.pack()
@@ -1098,7 +1196,8 @@ try:
             lab.config(text="Cancelling...")
         mkbutton(dlg, "Cancel", cancel, kind="ghost").pack(pady=(0, 14), padx=24, fill=X)
         dlg.protocol("WM_DELETE_WINDOW", cancel)
-        dlg.grab_set()
+        if _over:
+            dlg.grab_set()
         worker = threading.Thread(target=work, daemon=True)
         worker.start()
 
@@ -1292,7 +1391,7 @@ try:
     # The GameVersions/ folder the Quick Launch buttons force, so a shortcut
     # never runs vanilla (which has no loader and would ignore it).
     COMMUNITY_VERSION = "Bleach Rebirth of Souls Community Patch"
-    LATEST_STRING = get_latest()
+    LATEST_STRING = get_latest() if _QUICK is None else "unknown"     # no window shown: no fetch for its pill
     _have_latest  = LATEST_STRING not in ("", "unknown")
     _up_to_date   = _have_latest and (VERSION_STRING == LATEST_STRING)
 
@@ -1356,7 +1455,7 @@ try:
     # Quick Launch: the normal Community Patch launch plus a boot shortcut, so
     # the game opens on the screen you actually wanted instead of the title
     # screen and the menu walk. The version is forced to the Community Patch
-    # (same as the standalone Quick Launch scripts at the repo root): vanilla
+    # (as the standalone Quick Launch scripts did, until 2026-11-06): vanilla
     # goes through Steam with no loader, and with no loader there is nothing to
     # act on the shortcut, so it would silently do nothing.
     def quickLaunchTraining():
@@ -1861,6 +1960,102 @@ try:
     diagModesOuter.pack(fill=X, pady=(0,7))
     set_toggle_visual(diagnosticsButton, diagnosticsOn)
 
+    # Quick Launch -- the right-click menu on this launcher's file (launcher/quick_menu.py, MATCHFIND 2026-11-06):
+    # Quick Launch > a version > Title screen / Room Match / Training (Vanilla: the title screen). ON unless switched
+    # off; kept in Json/quick_menu.json (not config.json: a new key there resets the player's settings). Put in place
+    # or taken away at once, and brought up to date at every start of this window.
+    def _quick_versions():
+        """The versions this window lists: GameVersions, and the beta once this install is activated."""
+        vs = list(gameVersionsList)
+        try:
+            if _beta and _beta.is_active(BASE_DIR) and _beta.BETA_NAME not in vs:
+                vs.append(_beta.BETA_NAME)
+        except Exception:
+            pass
+        return vs
+
+    def _quick_menu_apply():
+        """The right-click menu as the switch says: brought up to date (ON) or removed (OFF). A line for the log."""
+        if not _quick_menu:
+            return "[quick menu] launcher/quick_menu.py is missing"
+        me = os.path.abspath(__file__)
+        if _quick_menu.load_choice(BASE_DIR):
+            return _quick_menu.install(me, _quick_versions(),
+                                       first=[COMMUNITY_VERSION] + ([_beta.BETA_NAME] if _beta else []),
+                                       label="Quick Launch", app_name="Bleach Community Patch",
+                                       icon=os.path.join(BASE_DIR, "ressources", "pimplin.ico"))
+        return _quick_menu.remove(me)
+
+    def _run_quick():
+        """--quick / --quick-menu (launcher/quick_menu.py). This window is never shown; what goes wrong is said in a
+        dialog, as from the window."""
+        global gameMode
+        q = _QUICK
+        if q["cmd"] == "menu":
+            me = os.path.abspath(__file__)
+            if q["action"] == "status":
+                line = _quick_menu.status(me)
+            elif q["action"] == "remove":
+                line = _quick_menu.remove(me)
+            else:
+                line = _quick_menu.install(me, _quick_versions(),
+                                           first=[COMMUNITY_VERSION] + ([_beta.BETA_NAME] if _beta else []),
+                                           label="Quick Launch", app_name="Bleach Community Patch",
+                                           icon=os.path.join(BASE_DIR, "ressources", "pimplin.ico"),
+                                           flat=q["flat"], match=q["match"])
+            print(line)
+            q["done"] = not any(w in line for w in ("not made", "not removed", "unknown"))
+            messagebox.showinfo("Quick Launch", line.replace("[quick menu] ", "Right-click menu: "))
+            return
+        v = q["version"]
+        if v not in _quick_versions():
+            messagebox.showerror("Quick Launch", f"'{v}' is not a version of this launcher (any more). Nothing was "
+                                 "started.\n\nThe right-click menu is brought up to date whenever the launcher's "
+                                 "window opens.")
+            return
+        boot = q["boot"]
+        if v == "Bleach Rebirth of Souls" and boot != "title":
+            messagebox.showerror("Quick Launch", "Vanilla is the game as Steam ships it: with no loader there is "
+                                 "nothing to open Room Match or Training. Nothing was started.")
+            return
+        gameMode = _quick_menu.quick_game_mode(BASE_DIR, boot) or "DEFAULT"
+        launch(v, boot_mode={"roommatch": "RoomMatchBoot", "training": "TrainingBoot"}.get(boot))
+
+    quickMenuOuter, quickMenuInner = make_card(gameModesPage, "Quick Launch")
+    quickMenuOn = _quick_menu.load_choice(BASE_DIR) if _quick_menu else False
+
+    def actualiseQuickMenuButton():
+        quickMenuButton.config(text=f'Right-click Quick Launch menu : (Currently {"ON" if quickMenuOn else "OFF"})')
+        set_toggle_visual(quickMenuButton, quickMenuOn)
+
+    def quickMenuFunc():
+        global quickMenuOn
+        if not _quick_menu:
+            return
+        try:
+            _quick_menu.save_choice(BASE_DIR, not quickMenuOn)
+        except _quick_menu.QuickError as e:
+            messagebox.showerror("Quick Launch", f"The switch could not be saved:\n\n{e}")
+            return
+        quickMenuOn = not quickMenuOn
+        actualiseQuickMenuButton()
+        line = _quick_menu_apply()
+        print(line)
+        if any(w in line for w in ("not made", "not removed")):
+            messagebox.showwarning("Quick Launch", line.replace("[quick menu] ", "The right-click menu was "))
+
+    quickMenuButton = mkbutton(
+        quickMenuInner,
+        text=f'Right-click Quick Launch menu : (Currently {"ON" if quickMenuOn else "OFF"})',
+        command=quickMenuFunc,
+        tooltip="ON: right-click this launcher's file > Quick Launch > a version > Title screen, Room Match or Training starts the game on that screen at once -- updated and installed exactly like the Launch button, with default rules. On Windows 11 the menu is under 'Show more options'. OFF: the menu is removed."
+    )
+    quickMenuButton.pack(pady=(paddingYvalue,0), fill=X)
+    if not _quick_menu:
+        quickMenuButton.config(state=DISABLED)
+    quickMenuOuter.pack(fill=X, pady=(0,7))
+    set_toggle_visual(quickMenuButton, quickMenuOn)
+
     gameModesMenuButton = mkbutton(gameModesPage, "Main Menu", backToMainMenu, kind="ghost", icon="←",
                                     tooltip="Return to the main menu.")
     gameModesMenuButton.pack(pady=paddingYvalue, fill=X)
@@ -2027,7 +2222,8 @@ try:
         window.update_idletasks()
         _sync_scroll()
     fit_window()
-    window.deiconify()
+    if _QUICK is None:
+        window.deiconify()
     # First start after the update: every player picks the netcode once before the
     # launcher can be used (Berg 2026-10-03: "Use the new improved netcode?", yes or
     # no). On Windows a Yes/No box has no close button, so an answer is required.
@@ -2052,6 +2248,47 @@ try:
                 print("[netcode] " + _netcode_mode.apply(game_path, netcodeOn, None, BASE_DIR))
             except Exception as e:
                 print(f"[netcode] bros_net.txt not written now ({e}); the next launch writes it")
+    if _QUICK is not None:
+        # A Quick Launch or --quick-menu: inside this window's event loop (the beta's progress dialog and the other
+        # dialogs need it), the window itself never shown. Exit 0 when it did what was asked.
+        def _quick_start():
+            # What this start tells the player is counted -- an error or a warning, a question answered no -- so that
+            # a Quick Launch which ends with nothing started and nothing said (a start that failed with only a line in
+            # the hidden console) still says so, with that console's last lines: the Quick Launch scripts' failure
+            # screen.
+            told = []
+
+            def _counted(f, declined_only):
+                def g(*a, **k):
+                    r = f(*a, **k)
+                    if not declined_only or not r:
+                        told.append(1)
+                    return r
+                return g
+            for _n, _d in (("showerror", False), ("showwarning", False), ("askokcancel", True), ("askyesno", True)):
+                setattr(messagebox, _n, _counted(getattr(messagebox, _n), _d))
+            try:
+                _run_quick()
+            except Exception as e:
+                messagebox.showerror("Quick Launch", f"Something went wrong:\n\n{e}\n\nNothing more was done.")
+            finally:
+                try:
+                    if _QUICK["cmd"] == "quick" and not _QUICK.get("done") and not told:
+                        _t = _QuickTail.tail()
+                        messagebox.showerror("Quick Launch", "The game was not started." + ("\n\n" + _t if _t else ""))
+                except Exception:
+                    pass
+                try:
+                    window.destroy()
+                except Exception:
+                    pass
+        window.after(0, _quick_start)
+        window.mainloop()
+        sys.exit(0 if _QUICK.get("done") else 1)
+    # The right-click Quick Launch menu, brought up to date (or removed) on a thread: a registry or a file manager's
+    # folder must never hold the window.
+    import threading as _threading
+    _threading.Thread(target=lambda: print(_quick_menu_apply()), daemon=True).start()
     window.mainloop()
 except Exception as e:
     try :

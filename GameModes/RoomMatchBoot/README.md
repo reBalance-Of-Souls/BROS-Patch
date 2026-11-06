@@ -1,7 +1,10 @@
 # RoomMatchBoot — boot straight into the online room-match menu
 
-Start it with **`Quick Launch Room Match.py`**. The game goes logos → Room Match
-(Create room / Find room).
+Started by the launcher's **Quick Launch Room Match** button, or by the Room
+Match entry of the right-click menu on the launcher's file (until 2026-11-06
+also by `Quick Launch Room Match.py`): the normal loader with
+`BROS_BOOT_MODE=roommatch`. The game goes logos → Room Match (Create room /
+Find room).
 
 **Getting in works.** See the known bug below for getting back out.
 
@@ -32,6 +35,10 @@ live state handlers. Not done yet.
 Everything else about the shortcut works, which is why it ships as-is.
 
 ## The loader
+
+(Not installed by any of those starts since 2026-09-24: the shortcut travels
+as `BROS_BOOT_MODE` on the normal loader -- the launcher's `launch()`
+docstring says why. What follows is the record of this folder's own build.)
 
 Built from this repo's `Files/Matchmaking/dinput8_proxy.c` with `-DENABLE_BOOT_ROOMMATCH=1`, so it is
 the normal patch loader plus this one shortcut — same matchmaking, same patches,

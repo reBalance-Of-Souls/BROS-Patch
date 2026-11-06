@@ -25,8 +25,8 @@ Recording is **off** unless this folder holds `tournament.txt` with `on 1`. Noth
    launch, and the loader never arms. The choice is kept in `Json/diagnostics.json` (not committed); only the
    player's own click writes it.
 3. **Every launch** that installs the loader copies the switch beside the game exe as `bros_diag.txt`, when both
-   switches are on. This happens in the main launcher (also for the beta) and in the Community Patch, Room Match and
-   Training Mode quick launchers (`launcher/diagnostics.py`).
+   switches are on: the launcher's Launch button (also for the beta) and every start from its right-click Quick
+   Launch menu (until 2026-11-06 also the Quick Launch scripts) (`launcher/diagnostics.py`).
    - The copy holds `tournament` and `salt`, plus the commit the player runs; never `upload`.
    - Without `tournament.txt`, with `on 0`, or with the player's switch OFF, the launch removes `bros_diag.txt`.
 4. **The loader** (`Files/Matchmaking/dinput8_proxy.c`, PART 43 "NETDIAG", format `bros-diag 2`) reads

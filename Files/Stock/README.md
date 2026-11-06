@@ -32,8 +32,11 @@ Without it the second and third are indistinguishable, and a revert has to
 guess. That guess deleted `Fnames/filename.bin` on 2026-09-09 and left every
 launcher faulting at `exe+0x1C8187` with no crashlog.
 
-`Quick Launch Bros Vanilla.py` reads this file in `restore_stock()`. With the
-manifest missing it deletes nothing at all, by design.
+`launcher/stock_revert.py` reads this file in `restore_stock()`: the launcher's
+Vanilla start (its Launch button and its right-click entry) returns to stock in
+two passes this file guides. That is the code of `Quick Launch Bros Vanilla.py`,
+moved into the launcher on 2026-11-06. With the manifest missing it deletes
+nothing at all, by design.
 
 ## Rebuilding it
 

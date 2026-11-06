@@ -2,7 +2,7 @@
 
 IN THE LAUNCHER. The Game Modes page has a "New netcode" switch, independent of the one-game-mode slot. The choice is
 kept in Json/netcode.json and applied to <game>\\bros_net.txt when it is switched and at every launch that installs the
-master dinput8.dll (the main launcher and the Quick Launch scripts; BalanceInit through Quick Launch Community Patch):
+master dinput8.dll (the launcher and its right-click Quick Launch):
 
   ON (the default)   NEW: lock 1, sleep 8, window 8, delay 0, probe 1 (build 3). A player who switched ON themselves
                      gets the launched version's own bros_net.txt instead, if its Overlay ships one (V1.2's, which

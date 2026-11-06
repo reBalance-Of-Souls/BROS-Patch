@@ -1,7 +1,10 @@
 # TrainingBoot — boot straight into the Training character select
 
-Start it with **`Quick Launch Training Mode.py`**. The game goes logos →
-Training character select, skipping the title screen and the menu walk.
+Started by the launcher's **Quick Launch Training Mode** button, or by the
+Training entry of the right-click menu on the launcher's file (until 2026-11-06
+also by `Quick Launch Training Mode.py`): the normal loader with
+`BROS_BOOT_MODE=training`. The game goes logos → Training character select,
+skipping the title screen and the menu walk.
 
 **Confirmed working.**
 
@@ -19,6 +22,10 @@ the two wrong attempts that both logged success — is in the dev environment's
 copy of this file.
 
 ## The loader
+
+(Not installed by any of those starts since 2026-09-24: the shortcut travels
+as `BROS_BOOT_MODE` on the normal loader -- the launcher's `launch()`
+docstring says why. What follows is the record of this folder's own build.)
 
 Built from this repo's `Files/Matchmaking/dinput8_proxy.c` with `-DENABLE_BOOT_TRAINING=1`, so it is
 the normal patch loader plus this one shortcut — same matchmaking, same patches,

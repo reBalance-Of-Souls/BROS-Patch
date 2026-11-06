@@ -25,3 +25,8 @@ Json/beta/
 # the default. Each player's own, never committed.
 Json/diagnostics.json
 Json/diagnostics.json.tmp
+
+# The right-click Quick Launch menu's switch (launcher/quick_menu.py, the Game Modes
+# page): absent = ON, the default. Each player's own, never committed.
+Json/quick_menu.json
+Json/quick_menu.json.tmp

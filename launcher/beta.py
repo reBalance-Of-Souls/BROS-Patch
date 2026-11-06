@@ -807,6 +807,23 @@ def sweep_effect_strays(game, log=print):
     return moved
 
 
+def _build_time(m):
+    """The build's Dev commit time (seconds since 1970) when the build carries it, else its creation time: which build
+    is newer, for the loader's online counts (content_pool.py FORMAT 2's cache labels; never part of the code)."""
+    b = m.get("build", {})
+    for key in ("dev_commit_time", "created"):
+        v = b.get(key)
+        if isinstance(v, (int, float)):
+            return int(v)
+        if isinstance(v, str) and v:
+            try:
+                import datetime
+                return int(datetime.datetime.fromisoformat(v.replace("Z", "+00:00")).timestamp())
+            except Exception:
+                continue
+    return None
+
+
 def install(base_dir, game, m, log=print, progress=None):
     """Put the build's end state into the game folder. Every file written is checked against the manifest's hash."""
     if not _busy.acquire(blocking=False):
@@ -960,7 +977,9 @@ def _install(base_dir, game, m, log, progress):
     # 6. the match code: the content pool, made from what is installed now (launcher/content_pool.py, the Dev
     #    launcher's rule for its Community Patch). If it cannot be made, the launch stops here.
     try:
-        code, n_counted, digest = cpool.write_code(game)
+        code, n_counted, digest = cpool.write_code(game, plan=[f["path"] for f in m["files"]],
+                                                   version=m["build"].get("name"), mode="DEFAULT",
+                                                   built=_build_time(m))
     except cpool.PoolError as e:
         raise BetaError("The online pool could not be made from the installed game (%s). The game was not started."
                         % e)
