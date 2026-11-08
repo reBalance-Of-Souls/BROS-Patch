@@ -1104,6 +1104,12 @@ static void room3_state(void* self, uint64_t lobby, const char* tag)
     log_line("ROOM3: %s -- lobby %llu holds %d/%d members",
              tag, (unsigned long long)lobby, n, lim);
 }
+/* NETUP part 2 (D-S8-10): every count hk_NumMembers returns, with its lobby, for
+   protocol v2's room gate (v2_s7.c, H1: no v2 in a lobby counted above two) -- the
+   lobby's low 56 bits, the count clamped to 0-255 in the top 8: one aligned
+   64-bit word, so no reader on another thread sees one lobby's count with
+   another lobby's id. 0: no count yet. */
+static volatile uint64_t g_net_v2_room = 0;
 /* The room UI polls the member count every frame, so this is the cheapest place
    to watch a third client arrive -- but only a CHANGE is worth a line. This is
    the decisive measurement on the HOST: if it ever prints 3, three members are
@@ -1113,6 +1119,8 @@ static int hk_NumMembers(void* self, uint64_t lobby)
     static int last = -1;
     int n = o_NumMembers(self, lobby);
     if (g_diag_on) g_diag_members = n;   /* PART 43 */
+    g_net_v2_room = (lobby & 0x00FFFFFFFFFFFFFFull) |
+                    ((uint64_t)(n < 0 ? 0 : n > 255 ? 255 : n) << 56);   /* NETUP part 2: the room gate */
     if (lobby && lobby != g_room3_left && !g_room3_steam_down) {   /* F4: not the room just left */
         if (!g_room3_lobby)
             log_line("ROOM3/p2p: in a room -- the session watch calls Steam");
@@ -18058,6 +18066,33 @@ static DWORD WINAPI worker(LPVOID u)
  *  REVIEW_31): a Send that gives up waiting no longer writes the game's queues
  *  unlocked; it leaves a copy that the next holder of the lock sends first
  *  (NET/defer). See `lock` below.
+ *  2026-11-06, NETUP part 1 (pass nu, from the diagnostics relay's 2,082
+ *  battles): the speed-up threshold at least one record (`tempo`: 1 instead
+ *  of 0 at D <= 1, stock above), and resend requests after 34 ms and every
+ *  50 ms instead of RTT' and every 300 ms, never at frame 0 (`resend`; the
+ *  "-0" of F2). Nothing on the wire changes.
+ *  2026-11-07, NETUP part 2 (pass nu): protocol v2, the symmetric delay
+ *  (SPEC_BUILD4 r3; D:\Development Log\NETUP_2026-11-06\notes\PART2_*). At
+ *  every battle's setup both seats exchange a HELLO and agree on one delay d
+ *  from both lobbies' RTT samples before frame 0; the host plays d - 1, the
+ *  guest d - 2, so both get the same margin. Every record carries a CRC-32C,
+ *  the frame state is hashed and compared (detect only), the guest corrects
+ *  positions from the host's late snapshots (option B), each seat checks it
+ *  played what it sent, and an arrival margin of its own is measured. A seat
+ *  commits to v2 only once the peer shows it holds this seat's HELLO; before
+ *  that, a stock record of the peer, or 1,000 ms without a word from it,
+ *  falls back to NEW (this part as above) -- so no battle has one seat in v2
+ *  and the other in NEW (notes\PART2_S8_PLAN.md), but for one case: a
+ *  stock record of an aborted start whose entries all lie within the bound
+ *  the peer's HELLO gives, arriving 100 ms or more after the peer's last
+ *  HELLO-phase record and before its commit: the seats then end in
+ *  different modes and the battle never begins (notes\PART2_S9_PLAN.md
+ *  D-S9-4, D-S9-8; the game's own watchdog is expected to end such a match,
+ *  not run in this work). v2 stays out of a lobby counted above two
+ *  members: in a spectator's or a Tag / Team room every battle plays part 1
+ *  alone (a lobby not counted yet begins v2). Eleven units, pasted
+ *  unchanged below net_resend_install; `scheme` and its keys below; the
+ *  NET/v2... lines in the glue's header (v2_s7.c).
  * ---------------------------------------------------------------------
  *  Research (static analysis of the live exe, md5 7b213566):
  *      D:\Development Log\NETCODE\00_OVERVIEW.md      <- start here
@@ -18246,6 +18281,66 @@ static DWORD WINAPI worker(LPVOID u)
  *    demolag 3 (2026-10-28) Seconds, 0 to 5: how far one cutscene may fall
  *              behind the clock before `demodt` catches up as stock does.
  *              0 steps as stock but never below one frame.
+ *    tempo  1  (2026-11-06, NETUP P1b) The speed-up threshold at least one
+ *              record. Stock (exe+0x801B19..0x801BAB): a side plays at
+ *              60 * (1 + clamp(0.2 * (Q - trunc(D/2)), 0, 1)) Hz, Q the other
+ *              side's records in hand (host [cnd+0x88], guest [cnd+0xF0]). With
+ *              the network thread at 1 ms the next record is nearly always in
+ *              hand a frame early, and at D <= 1 (threshold 0) that alone ran the
+ *              game at 72 Hz (the rig, 2026-10-15: 66-74 % of frames; the field,
+ *              guest at D 1: 14.6 %). `tempo 1` makes it max(trunc(D/2), 1):
+ *              exe+0x801B3B, where host and guest meet, `cdq; sub eax,edx;
+ *              sar eax,1; sub ecx,eax` (7 bytes) -> a call to a stub doing the
+ *              same with the max, + a 2-byte nop. At D >= 2 nothing changes: the
+ *              threshold is what bounds the guest's lag behind the host (02
+ *              s5.3, the guest's ratchet), so it stays stock there (VX_P1 2).
+ *              Not in the file: on with `lock`, off with CLASSIC.
+ *    resend 34 50  (2026-11-06, NETUP P1c) Resend requests, in ms: the first
+ *              of a stall (stock: RTT') and every later one (stock: 300). A
+ *              stall's first not-ready tick (StallTimer, exe+0x1AB020) stamps
+ *              [cnd+0xC8] and sets the interval [cnd+0xD0] = [cnd+0x08] (RTT');
+ *              both builders send frame -F once (now - stamp) ms > interval
+ *              and set it to 300 (0x1ABA1B host, 0x1AC370 guest). After an
+ *              outage longer than the window both sides wait, and only a
+ *              request ends it: RTT' + RTT stock (nu005: ~230 s of the 680 s
+ *              of stalls >= 100 ms lay beyond the inbound silence). The first
+ *              number caps StallTimer's interval (min(RTT', first), through a
+ *              stub at exe+0x1AB093, 11 bytes; CheckStall's callers never read
+ *              rax), the second replaces both 300s. At frame 0 no request is
+ *              sent at all: it would be "-0", which both receivers store as an
+ *              empty frame-0 entry over a real one and never answer (F2,
+ *              VERIFY_F2_F5). `resend 0` is stock. Not in the file: on with
+ *              `lock`, off with CLASSIC. A reader of [cnd+0xD0] (SPEC_31's
+ *              I1 / I3 planned to tell a request from a wait's start by 300 vs
+ *              RTT') must take min(RTT', first), 0x7FFFFFFF and `again` instead.
+ *              (2026-11-08, NETUP part 2, D-S9-1, D-S9-10) With the stub,
+ *              `again` above 50, or 0 beside a first above 0, reads 50, and
+ *              then `first` above 100, or 0 (RTT'), reads 100: a stall's
+ *              first request is timed at most 100 ms in and the next ones at
+ *              most 50 ms apart -- the rate by which protocol v2 proves the
+ *              stub (H7's z0: 8 of the peer's requests within 600 ms).
+ *    scheme 0  (2026-11-07, NETUP part 2) 2: protocol v2. It needs `lock 1`
+ *              (with lock 0 it is 0). The launcher's NEW file writes 2; any
+ *              other value is 0. Read by S2a's parser (v2keys.c), which keeps
+ *              this function's grammar and its clamps for every key above but
+ *              `first`'s and `again`'s with the stub (as said under `resend`).
+ *    vmargin 8, pctl 95, dmin 2, dmax 15  v2's delay: d = ceil((P / 2 + M) /
+ *              (50/3 ms)) within [dmin, dmax], P the larger of both seats'
+ *              pctl-th percentile of the opponent's lobby RTT samples (ms), M
+ *              the larger vmargin (ms, 0-50), the tighter clamp (2-15).
+ *    optb 1, hash 1  option B (the guest's late position corrections) and
+ *              the per-frame state hash: each only where both seats have it.
+ *    vtempo 0  the tempo balance (a burst above 60 Hz while this seat's
+ *              arrival margin lags the peer's): only where both seats have
+ *              it; off by default (nu044: no proven gain). The arrival
+ *              measure itself runs in every v2 battle.
+ *    fallback 1  a stock record of the peer before this seat committed to
+ *              v2, or 1,000 ms with nothing from the peer after the setup:
+ *              1 plays NEW, 0 refuses (the game's own watchdog is then
+ *              expected to end the match).
+ *    nsched 1  NEW's schedule when v2 would lower neither seat's NEW delay
+ *              (r3's D3); either seat's 1 applies.
+ *    late 0    option L: read and reported, not in this build.
  *
  *  Nothing here changes the match code, and every packet stays readable by an
  *  unpatched peer, so there is no matchmaking pool shift and patched and
@@ -18255,6 +18350,11 @@ static DWORD WINAPI worker(LPVOID u)
  *  cutscene frames step one frame where the game took the measured time.
  *  Both PCs need it to agree; a pair where only one has it is no worse off
  *  than two stock PCs, which each step cutscenes by their own clock.
+ *  Protocol v2 (`scheme 2`) keeps this: its records begin with a count of 0,
+ *  which every stock receiver reads as an empty record, and a v2 seat that
+ *  meets a stock record (or silence) before it committed to v2 plays NEW
+ *  (`fallback 1`). The match code is unchanged (the loader is part of the
+ *  content pool already).
  *
  *  INSTALLED FROM DllMain. DINPUT8.dll is a static import of the exe, so this
  *  runs during process start-up, before the exe's entry point and before any
@@ -18264,9 +18364,12 @@ static DWORD WINAPI worker(LPVOID u)
  *  written by net_watch.
  *
  *  CLAIMED. Every exe byte written here is declared in the master's claim
- *  registry first, under "dinput8.dll (master)" -- eight rows, see the Dev
- *  Environment's BERG_CLAIMS.md (CLAIMS.md there is another dev's file since
- *  2026-10-03 and has only the first six).
+ *  registry first, under "dinput8.dll (master)" -- seventeen rows: eight from
+ *  before NETUP, four from its part 1, five from its part 2 (claimed only with
+ *  `scheme 2`). The Dev Environment's BERG_CLAIMS.md gains each NETUP part's
+ *  rows when Berg merges the rows file its package carries
+ *  (BERG_CLAIMS_rows_p2.md: both parts'); CLAIMS.md there is another dev's
+ *  file since 2026-10-03 and has only the first six (VX_P2 F8).
  *  From DllMain the table is still empty, so a claim cannot be refused, and
  *  bros_claim's refusal path (the only one that logs) cannot run under the
  *  loader lock. Claiming this early is what keeps a plugin loaded later from
@@ -18312,6 +18415,19 @@ static DWORD WINAPI worker(LPVOID u)
 #define NET_RVA_DT_OVR      0x18D7630u  /* f32 .data, initial -1.0: the tick's step when >= 0, else the measured one */
 #define NET_RVA_OVR_RESET   0x801856u   /* movss [rip+d32],xmm0: the sync step's per-entry reset of it to -1.0      */
 #define NET_RVA_OVR_READ    0x8575C3u   /* movss xmm0,[rip+d32]: the root task's read of it, before the tick        */
+#define NET_RVA_TEMPO_HALF  0x801B3Bu   /* cdq..sub ecx,eax: Q - trunc(D/2) of the tempo rule, host and guest (7 B)  */
+#define NET_RVA_STALL_CTX   0x1AB08Cu   /* StallTimer: mov [rbx+0xC8],rax .. mov byte [rbx+0xD8],1 (25 bytes)        */
+#define NET_RVA_STALL_NAK   0x1AB093u   /* mov rax,[rbx+8]; mov [rbx+0xD0],rax: a stall's first request interval      */
+#define NET_RVA_NAK_HOST    0x1ABA1Bu   /* mov qword [rsi+0xD0],300: the host's later requests (imm32 at +7)          */
+#define NET_RVA_NAK_GUEST   0x1AC370u   /* mov qword [r14+0xD0],300: the guest's later requests (imm32 at +7)         */
+static const unsigned char NET_TEMPO_STOCK[7]  = { 0x99, 0x2B, 0xC2, 0xD1, 0xF8, 0x2B, 0xC8 };
+                                                  /* cdq; sub eax,edx; sar eax,1; sub ecx,eax */
+static const unsigned char NET_STALL_STOCK[25] = { 0x48,0x89,0x83,0xC8,0x00,0x00,0x00,      /* mov [rbx+0xC8],rax */
+                                                   0x48,0x8B,0x43,0x08,                     /* mov rax,[rbx+8]    */
+                                                   0x48,0x89,0x83,0xD0,0x00,0x00,0x00,      /* mov [rbx+0xD0],rax */
+                                                   0xC6,0x83,0xD8,0x00,0x00,0x00,0x01 };    /* mov byte [rbx+0xD8],1 */
+static const unsigned char NET_NAK_HOST_STOCK[11]  = { 0x48,0xC7,0x86,0xD0,0x00,0x00,0x00,0x2C,0x01,0x00,0x00 };
+static const unsigned char NET_NAK_GUEST_STOCK[11] = { 0x49,0xC7,0x86,0xD0,0x00,0x00,0x00,0x2C,0x01,0x00,0x00 };
 
 /* The stock bytes each change replaces. A mismatch means a different exe or
    somebody else got there first: the change is refused, never forced. */
@@ -18350,6 +18466,14 @@ static const char* g_net_why_capture = "off";
 static int  g_net_cfg_demodt = -1, g_net_on_demodt = 0;     /* 2026-10-28; -1 = not in the file */
 static int  g_net_cfg_demolag = 3;                          /* seconds, 0..5 */
 static const char* g_net_why_demodt = "off";
+static int  g_net_cfg_tempo = -1, g_net_on_tempo = 0;       /* NETUP P1b; -1 = not in the file */
+static int  g_net_cfg_first = -1, g_net_cfg_again = -1;     /* NETUP P1c, ms; -1 = not in the file, 0 = stock */
+static int  g_net_on_first = 0, g_net_on_again = 0;         /* what took effect (ms; 0 = stock) */
+static const char* g_net_why_tempo = "off";
+static const char* g_net_why_resend = "off";
+static char g_net_early_p1[320];                            /* NETUP part 1's own start-up line */
+static volatile LONG64 g_net_send_neg = 0;                  /* Sends the game's Send refused (< 0), direct path */
+static LONG64 g_net_send_neg0 = 0;                          /* its value at the battle's setup */
 /* demodt's state. The watch thread writes g_net_dd_F (the battle frame counter as it last sampled it, -1 outside a
    battle: a demo pass that finds it moved starts a new cutscene) and g_net_dd_epoch (the battle's number); all the
    rest is the game thread's, in net_demo_tick. The counts are aligned 64-bit and read by the watch for NET/demo:
@@ -18538,6 +18662,7 @@ static uintptr_t net_send(uintptr_t a, uintptr_t b, uintptr_t c,
         net_dq_drain_locked(a);                    /* the copies first: each queue keeps its order */
         r = o_net_send(a, b, c, d, e, f);
         LeaveCriticalSection(&g_net_cs);
+        if ((int)r < 0) InterlockedIncrement64(&g_net_send_neg);   /* NETUP: e.g. -2, a record over 1,198 B */
         return r;
     }
     kept = net_dq_push(a, b, c, d, e, f);          /* F1: never append unlocked */
@@ -18545,6 +18670,9 @@ static uintptr_t net_send(uintptr_t a, uintptr_t b, uintptr_t c,
     if (kept == -4) InterlockedIncrement64(&g_net_dq_dropped);
     return (uintptr_t)(unsigned)kept;
 }
+
+static void net_v2_on_update(uintptr_t impl);                 /* NETUP part 2 (v2_s7.c, below) */
+static void net_v2_on_setup(uintptr_t cnd, int d0, int d1);   /* NETUP part 2 (v2_s7.c, below) */
 
 static uintptr_t net_update(uintptr_t a, uintptr_t b, uintptr_t c, uintptr_t d)
 {
@@ -18561,6 +18689,7 @@ static uintptr_t net_update(uintptr_t a, uintptr_t b, uintptr_t c, uintptr_t d)
     if (g_net_on_lock) { net_lock_net(); net_dq_drain_locked(a); }  /* review F1, D1: a = impl */
     r = o_net_update(a, b, c, d);
     if (g_net_on_lock) LeaveCriticalSection(&g_net_cs);
+    net_v2_on_update(a);              /* NETUP part 2: S6's arrival scan, after the stock Update and the lock */
     return r;
 }
 
@@ -18580,6 +18709,7 @@ static uintptr_t net_setup(uintptr_t mgr, uintptr_t mode, uintptr_t st, uintptr_
     g_net_mode = (LONG)(mode & 0xFF);
     g_net_mgr  = mgr;
     InterlockedIncrement(&g_net_setup_seq);   /* review F3: a new battle even at a reused address */
+    net_v2_on_setup(mgr, d0, d1);             /* NETUP part 2: H1 -- this seat's HELLO, the v2 battle begun */
     InterlockedExchange(&g_net_newgame, 1);
     return r;
 }
@@ -18905,15 +19035,4046 @@ static const char* net_demodt_install(void)
     return on;
 }
 
+/* NETUP P1b: the speed-up threshold at least one record (`tempo` in the header). The stub does what the 7 bytes
+   did -- eax = trunc(D/2) (edx = cdq's sign, as stock), ecx = Q - eax, the flags of that sub -- with eax raised to 1
+   when it is 0 (D <= 1). eax is dead after the site (lea rax at 0x801B72 before any read). */
+static const char* net_tempo_install(void)
+{
+    static const unsigned char st[18] = {
+        0x99,                                        /*  0 cdq                                   */
+        0x2B,0xC2,                                   /*  1 sub  eax, edx                         */
+        0xD1,0xF8,                                   /*  3 sar  eax, 1        trunc(D/2)         */
+        0x83,0xF8,0x01,                              /*  5 cmp  eax, 1                           */
+        0x7D,0x05,                                   /*  8 jge  .q (15)                          */
+        0xB8,0x01,0x00,0x00,0x00,                    /* 10 mov  eax, 1        D <= 1: 1, not 0   */
+        0x2B,0xC8,                                   /* 15 .q: sub ecx, eax   Q - threshold      */
+        0xC3 };                                      /* 17 ret                                   */
+    unsigned char* site = g_net_mod + NET_RVA_TEMPO_HALF;
+    unsigned char* stub;
+    unsigned char  patch[7];
+    long long rel;
+    DWORD old;
+    if (memcmp(site, NET_TEMPO_STOCK, sizeof(NET_TEMPO_STOCK)) != 0)
+        return "REFUSED, exe+0x801B3B is not the stock code";
+    stub = (unsigned char*)gauge_alloc_near(site, 32);
+    if (!stub) return "REFUSED, no stub within +/-2 GB";
+    rel = (long long)stub - (long long)(site + 5);
+    if (rel > 0x7FFFFFFFLL || rel < -0x80000000LL) {
+        VirtualFree(stub, 0, MEM_RELEASE);
+        return "REFUSED, the stub is out of rel32 reach";
+    }
+    if (!bros_claim(BROS_MASTER_OWNER, NET_RVA_TEMPO_HALF, 7,
+                    "PART 41 NETTEST tempo: the online speed-up threshold at least one record (cdq; sub eax,edx; "
+                    "sar eax,1; sub ecx,eax -> call to the tempo stub: max(trunc(D/2), 1))")) {
+        VirtualFree(stub, 0, MEM_RELEASE);
+        return "REFUSED, the bytes are claimed by another owner";
+    }
+    memcpy(stub, st, sizeof(st));
+    FlushInstructionCache(GetCurrentProcess(), stub, sizeof(st));
+    patch[0] = 0xE8; memcpy(patch + 1, &rel, 4); patch[5] = 0x66; patch[6] = 0x90;   /* call stub; 2-byte nop */
+    if (!VirtualProtect(site, 7, PAGE_EXECUTE_READWRITE, &old)) {
+        VirtualFree(stub, 0, MEM_RELEASE);
+        return "REFUSED, VirtualProtect failed";
+    }
+    memcpy(site, patch, 7);
+    VirtualProtect(site, 7, old, &old);
+    FlushInstructionCache(GetCurrentProcess(), site, 7);
+    g_net_on_tempo = 1;
+    return "on (exe+0x801B3B: at D <= 1 faster than 60 Hz only from 2 records in hand, stock above)";
+}
+
+/* NETUP P1c: resend requests (`resend` in the header). The stub replaces StallTimer's two instructions
+   mov rax,[rbx+8]; mov [rbx+0xD0],rax  (rbx = the manager) with
+   [rbx+0xD0] = rax = ([rbx+0xB8] == 0) ? 0x7FFFFFFF : min([rbx+8], first). Only rax and the flags change; the
+   instruction after the site (mov byte [rbx+0xD8],1) writes no flag reader, and CheckStall's callers never read
+   rax. first == 0 keeps RTT' (the cap is 0x7FFFFFFF) but still sends nothing at frame 0. */
+static const char* net_resend_install(int first, int again)
+{
+    static char on[96];
+    unsigned char st[41] = {
+        0x48,0x8B,0x43,0x08,                         /*  0 mov  rax, [rbx+8]          RTT', ms (u64)        */
+        0x83,0xBB,0xB8,0x00,0x00,0x00,0x00,          /*  4 cmp  dword [rbx+0xB8], 0   F == 0 ?              */
+        0x74,0x15,                                   /* 11 je   .f0 (34)                                    */
+        0x48,0x3D,0,0,0,0,                           /* 13 cmp  rax, FIRST            (imm32 at 15)         */
+        0x76,0x05,                                   /* 19 jbe  .st (26)                                    */
+        0xB8,0,0,0,0,                                /* 21 mov  eax, FIRST            (imm32 at 22)         */
+        0x48,0x89,0x83,0xD0,0x00,0x00,0x00,          /* 26 .st: mov [rbx+0xD0], rax                         */
+        0xC3,                                        /* 33 ret                                              */
+        0xB8,0xFF,0xFF,0xFF,0x7F,                    /* 34 .f0: mov eax, 0x7FFFFFFF   no request at frame 0 */
+        0xEB,0xF1 };                                 /* 39 jmp  .st                                         */
+    static const unsigned char call_nop[6] = { 0x66,0x0F,0x1F,0x44,0x00,0x00 };
+    unsigned char* site = g_net_mod + NET_RVA_STALL_NAK;
+    unsigned char* stub;
+    unsigned char  patch[11];
+    long long rel;
+    unsigned int cap = first > 0 ? (unsigned int)first : 0x7FFFFFFFu;
+    DWORD old;
+    if (memcmp(g_net_mod + NET_RVA_STALL_CTX, NET_STALL_STOCK, sizeof(NET_STALL_STOCK)) != 0)
+        return "REFUSED, exe+0x1AB08C is not the stock StallTimer";
+    if (again > 0 && (memcmp(g_net_mod + NET_RVA_NAK_HOST, NET_NAK_HOST_STOCK, 11) != 0 ||
+                      memcmp(g_net_mod + NET_RVA_NAK_GUEST, NET_NAK_GUEST_STOCK, 11) != 0))
+        return "REFUSED, exe+0x1ABA1B / exe+0x1AC370 are not the stock 300 ms";
+    stub = (unsigned char*)gauge_alloc_near(site, 64);
+    if (!stub) return "REFUSED, no stub within +/-2 GB";
+    rel = (long long)stub - (long long)(site + 5);
+    if (rel > 0x7FFFFFFFLL || rel < -0x80000000LL) {
+        VirtualFree(stub, 0, MEM_RELEASE);
+        return "REFUSED, the stub is out of rel32 reach";
+    }
+    if (!bros_claim(BROS_MASTER_OWNER, NET_RVA_STALL_NAK, 11,
+                    "PART 41 NETTEST resend: a stall's first resend request after min(RTT', first) ms and none "
+                    "at frame 0 (StallTimer's mov rax,[rbx+8]; mov [rbx+0xD0],rax -> call to the resend stub)")) {
+        VirtualFree(stub, 0, MEM_RELEASE);
+        return "REFUSED, the bytes are claimed by another owner";
+    }
+    if (again > 0 &&
+        (!bros_claim(BROS_MASTER_OWNER, NET_RVA_NAK_HOST + 7, 4,
+                     "PART 41 NETTEST resend: the host's later resend requests every `again` ms "
+                     "(imm32 of mov qword [rsi+0xD0],300)") ||
+         !bros_claim(BROS_MASTER_OWNER, NET_RVA_NAK_GUEST + 7, 4,
+                     "PART 41 NETTEST resend: the guest's later resend requests every `again` ms "
+                     "(imm32 of mov qword [r14+0xD0],300)"))) {
+        VirtualFree(stub, 0, MEM_RELEASE);                     /* the first claim stays, unwritten */
+        return "REFUSED, the interval bytes are claimed by another owner";
+    }
+    memcpy(st + 15, &cap, 4);
+    memcpy(st + 22, &cap, 4);
+    memcpy(stub, st, sizeof(st));
+    FlushInstructionCache(GetCurrentProcess(), stub, sizeof(st));
+    patch[0] = 0xE8; memcpy(patch + 1, &rel, 4); memcpy(patch + 5, call_nop, 6);
+    if (!VirtualProtect(site, 11, PAGE_EXECUTE_READWRITE, &old)) {
+        VirtualFree(stub, 0, MEM_RELEASE);
+        return "REFUSED, VirtualProtect failed";
+    }
+    memcpy(site, patch, 11);
+    VirtualProtect(site, 11, old, &old);
+    FlushInstructionCache(GetCurrentProcess(), site, 11);
+    g_net_on_first = first > 0 ? first : 0;
+    if (again > 0) {                                   /* both sites or neither: host and guest alike */
+        int v = again, stock = 300;
+        if (net_poke(NET_RVA_NAK_HOST + 7, &v, 4)) {
+            if (net_poke(NET_RVA_NAK_GUEST + 7, &v, 4)) g_net_on_again = again;
+            else net_poke(NET_RVA_NAK_HOST + 7, &stock, 4);
+        }
+    }
+    if (first > 0)
+        snprintf(on, sizeof(on), "on (first after min(RTT', %d ms), then every %d ms, none at frame 0)",
+                 first, g_net_on_again ? g_net_on_again : 300);
+    else
+        snprintf(on, sizeof(on), "on (first after RTT', then every %d ms, none at frame 0)",
+                 g_net_on_again ? g_net_on_again : 300);
+    return on;
+}
+
+/* ======== NETUP part 2 (pass nu): protocol v2 -- eleven units, each pasted unchanged from
+   D:\Development Log\NETUP_2026-11-06\work\part2\ and checked by md5 (p2_edits.py check) ======== */
+/* ---- NETUP part 2: S1 the codec (nu017, nu024, nu056) (v2wire.c, md5 619dbee8), unchanged ---- */
+/* ====================================================================
+ *  v2wire.c -- protocol v2's wire format (SPEC_BUILD4 revision 3, s3), the C codec for PART 41 (pass nu, Part 2 S1).
+ *  Reference: v2wire_ref.py (the regenerated r3 reference); test: t_v2wire.c against its vectors.
+ *  (nu027: the HELLO's struct is V2WHello, so that v2core.c's own V2Hello can share PART 41's one file.)
+ *
+ *  A v2 record is the payload of an ordinary Chara record that begins with u16 count = 0 (a stock parser reads 0
+ *  entries and stops). Little-endian throughout; no struct is ever laid over the bytes.
+ *    +0 u16 0 | +2 u16 magic 0x5632 | +4 u8 version 2 | +5 u8 blocks | +6 u16 length (16..1194) |
+ *    +8 u32 CRC-32C of payload[0:8] + payload[12:length] | +12 u8 seat | +13 u8 d | +14 u16 flags (bits 9-15: 0)
+ *    blocks in bit order: HELLO 28, NAK 4, MARGIN 4, HASH 1+16n (n <= 2), SNAP 44, COMPAT 4, INNER (stock format).
+ *  Decoding (r3 F3, F7, N7), in this order: count 0; magic; 16 <= length <= 1194 and <= the bytes the caller may read;
+ *  the CRC; the version (S8, VX_P2 F5: after length and CRC, so a bit error cannot pose as another version);
+ *  blocks bit 7 = 0; the walk -- every block's end checked against `length` BEFORE it is read;
+ *  without INNER the walk ends exactly at `length`; INNER's stock parse (count >= 1, each entry's 8 bytes and each
+ *  command checked against `length` before reading, no negative frame, from the host every flag 0) ends exactly at
+ *  `length`; a record with hello_seen must carry MARGIN. The receiver then drops a hello_seen record whose echo is not
+ *  its own nonce as stale (v2_is_stale), before any of its blocks is applied.
+ *  No byte at or past `length` is ever read (t_v2wire.c proves it with a guard page), except the 16 header bytes,
+ *  which are read before `length` is known -- as the stock parser reads `count`.
+ * ==================================================================== */
+#include <stdint.h>
+#include <stddef.h>
+#include <string.h>
+
+#define V2_MAGIC          0x5632u
+#define V2_VERSION        2u
+#define V2_MAXPAY         1194u          /* layer 1 refuses a record above 1198 bytes, the key takes 4 */
+#define V2_HDR            16u
+#define V2B_HELLO         0x01u
+#define V2B_NAK           0x02u
+#define V2B_MARGIN        0x04u
+#define V2B_HASH          0x08u
+#define V2B_SNAP          0x10u
+#define V2B_COMPAT        0x20u
+#define V2B_INNER         0x40u
+#define V2F_HELLO_SEEN    0x0001u
+#define V2F_KNOWN         0x01FFu        /* bits 9-15: sent as 0, ignored on receipt (r3 N7) */
+
+enum {
+    V2_OK = 0, V2_STOCK = 1,
+    V2R_SHORT = -1, V2R_MAGIC = -2, V2R_VERSION = -3, V2R_LENGTH = -4, V2R_CRC = -5, V2R_BIT7 = -6, V2R_TRUNC = -7,
+    V2R_NAK = -8, V2R_HASHN = -9, V2R_END = -10, V2R_INNER_COUNT = -11, V2R_INNER_TRUNC = -12,
+    V2R_INNER_NEGFRAME = -13, V2R_INNER_FLAG = -14, V2R_INNER_END = -15, V2R_HELLO_MARGIN = -16
+};
+
+typedef struct {
+    uint16_t P_ms, nsamples, rtt_ms;
+    uint8_t  M_ms, pctl, dmin, dmax, d_game, window, d_new, new_src, nonce;
+    uint32_t build_id, content_id, settings_id;
+} V2WHello;
+
+typedef struct { int32_t frame; uint32_t h_core, h_float, h_pos; } V2Hash;
+
+typedef struct {
+    uint8_t  seat, d, blocks;
+    uint16_t flags;                      /* & V2F_KNOWN */
+    uint16_t length;
+    V2WHello hello;
+    int32_t  nak_frame;                  /* F of "resend from frame F" */
+    int16_t  margin_a;                   /* 0.1 ms */
+    uint8_t  margin_q, margin_echo;
+    uint8_t  nhash;
+    V2Hash   hash[2];
+    uint16_t snap_off;                   /* the SNAP block's 44 bytes are read in place (option B) */
+    uint8_t  compat_reason, compat_mask;
+    uint16_t inner_off, inner_count;     /* INNER: validated; the stock parser may read it as it is */
+} V2Rec;
+
+/* ------------------------------------------------------------ little-endian access */
+static uint16_t v2_rd16(const uint8_t* p) { return (uint16_t)(p[0] | (p[1] << 8)); }
+static uint32_t v2_rd32(const uint8_t* p) { return (uint32_t)p[0] | ((uint32_t)p[1] << 8) | ((uint32_t)p[2] << 16) | ((uint32_t)p[3] << 24); }
+static void v2_wr16(uint8_t* p, uint16_t v) { p[0] = (uint8_t)v; p[1] = (uint8_t)(v >> 8); }
+static void v2_wr32(uint8_t* p, uint32_t v) { p[0] = (uint8_t)v; p[1] = (uint8_t)(v >> 8); p[2] = (uint8_t)(v >> 16); p[3] = (uint8_t)(v >> 24); }
+
+/* ------------------------------------------------------------ CRC-32C (Castagnoli, reflected 0x82F63B78) */
+static uint32_t v2_crc_table[256];
+static volatile long v2_crc_ready;
+
+static void v2_crc_init(void)
+{
+    uint32_t i, c;
+    int k;
+    if (v2_crc_ready) return;
+    for (i = 0; i < 256; i++) {
+        c = i;
+        for (k = 0; k < 8; k++) c = (c & 1) ? (c >> 1) ^ 0x82F63B78u : c >> 1;
+        v2_crc_table[i] = c;
+    }
+    v2_crc_ready = 1;          /* idempotent: a second thread computing the same table writes the same values */
+}
+
+static uint32_t v2_crc32c_part(uint32_t c, const uint8_t* p, size_t n)    /* c: the running register (start ~0) */
+{
+    while (n--) c = v2_crc_table[(c ^ *p++) & 0xFF] ^ (c >> 8);
+    return c;
+}
+
+/* the record's CRC: payload[0:8] + payload[12:length] */
+static uint32_t v2_rec_crc(const uint8_t* p, uint16_t length)
+{
+    uint32_t c;
+    v2_crc_init();
+    c = v2_crc32c_part(0xFFFFFFFFu, p, 8);
+    c = v2_crc32c_part(c, p + 12, (size_t)length - 12);
+    return c ^ 0xFFFFFFFFu;
+}
+
+static int v2_cmd_len(uint8_t t) { return (t == 0x03 || t == 0x04 || t == 0x09 || t == 0x1F) ? 6 : 2; }
+
+/* ------------------------------------------------------------ INNER: the bounded stock walk (r3 F3) */
+static int v2_inner_walk(const uint8_t* b, uint32_t p, uint32_t length, int host, uint16_t* count_out)
+{
+    uint32_t n, i, k, nc;
+    if (p + 2 > length) return V2R_INNER_TRUNC;
+    n = v2_rd16(b + p);
+    p += 2;
+    if (n < 1) return V2R_INNER_COUNT;
+    for (i = 0; i < n; i++) {
+        if (p + 8 > length) return V2R_INNER_TRUNC;
+        if ((int32_t)v2_rd32(b + p) < 0) return V2R_INNER_NEGFRAME;
+        nc = v2_rd16(b + p + 6);
+        p += 8;
+        for (k = 0; k < nc; k++) {
+            uint32_t L;
+            if (p + 2 > length) return V2R_INNER_TRUNC;
+            L = (uint32_t)v2_cmd_len(b[p]);
+            if (p + L > length) return V2R_INNER_TRUNC;
+            p += L;
+        }
+    }
+    if (host) {
+        if (p + 2 * n > length) return V2R_INNER_TRUNC;
+        for (i = 0; i < n; i++)
+            if (v2_rd16(b + p + 2 * i)) return V2R_INNER_FLAG;
+        p += 2 * n;
+    }
+    if (p != length) return V2R_INNER_END;
+    *count_out = (uint16_t)n;
+    return V2_OK;
+}
+
+/* ------------------------------------------------------------ decode
+ * avail: the bytes the caller may read from b (the game passes no record length: PART 41 passes V2_MAXPAY, so a
+ * declared length is only ever bounded by the record limit); check_crc 0 is the tests' layout-fuzz bypass. */
+static int v2_decode(const uint8_t* b, size_t avail, int check_crc, V2Rec* r)
+{
+    uint32_t p, length;
+    uint8_t blocks;
+    memset(r, 0, sizeof *r);
+    if (avail < 2) return V2R_SHORT;
+    if (v2_rd16(b) != 0) return V2_STOCK;
+    if (avail < V2_HDR) return V2R_SHORT;
+    if (v2_rd16(b + 2) != V2_MAGIC) return V2R_MAGIC;
+    length = v2_rd16(b + 6);                          /* S8 (VX_P2 F5, D-S8-8): length and CRC before the version */
+    if (length < V2_HDR || length > V2_MAXPAY || length > avail) return V2R_LENGTH;
+    if (check_crc && v2_rec_crc(b, (uint16_t)length) != v2_rd32(b + 8)) return V2R_CRC;
+    if (b[4] != V2_VERSION) return V2R_VERSION;      /* another version only when v2's length and CRC hold */
+    blocks = b[5];
+    if (blocks & 0x80) return V2R_BIT7;
+    r->blocks = blocks;
+    r->length = (uint16_t)length;
+    r->seat = b[12];
+    r->d = b[13];
+    r->flags = (uint16_t)(v2_rd16(b + 14) & V2F_KNOWN);
+    p = V2_HDR;
+    if (blocks & V2B_HELLO) {
+        const uint8_t* h;
+        if (p + 28 > length) return V2R_TRUNC;
+        h = b + p;
+        r->hello.P_ms = v2_rd16(h);
+        r->hello.nsamples = v2_rd16(h + 2);
+        r->hello.rtt_ms = v2_rd16(h + 4);
+        r->hello.M_ms = h[6];  r->hello.pctl = h[7];  r->hello.dmin = h[8];  r->hello.dmax = h[9];
+        r->hello.d_game = h[10]; r->hello.window = h[11]; r->hello.d_new = h[12]; r->hello.new_src = h[13];
+        r->hello.nonce = h[14];                       /* h[15]: 0 on the wire, ignored */
+        r->hello.build_id = v2_rd32(h + 16);
+        r->hello.content_id = v2_rd32(h + 20);
+        r->hello.settings_id = v2_rd32(h + 24);
+        p += 28;
+    }
+    if (blocks & V2B_NAK) {
+        int32_t v;
+        if (p + 4 > length) return V2R_TRUNC;
+        v = (int32_t)v2_rd32(b + p);
+        if (v >= 0) return V2R_NAK;
+        r->nak_frame = -(v + 1);                      /* v = INT32_MIN gives 2^31 - 1, no overflow */
+        p += 4;
+    }
+    if (blocks & V2B_MARGIN) {
+        if (p + 4 > length) return V2R_TRUNC;
+        r->margin_a = (int16_t)v2_rd16(b + p);
+        r->margin_q = b[p + 2];
+        r->margin_echo = b[p + 3];
+        p += 4;
+    }
+    if (blocks & V2B_HASH) {
+        uint32_t n, i;
+        if (p + 1 > length) return V2R_TRUNC;
+        n = b[p];
+        if (n > 2) return V2R_HASHN;
+        if (p + 1 + 16 * n > length) return V2R_TRUNC;
+        for (i = 0; i < n; i++) {
+            const uint8_t* q = b + p + 1 + 16 * i;
+            r->hash[i].frame = (int32_t)v2_rd32(q);
+            r->hash[i].h_core = v2_rd32(q + 4);
+            r->hash[i].h_float = v2_rd32(q + 8);
+            r->hash[i].h_pos = v2_rd32(q + 12);
+        }
+        r->nhash = (uint8_t)n;
+        p += 1 + 16 * n;
+    }
+    if (blocks & V2B_SNAP) {
+        if (p + 44 > length) return V2R_TRUNC;
+        r->snap_off = (uint16_t)p;
+        p += 44;
+    }
+    if (blocks & V2B_COMPAT) {
+        if (p + 4 > length) return V2R_TRUNC;
+        r->compat_reason = b[p];
+        r->compat_mask = b[p + 1];
+        p += 4;
+    }
+    if (blocks & V2B_INNER) {
+        int rc = v2_inner_walk(b, p, length, r->seat == 0, &r->inner_count);
+        if (rc != V2_OK) return rc;
+        r->inner_off = (uint16_t)p;
+    } else if (p != length) {
+        return V2R_END;
+    }
+    if ((r->flags & V2F_HELLO_SEEN) && !(blocks & V2B_MARGIN)) return V2R_HELLO_MARGIN;
+    return V2_OK;
+}
+
+/* the receiver's first rule after a good decode (r3 F7): a hello_seen record whose echo is not this seat's nonce
+ * belongs to another setup: drop it whole, before any block is applied */
+static int v2_is_stale(const V2Rec* r, uint8_t my_nonce)
+{
+    return (r->flags & V2F_HELLO_SEEN) && r->margin_echo != my_nonce;
+}
+
+/* ------------------------------------------------------------ encode: blocks are added in bit order */
+typedef struct { uint8_t* buf; uint32_t cap, len; uint8_t blocks, last; int err; } V2Enc;
+
+static void v2e_begin(V2Enc* e, uint8_t* buf, uint32_t cap, uint8_t seat, uint8_t d, uint16_t flags)
+{
+    e->buf = buf; e->cap = cap < V2_MAXPAY ? cap : V2_MAXPAY; e->len = V2_HDR; e->blocks = 0; e->last = 0; e->err = 0;
+    if (e->cap < V2_HDR) { e->err = 1; return; }
+    memset(buf, 0, V2_HDR);
+    v2_wr16(buf + 2, V2_MAGIC);
+    buf[4] = V2_VERSION;
+    buf[12] = seat;
+    buf[13] = d;
+    v2_wr16(buf + 14, (uint16_t)(flags & V2F_KNOWN));
+}
+
+static uint8_t* v2e_take(V2Enc* e, uint8_t bit, uint32_t n)       /* NULL: order violated or no room */
+{
+    uint8_t* p;
+    if (e->err || bit <= e->last || e->len + n > e->cap) { e->err = 1; return 0; }
+    p = e->buf + e->len;
+    e->len += n;
+    e->blocks |= bit;
+    e->last = bit;
+    return p;
+}
+
+static void v2e_hello(V2Enc* e, const V2WHello* h)
+{
+    uint8_t* p = v2e_take(e, V2B_HELLO, 28);
+    if (!p) return;
+    v2_wr16(p, h->P_ms); v2_wr16(p + 2, h->nsamples); v2_wr16(p + 4, h->rtt_ms);
+    p[6] = h->M_ms; p[7] = h->pctl; p[8] = h->dmin; p[9] = h->dmax; p[10] = h->d_game; p[11] = h->window;
+    p[12] = h->d_new; p[13] = h->new_src; p[14] = h->nonce; p[15] = 0;
+    v2_wr32(p + 16, h->build_id); v2_wr32(p + 20, h->content_id); v2_wr32(p + 24, h->settings_id);
+}
+
+static void v2e_nak(V2Enc* e, int32_t F)                          /* F >= 0: "resend from frame F" -> -(F + 1) */
+{
+    uint8_t* p;
+    if (F < 0) { e->err = 1; return; }
+    p = v2e_take(e, V2B_NAK, 4);
+    if (p) v2_wr32(p, (uint32_t)(int32_t)(-((int64_t)F + 1)));    /* F = 2^31 - 1 gives INT32_MIN, no overflow */
+}
+
+static void v2e_margin(V2Enc* e, int16_t a_tenths, uint8_t q, uint8_t echo)
+{
+    uint8_t* p = v2e_take(e, V2B_MARGIN, 4);
+    if (!p) return;
+    v2_wr16(p, (uint16_t)a_tenths); p[2] = q; p[3] = echo;
+}
+
+static void v2e_hash(V2Enc* e, uint32_t n, const V2Hash* h)
+{
+    uint8_t* p;
+    uint32_t i;
+    if (n > 2) { e->err = 1; return; }
+    p = v2e_take(e, V2B_HASH, 1 + 16 * n);
+    if (!p) return;
+    p[0] = (uint8_t)n;
+    for (i = 0; i < n; i++) {
+        v2_wr32(p + 1 + 16 * i, (uint32_t)h[i].frame); v2_wr32(p + 5 + 16 * i, h[i].h_core);
+        v2_wr32(p + 9 + 16 * i, h[i].h_float); v2_wr32(p + 13 + 16 * i, h[i].h_pos);
+    }
+}
+
+static void v2e_snap_raw(V2Enc* e, const uint8_t snap44[44])        /* option B's 44 bytes, laid out by its caller */
+{
+    uint8_t* p = v2e_take(e, V2B_SNAP, 44);
+    if (p) memcpy(p, snap44, 44);
+}
+
+static void v2e_compat(V2Enc* e, uint8_t reason, uint8_t mask)
+{
+    uint8_t* p = v2e_take(e, V2B_COMPAT, 4);
+    if (!p) return;
+    p[0] = reason; p[1] = mask; p[2] = 0; p[3] = 0;
+}
+
+static void v2e_inner(V2Enc* e, const uint8_t* stock, uint32_t n)   /* a stock-format record, as a builder made it */
+{
+    uint8_t* p = v2e_take(e, V2B_INNER, n);
+    if (p) memcpy(p, stock, n);
+}
+
+/* length and CRC; returns the record's length, or -1 (an order violation, a bad argument, or no room: nothing to send) */
+static int v2e_end(V2Enc* e)
+{
+    if (e->err) return -1;
+    e->buf[5] = e->blocks;
+    v2_wr16(e->buf + 6, (uint16_t)e->len);
+    v2_wr32(e->buf + 8, v2_rec_crc(e->buf, (uint16_t)e->len));
+    return (int)e->len;
+}
+/* ---- end of v2wire.c ---- */
+/* ---- NETUP part 2: S2a the rules, rev. 2 (nu019-nu020, nu029, nu056) (v2core.c, md5 3efb49d3), unchanged ---- */
+/* ====================================================================
+ *  v2core.c -- pass nu, Part 2 S2a: protocol v2's pure rules for PART 41
+ *  (SPEC_BUILD4 r3 s4.1, s4.6 with F1 / F6 / F7, s11), no game code.
+ *  References: v2core_ref.py (P, the member, d, D3) and v2hello_ref.py
+ *  (one seat's HELLO phase and compatibility check); t_v2core.c checks
+ *  every vector and trace of both against this file.
+ *
+ *  Integers only. Nothing here allocates, locks or logs: the callers
+ *  (H1 at setup, recv2 on the network thread, hb2 / gb2 at capture) own
+ *  the timing and the log lines.
+ *
+ *  Revision 2 (S8, VX_P2's F1 / F2; notes\PART2_S8_PLAN.md D-S8-1..3):
+ *  - commit on seen: a decision for v2 enters AGREED (the HELLO phase's
+ *    behaviour: nothing built, a HELLO-phase record every 16 ms, now with
+ *    hello_seen); AGREED becomes V2 on the peer's hello_seen (its echo =
+ *    this seat's nonce), as NSW becomes NSCHED. A seat in V2 thus knows
+ *    the peer holds its HELLO -- the peer never falls back -- and a seat
+ *    that falls back knows the peer cannot be in V2;
+ *  - silence: HELD with nothing heard of the peer for 1,000 ms since the
+ *    setup -> FALLBACK (`fallback 0`: REFUSED, reason 4). Heard: any
+ *    record the codec decodes as the peer's (a stale one too), or a stock
+ *    record of this battle (the caller passes only those: D-S8-4);
+ *  - a stock record in AGREED -> FALLBACK (`fallback 0`: REFUSED,
+ *    reason 3), as in HELD: the peer fell back without ever holding this
+ *    seat's HELLO;
+ *  - `decided` is a set of bits (V2D_..): what the last event decided;
+ *    `left` also names a fallback's cause (3 a stock record in HELD,
+ *    4 silence, 5 a stock record in AGREED).
+ * ==================================================================== */
+#include <stdint.h>
+#include <string.h>
+
+#define V2_P_UNKNOWN 0xFFFFu
+#define V2_RING      512
+
+/* ---------------------------------------------------------------- P: the opponent member's percentile (s4.1 1-2) */
+/* nearest rank: sorted[ceil(pctl n / 100) - 1]; n = 0 -> unknown; n < 32 -> at least RTT' + 17; at most 0xFFFE */
+static uint16_t v2_p_seat(const uint16_t* samples, int n, int pctl, int rtt)
+{
+    uint16_t s[V2_RING]; int i, j, k; uint32_t v;
+    if (n <= 0) return V2_P_UNKNOWN;
+    if (n > V2_RING) { samples += n - V2_RING; n = V2_RING; }
+    if (pctl < 1) pctl = 1;
+    if (pctl > 100) pctl = 100;
+    memcpy(s, samples, (size_t)n * sizeof s[0]);
+    for (i = 1; i < n; i++) {                                     /* insertion sort: n <= 512, once per battle */
+        uint16_t x = s[i];
+        for (j = i - 1; j >= 0 && s[j] > x; j--) s[j + 1] = s[j];
+        s[j + 1] = x;
+    }
+    k = (pctl * n + 99) / 100;                                    /* ceil(pctl n / 100), >= 1 for n >= 1 */
+    v = s[k - 1];
+    if (n < 32 && v < (uint32_t)rtt + 17u) v = (uint32_t)rtt + 17u;
+    return (uint16_t)(v > 0xFFFEu ? 0xFFFEu : v);
+}
+
+/* the opponent's member among the ring's last <= 512 entries (oldest first): the only one; else the first (by first
+   appearance) whose last-10 integer mean equals RTT'; else the one of the most recent entry. -1: an empty ring */
+static int64_t v2_pick_member(const uint64_t* member, const uint16_t* sample, int n, int rtt)
+{
+    uint64_t seen[V2_RING]; int ns = 0, i, j, a = n > V2_RING ? n - V2_RING : 0;
+    if (n <= 0) return -1;
+    for (i = a; i < n; i++) {
+        for (j = 0; j < ns && seen[j] != member[i]; j++) {}
+        if (j == ns) seen[ns++] = member[i];
+    }
+    if (ns == 1) return (int64_t)seen[0];
+    for (j = 0; j < ns; j++) {
+        uint32_t sum = 0; int c = 0;
+        for (i = n - 1; i >= a && c < 10; i--) if (member[i] == seen[j]) { sum += sample[i]; c++; }
+        if (c && (int)(sum / (uint32_t)c) == rtt) return (int64_t)seen[j];
+    }
+    return (int64_t)member[n - 1];
+}
+
+/* ---------------------------------------------------------------- d (s4.1 item 4) and D3 (s4.6, r3 F6) */
+static int v2_d_rule(int Ph, int Pg, int Mh, int Mg, int dminh, int dming, int dmaxh, int dmaxg, int rtth, int rttg)
+{
+    int ph = Ph == (int)V2_P_UNKNOWN ? rtth + 17 : Ph, pg = Pg == (int)V2_P_UNKNOWN ? rttg + 17 : Pg;
+    int P = ph > pg ? ph : pg, M = Mh > Mg ? Mh : Mg, lo = dminh > dming ? dminh : dming, hi = dmaxh < dmaxg ? dmaxh : dmaxg;
+    int d = (3 * (P + 2 * M) + 99) / 100;                         /* ceil((P / 2 + M) / (50 / 3)), exact (v2core_ref) */
+    if (lo > hi) return lo;
+    return d < lo ? lo : d > hi ? hi : d;
+}
+static int v2_d3(int d, int dnew_h, int dnew_g, int nsched_h, int nsched_g)
+{
+    if (!(nsched_h || nsched_g) || dnew_h == 0xFF || dnew_g == 0xFF) return 0;
+    return d >= dnew_g + 2 && d >= dnew_h + 1;
+}
+
+/* ---------------------------------------------------------------- one seat's HELLO phase (s4.6) and check (s11) */
+enum { V2F_SEEN = 1, V2F_REL = 2, V2F_OPTB = 4, V2F_HASH = 8, V2F_TEMPO = 16, V2F_OPTL = 32, V2F_FALLBACK = 64,
+       V2F_REFUSING = 128, V2F_NSCHED = 256 };
+#define V2F_FEATURES (V2F_OPTB | V2F_HASH | V2F_TEMPO | V2F_OPTL)
+enum { V2S_HELD, V2S_NSW, V2S_V2, V2S_NSCHED, V2S_FALLBACK, V2S_REFUSED, V2S_AGREED };   /* rev. 2: AGREED last */
+enum { V2D_COMMIT = 1, V2D_NSCHED = 2, V2D_AGREE = 4 };   /* rev. 2: `decided`'s bits */
+#define V2_SILENCE_US 1000000          /* rev. 2: D-S8-2 */
+enum { V2A_STOCK, V2A_IGNORED, V2A_REJECTED, V2A_REFUSE_VERSION, V2A_STALE, V2A_REFUSE_CONTENT, V2A_HELD,
+       V2A_APPLY, V2A_APPLY_DMISMATCH, V2A_FALLBACK, V2A_REFUSE_STOCK, V2A_LEAVE_STOCK, V2A_PROTO_ERROR };
+
+typedef struct {                       /* a HELLO's fields (s3.2) that the rules read */
+    int P, M, pctl, dmin, dmax, rtt, dgame, dnew, newsrc, window, nonce;
+    uint32_t build, content, settings;
+    int seat, flags;                   /* this seat's own: seat 0 host / 1 guest; its settings' flag bits */
+} V2Hello;
+
+typedef struct {
+    V2Hello me, peer;
+    int state, have_peer, peer_seen, d, D, features, reason, mask;
+    int decided;                       /* rev. 2: what the last event decided, V2D_.. bits (V2D_COMMIT: V2 entered) */
+    int left;                          /* NSCHED: 1 on the peer's hello_seen, 2 on a stock record; rev. 2, FALLBACK:
+                                          3 a stock record in HELD, 4 silence, 5 a stock record in AGREED */
+    int got_stock;                     /* a stock record of the peer has arrived: NSCHED's repeat stops (nu029) */
+    int heard;                         /* rev. 2: a record of the peer of this battle has arrived */
+    int64_t t0_us;                     /* rev. 2: the setup, us (v2s_tick's and v2s_silence's clock) */
+    int64_t last_send;                 /* us; -1 none yet */
+    uint32_t n_stale, n_rejected, n_proto, n_dmismatch, n_ignored;
+} V2Seat;
+
+static void v2s_init(V2Seat* s, const V2Hello* me, int64_t now_us)
+{
+    memset(s, 0, sizeof *s);
+    s->me = *me;
+    s->state = V2S_HELD;
+    s->last_send = -1;
+    s->t0_us = now_us;                 /* rev. 2 */
+}
+
+static void v2s_decide(V2Seat* s)
+{
+    const V2Hello *m = &s->me, *p = &s->peer, *h = m->seat == 0 ? m : p, *g = m->seat == 0 ? p : m;
+    s->mask = (p->build != m->build ? 2 : 0) | (p->content != m->content ? 4 : 0) | (p->settings != m->settings ? 8 : 0);
+    if (s->mask & 4) { s->state = V2S_REFUSED; s->reason = 2; return; }
+    s->d = v2_d_rule(h->P, g->P, h->M, g->M, h->dmin, g->dmin, h->dmax, g->dmax, h->rtt, g->rtt);
+    s->features = m->flags & p->flags & V2F_FEATURES;
+    if (v2_d3(s->d, h->dnew, g->dnew, ((m->flags | p->flags) & V2F_NSCHED) != 0, 0)) { s->state = V2S_NSW; s->decided |= V2D_NSCHED; return; }
+    s->state = V2S_AGREED;                            /* rev. 2: V2 on the peer's hello_seen (D-S8-1) */
+    s->D = m->seat == 0 ? s->d - 1 : s->d - 2;
+    s->decided |= V2D_AGREE;
+}
+
+/* a count-0 record the codec accepted: version, d, flags, the HELLO (NULL if absent), MARGIN's echo (-1 if absent).
+   Returns the action (V2A_..); s->decided / s->left tell what else happened (V2A_HELD with V2D_NSCHED = "nsched";
+   V2D_AGREE = the decision for v2, AGREED entered; V2D_COMMIT = V2 entered, V2A_APPLY returned). */
+static int v2s_on_v2(V2Seat* s, int version, int d, int flags, const V2Hello* hello, int echo)
+{
+    s->decided = 0;
+    s->heard = 1;                                     /* rev. 2: the peer's, whatever comes of it (D-S8-2) */
+    if (s->state == V2S_NSCHED || s->state == V2S_FALLBACK) return V2A_STOCK;
+    if (s->state == V2S_REFUSED) { s->n_ignored++; return V2A_IGNORED; }
+    if (version != 2) {
+        if (s->state == V2S_V2) { s->n_rejected++; return V2A_REJECTED; }
+        s->state = V2S_REFUSED; s->reason = 1; s->mask = 1;
+        return V2A_REFUSE_VERSION;
+    }
+    if ((flags & V2F_SEEN) && echo != s->me.nonce) { s->n_stale++; return V2A_STALE; }   /* F7: before anything applies */
+    if (hello && !s->have_peer) {
+        s->peer = *hello; s->have_peer = 1;
+        v2s_decide(s);
+        if (s->state == V2S_REFUSED) return V2A_REFUSE_CONTENT;
+    }
+    if (flags & V2F_SEEN) s->peer_seen = 1;
+    if (s->state == V2S_NSW && s->peer_seen) { s->state = V2S_NSCHED; s->left = 1; return V2A_HELD; }
+    if (s->state == V2S_AGREED && s->peer_seen) { s->state = V2S_V2; s->decided |= V2D_COMMIT; }   /* rev. 2 */
+    if (s->state == V2S_V2) {
+        if (d != 0 && d != s->d) { s->n_dmismatch++; return V2A_APPLY_DMISMATCH; }
+        return V2A_APPLY;
+    }
+    return V2A_HELD;
+}
+
+/* a count >= 1 record -- rev. 2: of this battle (the caller leaves out a late record of the last one, D-S8-4) */
+static int v2s_on_stock(V2Seat* s)
+{
+    s->decided = 0;
+    s->heard = 1;                                     /* rev. 2 */
+    switch (s->state) {
+    case V2S_HELD: case V2S_AGREED:                   /* rev. 2: AGREED as HELD (D-S8-3) */
+        if (s->me.flags & V2F_FALLBACK) { s->left = s->state == V2S_HELD ? 3 : 5; s->state = V2S_FALLBACK; return V2A_FALLBACK; }
+        s->state = V2S_REFUSED; s->reason = 3;
+        return V2A_REFUSE_STOCK;
+    case V2S_NSW: s->state = V2S_NSCHED; s->left = 2; s->got_stock = 1; return V2A_LEAVE_STOCK;
+    case V2S_V2: s->n_proto++; return V2A_PROTO_ERROR;
+    case V2S_REFUSED: s->n_ignored++; return V2A_IGNORED;
+    case V2S_NSCHED: s->got_stock = 1; return V2A_STOCK;
+    default: return V2A_STOCK;
+    }
+}
+
+/* the held seat's HELLO-only (or COMPAT) record: 1 = send one now (every 16 ms of wall time, the first at setup);
+   nu029 (S2c's F-S2c-1): a seat in NEW's schedule keeps sending one (hello_seen, its echo) until a stock record of
+   the peer arrives -- it may have left on the peer's hello_seen without ever sending hello_seen, and under Part 1 it
+   is silent at frame 0, so a peer that leaves only on this seat's hello_seen or first stock record could stay held */
+static int v2s_tick(V2Seat* s, int64_t now_us)
+{
+    if (s->state != V2S_HELD && s->state != V2S_NSW && s->state != V2S_REFUSED && s->state != V2S_AGREED &&
+        !(s->state == V2S_NSCHED && !s->got_stock)) return 0;
+    if (s->last_send < 0 || now_us - s->last_send >= 16000) { s->last_send = now_us; return 1; }
+    return 0;
+}
+
+/* rev. 2 (D-S8-2): HELD and nothing of the peer heard for V2_SILENCE_US since the setup -> FALLBACK (left 4), or
+   REFUSED (reason 4) with `fallback 0`. hb2 / gb2 ask before every call's work; 1 = the state changed now. */
+static int v2s_silence(V2Seat* s, int64_t now_us)
+{
+    if (s->state != V2S_HELD || s->heard || now_us - s->t0_us < V2_SILENCE_US) return 0;
+    s->decided = 0;
+    if (s->me.flags & V2F_FALLBACK) { s->state = V2S_FALLBACK; s->left = 4; }
+    else { s->state = V2S_REFUSED; s->reason = 4; }
+    return 1;
+}
+
+/* what the next record of this seat carries */
+static void v2s_out(const V2Seat* s, int* d, int* flags, int* hello, int* echo)
+{
+    int f = s->me.flags & (V2F_FEATURES | V2F_FALLBACK | V2F_NSCHED);
+    if (s->have_peer) f |= V2F_SEEN;
+    if (s->state == V2S_V2) f |= V2F_REL;
+    if (s->state == V2S_REFUSED) f |= V2F_REFUSING;
+    *d = s->state == V2S_V2 ? s->d : 0;
+    *flags = f;
+    *hello = !s->peer_seen && (s->state == V2S_HELD || s->state == V2S_NSW || s->state == V2S_V2 || s->state == V2S_REFUSED ||
+                               s->state == V2S_AGREED);
+    *echo = s->have_peer ? s->peer.nonce : 0;
+}
+/* ---- end of v2core.c ---- */
+/* ---- NETUP part 2: S2a the keys, rev. 4 (nu022, nu045, nu066, nu072) (v2keys.c, md5 f0b14caa), unchanged ---- */
+/* ====================================================================
+ *  v2keys.c -- pass nu, Part 2 S2a item 6: bros_net.txt's keys with
+ *  protocol v2's (SPEC_BUILD4 r3 s12.3), in PART 41's own grammar
+ *  (net_read_cfg with Part 1: devrepo_dt1.p1.c 19315-19375, kept byte
+ *  for byte -- its loop, its atoi, its clamps). Reference: v2keys_ref.py.
+ *  `buf` is the file's text, NUL-terminated, at most 2,047 bytes (the
+ *  master reads it so). For S7: net_read_cfg's loop becomes this one.
+ *  Revision 3 (S9, nu066; notes\PART2_S9_PLAN.md D-S9-1, VX_S8 S8-1):
+ *  with Part 1's resend stub (first > 0 or again > 0) `again` is at most
+ *  100 ms -- above 100, or 0 beside a first interval, it is read as 100 --
+ *  so every seat of this build that never sends "-0" asks at least every
+ *  100 ms, which recv2 (H7) can prove by the request rate. Part 1's own
+ *  clamp was 17-300 (0: the stock 300 ms); `resend 0` stays stock.
+ *  Revision 4 (S9, nu072; notes\PART2_S9_PLAN.md D-S9-10): with the stub,
+ *  `again` is at most 50 ms (above 50, or 0 beside a first interval, it is
+ *  read as 50) and `first` at most 100 ms (above 100, or 0 -- RTT' --
+ *  beside an `again`, it is read as 100): Part 1's stub then sets a stall's
+ *  first request timer to min(RTT', first) <= 100 ms and the next ones' to
+ *  17-50 ms, a run H7 rev. 13's window (8 counted requests within 600 ms)
+ *  can prove -- at `again` 100 it never could (8 requests span 700 ms;
+ *  proof_sim.py, nu071: 238-350 ms to the proof at 17-50 ms and low
+ *  jitter). Part 1's default (34, 50) is unchanged.
+ * ==================================================================== */
+#include <stdlib.h>
+#include <string.h>
+
+typedef struct {
+    int lock, sleep, window, delay, probe, capture, demodt, demolag, tempo, first, again;      /* the master's, Part 1's */
+    int scheme, vmargin, pctl, dmin, dmax, optb, hash, late, fallback, nsched;              /* protocol v2's */
+    int vtempo;                         /* S6: the controller (r3 s10.1's `tempo`), a key of its own; 0 = off   */
+} V2Keys;
+
+static void v2_keys_defaults(V2Keys* k)
+{
+    k->lock = 1; k->sleep = 1; k->window = 8; k->delay = 0; k->probe = 1; k->capture = -1; k->demodt = -1;
+    k->demolag = 3; k->tempo = -1; k->first = -1; k->again = -1;
+    k->scheme = 0; k->vmargin = 8; k->pctl = 95; k->dmin = 2; k->dmax = 15; k->optb = 1; k->hash = 1; k->late = 0;
+    k->fallback = 1; k->nsched = 1; k->vtempo = 0;
+}
+
+static void v2_keys_parse(const char* buf, V2Keys* k)
+{
+    char key[32]; const char* p = buf; int n, val;
+    v2_keys_defaults(k);
+    if ((unsigned char)p[0] == 0xEF && (unsigned char)p[1] == 0xBB && (unsigned char)p[2] == 0xBF) p += 3;
+    while (*p) {
+        while (*p == ' ' || *p == '\t' || *p == '\r' || *p == '\n') p++;
+        if (!*p) break;
+        if (*p == '#') { while (*p && *p != '\n') p++; continue; }
+        n = 0;
+        while (*p && n < 31 && ((*p >= 'a' && *p <= 'z') || (*p >= 'A' && *p <= 'Z'))) key[n++] = (char)(*p++ | 0x20);
+        key[n] = 0;
+        while (*p == ' ' || *p == '\t' || *p == '=' || *p == ':') p++;
+        val = atoi(p);
+        if      (!strcmp(key, "lock"))     k->lock = val ? 1 : 0;
+        else if (!strcmp(key, "sleep"))    k->sleep = val;
+        else if (!strcmp(key, "window"))   k->window = val;
+        else if (!strcmp(key, "delay"))    k->delay = val;
+        else if (!strcmp(key, "probe"))    k->probe = val ? 1 : 0;
+        else if (!strcmp(key, "capture"))  k->capture = val ? 1 : 0;
+        else if (!strcmp(key, "demodt"))   k->demodt = val ? 1 : 0;
+        else if (!strcmp(key, "demolag"))  k->demolag = val;
+        else if (!strcmp(key, "tempo"))    k->tempo = val ? 1 : 0;
+        else if (!strcmp(key, "resend")) {                     /* `resend FIRST AGAIN`; one number sets both */
+            const char* q = p;
+            k->first = val < 0 ? 0 : val;
+            if (*q == '+' || *q == '-') q++;
+            while (*q >= '0' && *q <= '9') q++;
+            while (*q == ' ' || *q == '\t' || *q == ',' || *q == ':' || *q == '=' || *q == '/') q++;
+            if (*q == '+') q++;
+            k->again = (*q == '-' || (*q >= '0' && *q <= '9')) ? atoi(q) : k->first;
+            if (k->again < 0) k->again = 0;
+        }
+        else if (!strcmp(key, "scheme"))   k->scheme = val;
+        else if (!strcmp(key, "vmargin"))  k->vmargin = val;
+        else if (!strcmp(key, "pctl"))     k->pctl = val;
+        else if (!strcmp(key, "dmin"))     k->dmin = val;
+        else if (!strcmp(key, "dmax"))     k->dmax = val;
+        else if (!strcmp(key, "optb"))     k->optb = val ? 1 : 0;
+        else if (!strcmp(key, "hash"))     k->hash = val ? 1 : 0;
+        else if (!strcmp(key, "late"))     k->late = val ? 1 : 0;
+        else if (!strcmp(key, "fallback")) k->fallback = val ? 1 : 0;
+        else if (!strcmp(key, "nsched"))   k->nsched = val ? 1 : 0;
+        else if (!strcmp(key, "vtempo"))   k->vtempo = val ? 1 : 0;
+        while (*p && *p != '\n') p++;
+    }
+    if (k->sleep < 1) k->sleep = 1;
+    if (k->sleep > 8) k->sleep = 8;
+    if (k->window < 3) k->window = 3;
+    if (k->window > 10) k->window = 10;
+    if (k->delay > 0) k->delay = 0;
+    if (k->delay < -6) k->delay = -6;
+    if (k->demolag < 0) k->demolag = 0;
+    if (k->demolag > 5) k->demolag = 5;
+    if (k->first > 0 && k->first < 17) k->first = 17;
+    if (k->first > 1000) k->first = 1000;
+    if (k->again > 0 && k->again < 17) k->again = 17;
+    if (k->again > 50) k->again = 50;                           /* rev. 4 (D-S9-10); rev. 3 100, rev. 2 300 */
+    if (k->again == 0 && k->first > 0) k->again = 50;           /* rev. 3 / 4: the stub at the stock 300 ms -> 50 */
+    if (k->again > 0 && (k->first == 0 || k->first > 100)) k->first = 100;   /* rev. 4: the stub's first, <= 100 */
+    k->scheme = (k->scheme == 2 && k->lock == 1) ? 2 : 0;    /* v2 needs the send-queue lock (r3 s12.3) */
+    if (k->vmargin < 0) k->vmargin = 0;
+    if (k->vmargin > 50) k->vmargin = 50;
+    if (k->pctl < 50) k->pctl = 50;
+    if (k->pctl > 99) k->pctl = 99;
+    if (k->dmin < 2) k->dmin = 2;
+    if (k->dmin > 15) k->dmin = 15;
+    if (k->dmax < k->dmin) k->dmax = k->dmin;
+    if (k->dmax > 15) k->dmax = 15;
+}
+/* ---- end of v2keys.c ---- */
+/* ---- NETUP part 2: H6 the lobby samples (nu024-nu025) (v2_h6.c, md5 4ad55736), unchanged ---- */
+/* ---- NETUP part 2, S2b (pass nu): H6 -- every RTT sample of every lobby member, kept for v2's P -------------------
+   The game keeps, per lobby member, the last 10 RTT samples (ms) in a std::list at member+0x30 (exe+0x67DA3B..
+   0x67DAC6: r15 = max(0, now - sent - 0x20); a node with r15 at +0x10 appended; the front dropped past 10) and uses
+   their mean as RTT' (cnd+8). Protocol v2's P (SPEC_BUILD4 r3 s4.1) is a percentile of up to 512 of the opponent's
+   samples: H6 copies each sample, with its member (r14), into a 1,024-slot ring; the setup (H1) takes the newest 512
+   (a reader taking 512 of 1,024 slots never meets the producer's slot unless 512 samples arrive while it copies).
+   The 7 bytes at 0x67DA4D (lea rbx,[r14+0x30]; mov r13,[rbx]) become jmp stub; nop; nop. The stub saves rax, rcx,
+   rdx; writes ring.member[idx & 1023] = r14 and ring.sample[idx & 1023] = min(r15, 0xFFFF); publishes with lock inc idx
+   (a full barrier: the slot's two stores are visible before the new index); restores; runs the two instructions; jumps
+   to 0x67DA54. The flags are dead at the site: 0x67DA54's cmp writes them before anything reads them, and the stub's
+   own flag changes end before the two instructions (which write none). Only one thread runs 0x67DA4D (a single
+   producer); the reader takes a snapshot (net_v2_ring_take). Installed at DllMain (no game thread yet), only with the
+   New netcode (`lock 1`) and `scheme 2`. */
+#include <stddef.h>                     /* offsetof: the ring's layout is the stub's (checked below) */
+#define NET_RVA_V2_SAMPLE   0x67DA4Du   /* lea rbx,[r14+0x30]; mov r13,[rbx] (7 bytes)                              */
+#define NET_RVA_V2_SAMPLE_CTX 0x67DA3Bu /* the sample's computation, the site and the list's size check (29 bytes)  */
+static const unsigned char NET_V2_SAMPLE_STOCK[29] = {
+    0x49,0x8B,0xCD,                        /* mov rcx, r13                                                    */
+    0x48,0x2B,0x48,0x18,                   /* sub rcx, [rax+0x18]                                             */
+    0x45,0x33,0xFF,                        /* xor r15d, r15d                                                  */
+    0x48,0x83,0xC1,0xE0,                   /* add rcx, -0x20                                                  */
+    0x4C,0x0F,0x49,0xF9,                   /* cmovns r15, rcx                                                 */
+    0x49,0x8D,0x5E,0x30,                   /* lea rbx, [r14+0x30]       <- the site                           */
+    0x4C,0x8B,0x2B,                        /* mov r13, [rbx]                                                  */
+    0x4C,0x39,0x4B,0x08 };                 /* cmp [rbx+8], r9           <- where the stub returns (writes the flags) */
+#define NET_V2_RING 1024                    /* slots (the stub's mask 0x3FF and its 0x2008)                      */
+#define NET_V2_TAKE 512                     /* the newest taken by the setup (r3 s4.1: the last <= 512 samples) */
+typedef struct {
+    volatile LONG      idx;                /* samples written so far; slot = idx & 1023 (the stub's lock inc) */
+    LONG               pad;
+    uint64_t           member[NET_V2_RING];  /* r14 at the sample: the member's record (+8)                   */
+    uint16_t           sample[NET_V2_RING];  /* ms, at most 0xFFFF (+0x2008)                                  */
+} NetV2Ring;
+static NetV2Ring g_net_v2_ring;
+typedef char net_v2_ring_layout[(offsetof(NetV2Ring, member) == 8 && offsetof(NetV2Ring, sample) == 0x2008) ? 1 : -1];
+static int g_net_on_v2sample;
+static const char* g_net_why_v2sample = "off";
+
+static const char* net_v2_sample_install(void)
+{
+    unsigned char st[69] = {
+        0x50, 0x51, 0x52,                                  /*  0 push rax; push rcx; push rdx                     */
+        0x48,0xB8, 0,0,0,0,0,0,0,0,                        /*  3 mov rax, &g_net_v2_ring       (imm64 at 5)       */
+        0x8B,0x10,                                         /* 13 mov edx, [rax]                 idx               */
+        0x81,0xE2,0xFF,0x03,0x00,0x00,                     /* 15 and edx, 1023                                    */
+        0x4C,0x89,0x74,0xD0,0x08,                          /* 21 mov [rax+rdx*8+8], r14         member            */
+        0x4C,0x89,0xF9,                                    /* 26 mov rcx, r15                   sample            */
+        0x48,0x81,0xF9,0xFF,0xFF,0x00,0x00,                /* 29 cmp rcx, 0xFFFF                                  */
+        0x76,0x05,                                         /* 36 jbe 43                                           */
+        0xB9,0xFF,0xFF,0x00,0x00,                          /* 38 mov ecx, 0xFFFF                                  */
+        0x66,0x89,0x8C,0x50,0x08,0x20,0x00,0x00,           /* 43 mov [rax+rdx*2+0x2008], cx                       */
+        0xF0,0xFF,0x00,                                    /* 51 lock inc dword [rax]           publish           */
+        0x5A, 0x59, 0x58,                                  /* 54 pop rdx; pop rcx; pop rax                        */
+        0x49,0x8D,0x5E,0x30,                               /* 57 lea rbx, [r14+0x30]            the site's two    */
+        0x4C,0x8B,0x2B,                                    /* 61 mov r13, [rbx]                 instructions      */
+        0xE9, 0,0,0,0 };                                   /* 64 jmp exe+0x67DA54               (rel32 at 65)     */
+    unsigned char* site = g_net_mod + NET_RVA_V2_SAMPLE;
+    unsigned char* stub;
+    unsigned char  patch[7];
+    unsigned long long ring = (unsigned long long)(uintptr_t)&g_net_v2_ring;
+    long long to_stub, back;
+    DWORD old;
+    if (memcmp(g_net_mod + NET_RVA_V2_SAMPLE_CTX, NET_V2_SAMPLE_STOCK, sizeof(NET_V2_SAMPLE_STOCK)) != 0)
+        return "REFUSED, exe+0x67DA3B is not the stock sample code";
+    stub = (unsigned char*)gauge_alloc_near(site, 128);
+    if (!stub) return "REFUSED, no stub within +/-2 GB";
+    to_stub = (long long)stub - (long long)(site + 5);
+    back = (long long)(site + 7) - (long long)(stub + 69);
+    if (to_stub > 0x7FFFFFFFLL || to_stub < -0x80000000LL || back > 0x7FFFFFFFLL || back < -0x80000000LL) {
+        VirtualFree(stub, 0, MEM_RELEASE);
+        return "REFUSED, the stub is out of rel32 reach";
+    }
+    if (!bros_claim(BROS_MASTER_OWNER, NET_RVA_V2_SAMPLE, 7,
+                    "PART 41 NETUP v2 (H6): every RTT sample of every lobby member into a ring for v2's P "
+                    "(lea rbx,[r14+0x30]; mov r13,[rbx] -> jmp to the sample stub, which runs them)")) {
+        VirtualFree(stub, 0, MEM_RELEASE);
+        return "REFUSED, the bytes are claimed by another owner";
+    }
+    memcpy(st + 5, &ring, 8);
+    { int r = (int)back; memcpy(st + 65, &r, 4); }
+    memcpy(stub, st, sizeof(st));
+    FlushInstructionCache(GetCurrentProcess(), stub, sizeof(st));
+    patch[0] = 0xE9; { int r = (int)to_stub; memcpy(patch + 1, &r, 4); } patch[5] = 0x90; patch[6] = 0x90;
+    if (!VirtualProtect(site, 7, PAGE_EXECUTE_READWRITE, &old)) {
+        VirtualFree(stub, 0, MEM_RELEASE);                     /* the claim stays, unwritten */
+        return "REFUSED, VirtualProtect failed";
+    }
+    memcpy(site, patch, 7);
+    VirtualProtect(site, 7, old, &old);
+    FlushInstructionCache(GetCurrentProcess(), site, 7);
+    g_net_on_v2sample = 1;
+    return "on (exe+0x67DA4D: every member's RTT sample into a 1,024-slot ring)";
+}
+
+/* A snapshot of the ring, oldest first: the last <= min(max, 512) samples written. The producer may write while this copies:
+   the index is read before and after, and every index whose slot it may have reused (or be writing) by the second read
+   is left out. Returns the count. */
+static int net_v2_ring_take(uint64_t* member, uint16_t* sample, int max)
+{
+    LONG a = g_net_v2_ring.idx, b, i, lo, cap = max < NET_V2_TAKE ? max : NET_V2_TAKE;
+    int n = 0;
+    MemoryBarrier();                                   /* the slots of indices < a were written before a was */
+    lo = a > cap ? a - cap : 0;                        /* the newest <= cap */
+    for (i = lo; i < a && n < max; i++) {
+        member[n] = g_net_v2_ring.member[i & (NET_V2_RING - 1)];
+        sample[n] = g_net_v2_ring.sample[i & (NET_V2_RING - 1)];
+        n++;
+    }
+    MemoryBarrier();
+    b = g_net_v2_ring.idx;                             /* the producer may be writing index b now, in the slot of index
+                                                          b - 1024: indices <= b - 1024 may be overwritten or torn */
+    if (b - NET_V2_RING + 1 > lo) {
+        int drop = (int)(b - NET_V2_RING + 1 - lo);
+        if (drop >= n) return 0;
+        memmove(member, member + drop, (size_t)(n - drop) * sizeof *member);
+        memmove(sample, sample + drop, (size_t)(n - drop) * sizeof *sample);
+        n -= drop;
+    }
+    return n;
+}
+/* ---- end of v2_h6.c ---- */
+/* ---- NETUP part 2: H1's P (nu025) (v2_h1p.c, md5 37057e2c), unchanged ---- */
+/* ---- NETUP part 2, S2b (pass nu): H1's P -- this seat's P at the battle's setup, from H6's ring -------------------
+   r3 s4.1 items 1-2: the newest <= 512 samples; the opponent's member (the only one; else the first, by first
+   appearance, whose last-10 integer mean equals RTT' -- the game's own RTT' is that mean, cnd+8; else the member of the
+   newest sample); that member's samples in order; the nearest-rank percentile `pctl`, at least RTT' + 17 while fewer
+   than 32, 0xFFFF when none, at most 0xFFFE. S2a's v2_pick_member and v2_p_seat (v2core.c) do the arithmetic. Frozen
+   at the setup: called once per battle from PART 41's setup detour (the game thread); not reentrant. */
+static int net_v2_p_frozen(int pctl, int rtt, int64_t* member_out, int* n_out)
+{
+    static uint64_t mem[NET_V2_TAKE];
+    static uint16_t smp[NET_V2_TAKE], mine[NET_V2_TAKE];
+    int n = net_v2_ring_take(mem, smp, NET_V2_TAKE), k, m = 0;
+    int64_t who = v2_pick_member(mem, smp, n, rtt);
+    for (k = 0; k < n && m < NET_V2_TAKE; k++)        /* m <= n <= 512 already; the bound says so to the compiler */
+        if ((int64_t)mem[k] == who) mine[m++] = smp[k];
+    if (member_out) *member_out = who;
+    if (n_out) *n_out = m;
+    return v2_p_seat(mine, m, pctl, rtt);
+}
+/* ---- end of v2_h1p.c ---- */
+/* ---- NETUP part 2: H7 recv2, rev. 13 (nu026-nu027, nu036-nu040, nu045, nu051, nu057, nu060, nu067, nu070, nu073) (v2_h7.c, md5 96226d7c), unchanged ---- */
+/* ---- NETUP part 2, S2b (pass nu): H7 -- recv2, protocol v2's receive side ------------------------------------------
+   Where. PacketCharacter's vtable (exe+0x14A37B0) slot 3, exe+0x14A37C8: the record receiver 0x7FF820. That slot is the
+   only pointer to 0x7FF820 in the image, and the vtable is installed once (0x808992, SOnlineAction's setup). Dispatch
+   (0x676E00, main thread, under the batch mutex) calls it with (this, payload) for every received Chara record; the
+   payload is the record's bytes after its 4-byte key, inside the 2 MiB receive buffer. The game passes no length
+   (SPEC_BUILD4 r3 s3.2), so recv2 decodes with avail = 1,194 bytes -- and that read never leaves the buffer: the
+   receiver (0x676920) takes a batch only while less than half of it is used (0x676952..0x676966; the capacity
+   0x200000 is written once, by the constructor, 0x6763AA), and a batch adds at most 64 slots of at most 0x1000 bytes
+   (0xA79E70), so every payload starts below 1.25 MiB of the buffer's 2 MiB.
+   The stock receiver. Seat [[this+0x50]] (the manager, "cnd") 0, the host: parse the guest format (0x1AA3E0: u16
+   count, count entries) and store each entry of frame >= F (cnd+0xB8) in map78 (cnd+0x78); a negative frame writes
+   |f| to cnd+0xC0 and ends the walk. Seat 1, the guest: 0x1ABF00 (the host format, 0x1AA6E0: the entries, then a u16
+   flag per entry and 40 snapshot bytes after a non-zero flag) into mapE0 (cnd+0xE0). Any other seat: nothing. Both
+   read a count-0 record -- a v2 record -- as empty.
+   recv2, per record (r3 s3.4, s4.6, s6, s13 H7):
+   - not this seat's v2 battle -- no v2 setup, another setup since (g_net_setup_seq), another manager, or the
+     manager's seat [cnd] no longer the setup's: the stock receiver, unchanged (build 4 is then absent);
+   - NEW's schedule or a fallback: the stock receiver, unchanged (s4.6: a HELLO-only record is read as empty); a
+     count >= 1 record is first noted by the machine (nu029: NEW's schedule repeats its hello_seen until one arrives).
+     Revision 2 (S3, nu036; F-S2c-2's fix, notes\PART2_S3_NOTES.md s6): a count-0 record there is also decoded (S1);
+     valid, the peer's, not stale and carrying NAK -> cnd+0xC0 = F (f0req's receive half: a request for frame 0 that
+     the stock "-0" cannot make). Every record still goes to the stock receiver whole, as before;
+   - revision 2, on the host, in every state of this seat's v2 battle: the evidence hb2's h1 stops on (g_v2h_past0,
+     once per battle), as e10i / e10j modelled it -- E1 any valid v2 record of the guest (decoded, the peer's seat, not
+     stale): a guest of this build, which asks for frame 0 itself (f0req) and resends its own (g1); E2 a count >= 1
+     record after which cnd+0xC0 differs from before it and is >= 1: the stock receiver wrote the guest's request for
+     a frame >= 1, so the guest has played frame 0. (E2 compares before and after so that only this record's own
+     request counts; a request equal to one still pending can only follow a record that set the evidence already.);
+   - count >= 1: S2a's v2s_on_stock -- a fallback, leaving the HELLO phase for NEW's schedule (F1), or NEW's
+     schedule: the stock receiver; a refusal (`fallback 0`), a protocol error after agreement, a refused seat: dropped;
+   - revision 3 (F-S3-1, nu037; notes\PART2_S3_NOTES.md s6): z0. Every count >= 1 record this seat's v2 battle hands
+     to the stock receiver (NEW's schedule, a fallback, and the records that begin them) is first walked while F
+     (cnd+0xB8) is 0, as the stock receiver reads it (this seat's format; the entries before the first negative frame):
+     a frame-0 entry with no commands (the host's format: flag 0) that would overwrite a frame-0 entry of the peer
+     with commands (or a flag) -- delivered earlier in this battle or earlier in the same record -- is left out, and
+     the record is handed on rewritten without it (count, entries and, in the host's format, its flag). That entry
+     can only be a 3.x seat's stock "-0" (F2: the request at frame 0, stored by the stock receiver as an empty frame-0
+     entry over the real one): both stock builders write it with no commands and flag 0 (0x1ABA37, 0x1AC37B), and a
+     frame's real entry is built once and copied unchanged by every resend and window. Nothing else changes: an empty
+     frame-0 entry with nothing better held is stored as before (the residual; revision 8: not in a fallback when it is
+     the record's only entry), the request is not answered (the
+     model showed no gain, e10n), and a record whose walk passes 4,096 bytes (a batch slot's size: a corrupt count)
+     goes on whole, counted. A seat of this build never sends "-0" (Part 1), so z0 acts only against a 3.x seat.
+   - revision 5 (S5, nu040; notes\PART2_S5_NOTES.md s4.7): the SNAP queue H2 takes from holds 16 (r3: 4) -- the host
+     can lead the guest by D_guest + 2 <= 15 frames, and in 18 action kinds its trigger fires every build; overflow
+     still drops the oldest. H1's begin also begins H2's state.
+   - revision 6 (S6, nu045; notes\PART2_S6_NOTES.md s2.1): H1's begin also begins S6's measure -- the battle (this
+     setup), this seat's nonce and the peer's seat published for the network thread's scan, the main thread's margin
+     reset. Nothing else changes here: MARGIN was already kept (peer_a), and hb2 / gb2 hand it to S6's controller.
+   - count 0: S1's v2_decode (CRC, every layout rule). Another version (magic right) goes to the machine as such: a
+     refusal before agreement, rejected after. Any other failure: dropped, counted (CRC and layout apart). Then two
+     rules of H7's own [design, pass nu; a conforming peer breaks neither]: the record's seat is the peer's
+     (1 - this seat: INNER's layout follows it), and SNAP comes from the host only. Then S2a's v2s_on_v2: stale
+     (F7: dropped whole), the HELLO (held, decided at once), hello_seen. After agreement ("apply"): at the agreement
+     itself D (cnd+0x74) and on the host the cap (cnd+0x48, raised to at least window + D) are written (s4.1 item 5);
+     then the NAK -> cnd+0xC0 = F (s6: what the stock receiver writes for |f|; a NAK never reaches a stock parser),
+     MARGIN, HASH and SNAP kept for S4-S6, and INNER handed to the stock receiver as a record of its own (payload + its
+     offset). COMPAT (revision 7): kept for the log from every record of the peer that passes the two rules and is not
+     stale, whatever the machine does with it. In the HELLO phase a record carrying NAK, HASH, SNAP or INNER is counted
+     and those blocks are not applied: a conforming peer sends them only once it has agreed, and its every record
+     carries its HELLO until it sees this seat's hello_seen -- this seat has agreed by then.
+   - The peer's HELLO values are clamped to the keys' ranges (r3 s12.3: vmargin 0-50, pctl 50-99, dmin 2-15, dmax
+     dmin-15) before the machine reads them [design, pass nu]: the identity for every conforming peer (its own parser
+     clamps them), and d then stays within 2-15 (D 0-14) whatever a peer sends.
+   - revision 7 (S7 step 6, nu051; F-S7-2): COMPAT is kept before the machine's action decides anything else. It was
+     kept only after agreement ("apply"), where no peer sends one: a seat that refused ignores the peer's records, so it
+     never kept the COMPAT of a peer that refused too, and its line said "the peer sent no COMPAT".
+   - revision 8 (S8, VX_P2's F1 / F2; notes\PART2_S8_PLAN.md D-S8-1, D-S8-4, D-S8-5): (a) S2a revision 2's AGREED: the
+     HELLO's decision for v2 no longer writes D and the cap; the commit does (the peer's hello_seen), and is timed
+     (t_commit); in AGREED a record's NAK / HASH / SNAP / INNER is counted early, as in HELD. (b) Only this battle's
+     stock records decide: in every state but NEW's schedule and a fallback, a count >= 1 record with an entry of frame
+     > 255 (or a request beyond -255) before the end of its walk -- as the receiver reads it, this seat's format -- is a
+     late record of the last battle (a stock peer cannot have played a frame of this battle at its start): dropped,
+     counted (late), and the machine is not told (it decides nothing and is not "heard"). (c) z0 in a fallback: at F == 0
+     a record whose only entry is an empty frame 0 (host's format: flag 0) is never stored (counted: lone) -- every stock
+     "-0" is such a record, and a real lone label 0 comes again in the sender's next records. NEW's schedule keeps z0 as
+     before (a v2 peer never sends "-0"). (d) The begin gives S2a the setup's time on hb2's steady clock (its silence).
+     The fallback's cause comes from the machine: left_by 3 (a stock record in HELD), 4 (silence: hb2 / gb2), 5 (a stock
+     record in AGREED).
+   - revision 10 (S8 step 6, nu060; notes\PART2_S8_PLAN.md s5, D-S8-14 / 15 / 16): (a) late records in NEW's play too: in
+     NEW's schedule and a fallback a count >= 1 record with an entry of frame > F + 255 (F: cnd+0xB8 as it arrives) or a
+     request beyond -(F + 255) is dropped and counted (late), the machine not told -- no record of this battle carries
+     more than F + D_guest + 2; elsewhere the bound stays 255 (F is 0 in the HELLO phase; in V2 no stock record is the
+     peer's). (b) z0's lone rule spares a peer that has sent a valid v2 record of this battle (v2peer: decoded, its seat,
+     not stale -- E1's test, both seats): a seat of this build never sends "-0" (D-S8-13), so its lone empty frame 0 is
+     its frame 0 and is handed on (counted: z0_v2). (c) Otherwise the first lone record left out is kept as received; in
+     a fallback at F == 0 the peer's requests are counted per frame (a request for another frame starts again), and once
+     they number at least 3 + (ms since the fallback) / 300 while no frame-0 entry of the peer has been handed on
+     (z0_any), the kept record is handed on before the record in hand (counted: take). Part 1's resend stub sets the
+     request timer at frame 0 to 0x7FFFFFFF (exe+0x1AB093): a seat with it never sends "-0", and asks every 50 ms; a
+     seat without it asks at most once per 300 ms of a stall (the first after RTT), and its stall began after this
+     seat's fallback (it waits for frame-0 data this seat sends only from then): at most 1 + ms / 300.
+   - revision 11 (S9, nu067; notes\PART2_S9_PLAN.md D-S9-2 .. D-S9-4, VX_S8's S8-1 / S8-2): (a) the proof of Part 1's
+     stub counts from the run's first request: a run (the peer's requests for one frame; another frame starts a new
+     one) proves the stub once it holds at least 4 + T / 300 requests, T the ms since its first counted request -- a seat
+     without the stub reaches at most 1 + T / 300, so three to spare (a 900 ms jitter spread, or three duplicates past
+     the guard); Part 1's `again` is at most 100 ms in this build (S2a keys rev. 3), so a stub's unbroken run proves
+     itself within 400 ms (rev. 12's text: this read "about 450 ms"). (b) A request handed on less than 25 ms after the
+     run's last counted one is not counted (n_rq_near): a duplicated datagram (the transport has no sequence of its own)
+     or two requests a lagging receiver took together; the stub asks every 17-100 ms. (c) In AGREED (the peer's HELLO
+     in hand) a stock record is of this battle only if
+     every entry is at most max(the HELLO's D_game, D_new) + 2 and no request beyond its negative -- in AGREED this seat
+     sends no stock entry, so a peer that fell back to NEW cannot play frame 0 and labels at most its D_new + 1 -- and
+     no valid v2 record of the peer came in the last 100 ms (a live v2 peer sends one every 16 ms); anything else is
+     late (dropped, counted: n_ag_bound / n_ag_live beside n_late; the machine not told). Left: a record of an aborted
+     start (every entry within that bound) arriving after 100 ms without a v2 record of the peer, inside the commit's
+     round trip.
+   - revision 12 (S9, nu070; notes\PART2_S9_PLAN.md D-S9-8): (c)'s live peer is a peer in its HELLO phase -- t_v2 is
+     noted only for a valid v2 record of the peer that carries the HELLO block, which S2a's v2s_out puts only in a
+     record of HELD, NSW, AGREED, REFUSED (and V2 before hello_seen: never, V2 begins on it). A peer playing NEW (NEW's
+     schedule, a fallback) sends no HELLO: its count-0 records (f0req's NAK, the schedule's repeat) no longer keep it
+     "live", so its stock records end this seat's AGREED 100 ms after its last HELLO-phase record (rev. 11 dropped them
+     all while f0req came every 100 ms: two NEW seats behind a one-way outage of 1 s never began, nu069). A peer in V2
+     makes this seat commit on its first record (hello_seen), before any stock record could be weighed.
+   - revision 13 (S9, nu073; notes\PART2_S9_PLAN.md D-S9-11, beside S2a keys rev. 4: D-S9-10): (a)'s proof is a
+     window -- a run proves the stub once its last 8 counted requests span at most 600 ms (QPC ticks: span x 1000 <=
+     600 x the frequency; rq_t keeps the times of the run's last 8 counted requests, the k-th at (k - 1) mod 8). A seat
+     without the stub asks at most once per 300 ms of a stall: with at most one copy of each datagram, no copy more
+     than 200 ms behind it, and arrivals spread by less than 300 ms (jitter under +-150 ms), any 600 ms holds at most 3
+     of its requests and 4 copies -- 7, however long the run; rev. 11's count from the run's first request let far
+     copies add up while the run lasted (nu071: 6 such false proofs in S9's world, after 1.8-14 s). Part 1's stub asks
+     every 17-50 ms in this build (keys rev. 4), so 8 of its requests span 119-350 ms by its timer -- a sender's pass
+     grid lengthens each step by less than a pass (at the 15.625 ms system tick, 8 within 460 ms) -- and at `again` 100
+     they would span 700 and never prove. (b)'s guard is 10 ms (rev. 11: 25): a copy less than 10 ms behind its
+     datagram, or two records read in one pass, is still not counted, and a stub's requests that jitter brings closer
+     than 25 ms now are. Left, and written so: outside those bounds the proof is not claimed -- with two or more copies
+     of a datagram, copies more than 200 ms late (from about 310 ms beside a wide spread) or arrivals spread by 300 ms
+     and more, 8 requests of a seat without the stub can come within 600 ms (N45 shows one of each; proof_sim13.py
+     measures them).
+   Threads: Dispatch, H1's setup and the builders all run on the main thread: no lock. The watch thread reads the
+   counters at the battle's end. Between two battles, the last battle's state keeps taking this manager's records
+   until the next setup: only the peer's HELLO-only records can come then (no seat sends anything else before it
+   holds the other's HELLO of this setup), and H1's next setup rewrites every field they could touch. */
+#define NET_RVA_PC_VT       0x14A37B0u  /* PacketCharacter's vtable (its RTTI locator at -8: 0x1538A38)          */
+#define NET_RVA_PC_SLOT3    0x14A37C8u  /* slot 3: the record receiver                                           */
+#define NET_RVA_PC_RECV     0x7FF820u   /* the stock receiver, slot 3's value                                    */
+#define NET_PC_CND          0x50        /* PacketCharacter -> its network-data manager                           */
+#define NET_CND_WINDOW      0x14        /* int: entries per record (the ctor's; PART 41's `window`)              */
+#define NET_CND_CAP         0x48        /* int: the host's delay-line cap (setup: window + D)                    */
+#define NET_CND_D           0x74        /* int: D                                                                */
+#define NET_CND_RESEND      0xC0        /* int: resend from (setup: -1)                                          */
+#define NET_V2_SNAPQ        16          /* host snapshots waiting for the guest's H2 (r3 s7 step 3: 4; rev. 5: 16) */
+#define NET_V2_HASHN        64          /* the peer's hashes kept, by frame mod 64 (r3 s8)                       */
+#define NET_V2_COSTB        257         /* recv2's own work per record, us: 0..255, the last >= 256              */
+#define NET_CND_F           0xB8        /* int: the frame being played (v2_hb2.c has the same)                   */
+#define NET_V2_Z0_MAX       0x1000      /* rev. 3: z0's walk -- no record in a batch slot is longer               */
+#define NET_V2_Z0_ENT       511         /* entries 4,096 bytes can hold after the count (8 bytes each at least)  */
+#define NET_V2_RQ_GAP_MS    10          /* rev. 13 (D-S9-11; was 25): this soon after the last counted: not counted */
+#define NET_V2_RQ_K         8           /* rev. 13 (D-S9-11): the stub proven by the run's last 8 counted requests  */
+#define NET_V2_RQ_W_MS      600         /*                    ... spanning at most 600 ms                           */
+#define NET_V2_LIVE_MS      100         /* rev. 11 (D-S9-4): AGREED -- the peer's v2 this recent: a stock record late */
+
+typedef void (*net_pc_recv_t)(void* self, const unsigned char* payload);
+typedef struct { int32_t frame; uint32_t h_core, h_float, h_pos; } NetV2PeerHash;   /* frame -1: none            */
+typedef struct { int32_t frame; unsigned char b[44]; } NetV2Snap;                    /* the SNAP block as received */
+typedef struct {
+    LONG      seq;                      /* g_net_setup_seq of the setup that began this battle (H1); 0: none      */
+    uintptr_t cnd;
+    int       mode;                     /* this seat: 0 host, 1 guest ([cnd] at the setup)                        */
+    V2Seat    seat;                     /* S2a's machine                                                          */
+    LONG64    t_setup, t_decide, t_left;/* QPC: the setup; the decision (agreement, NEW's schedule, refusal);
+                                           leaving the HELLO phase for NEW's schedule or a fallback (0: not yet)  */
+    LONG64    t_commit;                 /* rev. 8: QPC of the commit (V2 entered); 0 never                         */
+    int       left_by;                  /* 0 -, 1 the peer's hello_seen, 2 a stock record (F1); a fallback (rev. 8):
+                                           3 a stock record in HELD, 4 silence, 5 a stock record in AGREED          */
+    int       D_before, cap_before, cap_after;      /* the agreement's writes (the cap: host only)               */
+    int       peer_margin;              /* 1 once a MARGIN was applied                                            */
+    int16_t   peer_a;                   /* the peer's smoothed arrival margin, 0.1 ms                             */
+    uint8_t   peer_q;                   /* the peer's entries in hand                                             */
+    uint8_t   compat_reason, compat_mask;
+    int       compat;                   /* 1 once a COMPAT was applied                                            */
+    NetV2PeerHash peer_hash[NET_V2_HASHN];
+    NetV2Snap snap[NET_V2_SNAPQ];       /* oldest first                                                           */
+    int       nsnap;
+    int       last_a;                   /* the machine's answer to the last record (V2A_..; -1: it did not reach it) */
+    LONG64    n_v2, n_largest, n_crc, n_layout, n_version, n_stock, n_pass, n_early, n_dropped,
+              n_nak, n_nak0, n_inner, n_snap, n_snapdrop, n_hash;
+    LONG64    n_ctl, n_ctl_bad, n_ctl_stale, n_ctl_nak, n_ctl_nak0;   /* rev. 2: NEW-playing count-0 records */
+    LONG64    n_past0;                  /* rev. 2: the host's E1 / E2 evidence taken (0 or 1)                      */
+    int       z0_full;                  /* rev. 3: a frame-0 entry of the peer with commands (or a flag) delivered */
+    LONG64    n_z0, n_z0_rec, n_z0_long;/* rev. 3: "-0" entries left out; records rewritten; walks past 4,096   */
+    LONG64    n_late, n_z0_lone;        /* rev. 8: late stock records left out (D-S8-4); lone empty frame-0 records
+                                           left out in a fallback (D-S8-5)                                         */
+    LONG64    n_silence;                /* rev. 8: the HELLO phase left on silence (hb2 / gb2 ask, D-S8-2)         */
+    int       v2peer;                   /* rev. 10: a valid v2 record of the peer seen in this battle (D-S8-15)    */
+    int       z0_any;                   /* rev. 10: a frame-0 entry of the peer handed on (commands or none)       */
+    uint32_t  z0_kept_len;              /* rev. 10: the first lone record left out, as received (0: none) ...      */
+    unsigned char z0_kept[16];          /*          ... count 1, its entry (8 bytes), the host's format's flag     */
+    LONG64    rq_frame, rq_n;           /* rev. 10: the peer's requests in a fallback at F == 0: the frame, how many */
+    LONG64    rq_t[NET_V2_RQ_K];        /* rev. 13: QPC of the run's last 8 counted requests, the k-th at (k-1) % 8 */
+    LONG64    n_rq_near;                /* rev. 11: the run's requests the guard left out (not counted)            */
+    LONG64    t_v2;                     /* rev. 11: QPC of the peer's last valid v2 record (net_v2_on_v2_rec) of this
+                                           battle (0: none); rev. 12: only one with the HELLO block; read in AGREED */
+    LONG64    n_ag_bound, n_ag_live;    /* rev. 11: AGREED's stock records left out: beyond the HELLO's bound; the
+                                           peer's v2 live (both also in n_late)                                     */
+    LONG64    n_z0_v2, n_z0_take;       /* rev. 10: a v2 peer's lone frame 0 handed on; kept records handed on     */
+    LONG64    cost[NET_V2_COSTB], cost_max;         /* recv2's own work (the stock receiver's time left out), us  */
+} NetV2Bat;
+static NetV2Bat       g_v2b;
+static net_pc_recv_t  o_net_pc_recv;    /* the stock 0x7FF820 */
+static int            g_net_on_v2recv;
+static const char*    g_net_why_v2recv = "off";
+static volatile LONG64 g_net_v2_gate;   /* records passed straight on: not this seat's v2 battle */
+
+static void net_v2_mark(LONG64* t)
+{
+    LARGE_INTEGER q;
+    if (*t) return;
+    QueryPerformanceCounter(&q);
+    *t = q.QuadPart ? q.QuadPart : 1;
+}
+
+/* rev. 11: the QPC now (1 when it reads 0, as net_v2_mark notes a time) and the ms since a QPC (C's division; a
+   frequency <= 0 reads as long ago) */
+static LONG64 net_v2_qpc(void)
+{
+    LARGE_INTEGER q;
+    QueryPerformanceCounter(&q);
+    return q.QuadPart ? q.QuadPart : 1;
+}
+static LONG64 net_v2_ms_since(LONG64 t)
+{
+    LARGE_INTEGER c;
+    if (g_net_qpf.QuadPart <= 0) return 0x7FFFFFFF;
+    QueryPerformanceCounter(&c);
+    return (c.QuadPart - t) * 1000 / g_net_qpf.QuadPart;
+}
+
+/* the stock receiver, its time kept out of recv2's cost */
+static void net_v2_stock(void* self, const unsigned char* p, LONG64* spent)
+{
+    LARGE_INTEGER a, b;
+    QueryPerformanceCounter(&a);
+    o_net_pc_recv(self, p);
+    QueryPerformanceCounter(&b);
+    *spent += b.QuadPart - a.QuadPart;
+}
+
+/* rev. 3: z0 (see the header). Main thread only (Dispatch): the work arrays and the rewrite buffer are static. */
+static unsigned char g_v2_z0buf[NET_V2_Z0_MAX];
+static uint32_t      g_v2_z0len;        /* the last rewritten record's length */
+static uint32_t      g_v2_z0_eo[NET_V2_Z0_ENT], g_v2_z0_el[NET_V2_Z0_ENT], g_v2_z0_fo[NET_V2_Z0_ENT], g_v2_z0_fl[NET_V2_Z0_ENT];
+static uint8_t       g_v2_z0_drop[NET_V2_Z0_ENT];
+
+/* rev. 13 (D-S9-11; rev. 11: D-S9-2, rev. 10: D-S8-16): the run's last 8 counted requests span at most 600 ms, which
+   no seat without Part 1's resend stub reaches within the header's revision 13 bounds */
+static int net_v2_z0_proven(const NetV2Bat* b)
+{
+    LONG64 span;
+    if (b->rq_n < NET_V2_RQ_K || !b->t_left || g_net_qpf.QuadPart <= 0) return 0;
+    span = b->rq_t[(b->rq_n - 1) % NET_V2_RQ_K] - b->rq_t[b->rq_n % NET_V2_RQ_K];
+    return span * 1000 <= NET_V2_RQ_W_MS * g_net_qpf.QuadPart;
+}
+
+static void net_v2_stock_z0(NetV2Bat* b, void* self, const unsigned char* p, LONG64* spent)
+{
+    uint32_t n, i, k, at, stop, ndrop = 0, lone = 0, any = 0;
+    int host = b->mode == 1, full = b->z0_full;         /* the guest reads the host's format */
+    if (*(volatile const int32_t*)(b->cnd + NET_CND_F) != 0) { net_v2_stock(self, p, spent); return; }
+    n = v2_rd16(p);
+    if (n > NET_V2_Z0_ENT) goto whole_long;
+    at = 2;
+    stop = n;
+    for (i = 0; i < n; i++) {                           /* the entries: frame, word, count, commands */
+        uint32_t nc;
+        if (at + 8 > NET_V2_Z0_MAX) goto whole_long;
+        g_v2_z0_eo[i] = at;
+        if (stop == n && (int32_t)v2_rd32(p + at) < 0) stop = i;   /* the stock receiver stores nothing from here */
+        nc = v2_rd16(p + at + 6);
+        at += 8;
+        for (k = 0; k < nc; k++) {
+            if (at >= NET_V2_Z0_MAX) goto whole_long;
+            at += (uint32_t)v2_cmd_len(p[at]);
+        }
+        if (at > NET_V2_Z0_MAX) goto whole_long;
+        g_v2_z0_el[i] = at - g_v2_z0_eo[i];
+    }
+    if (host) {
+        for (i = 0; i < n; i++) {                       /* the host's format: a flag per entry, 40 bytes after one */
+            if (at + 2 > NET_V2_Z0_MAX) goto whole_long;
+            g_v2_z0_fo[i] = at;
+            at += 2 + (v2_rd16(p + at) ? 40u : 0u);
+            if (at > NET_V2_Z0_MAX) goto whole_long;
+            g_v2_z0_fl[i] = at - g_v2_z0_fo[i];
+        }
+    }
+    if (stop < n && b->seat.state == V2S_FALLBACK) {   /* rev. 10: the peer's request, per frame */
+        LONG64 x = -(LONG64)(int32_t)v2_rd32(p + g_v2_z0_eo[stop]), now = net_v2_qpc();
+        if (b->rq_n && x == b->rq_frame) {
+            if (net_v2_ms_since(b->rq_t[(b->rq_n - 1) % NET_V2_RQ_K]) >= NET_V2_RQ_GAP_MS) {   /* rev. 11; 13: 10 ms */
+                b->rq_t[b->rq_n % NET_V2_RQ_K] = now;                                         /* rev. 13: the ring */
+                b->rq_n++;
+            } else b->n_rq_near++;
+        } else { b->rq_frame = x; b->rq_n = 1; b->rq_t[0] = now; }
+    }
+    for (i = 0; i < n; i++) {
+        g_v2_z0_drop[i] = 0;
+        if (i >= stop || v2_rd32(p + g_v2_z0_eo[i]) != 0) continue;
+        if (v2_rd16(p + g_v2_z0_eo[i] + 6) != 0 || (host && v2_rd16(p + g_v2_z0_fo[i]) != 0)) full = 1;
+        else if (full) { g_v2_z0_drop[i] = 1; ndrop++; }
+        else if (n == 1 && b->seat.state == V2S_FALLBACK) {                                       /* rev. 8 */
+            if (b->v2peer) b->n_z0_v2++;                /* rev. 10: a v2 peer's own frame 0 (D-S8-15) */
+            else { g_v2_z0_drop[i] = 1; ndrop++; lone = 1; }
+        }
+        if (!g_v2_z0_drop[i]) any = 1;                  /* rev. 10: a frame-0 entry handed on */
+    }
+    b->z0_full = full;
+    b->n_z0_lone += lone;
+    if (any) b->z0_any = 1;
+    if (lone && !b->z0_kept_len) {                      /* rev. 10: the first lone record left out, kept */
+        uint32_t len = 2 + g_v2_z0_el[0] + (host ? g_v2_z0_fl[0] : 0);
+        if (len <= sizeof b->z0_kept) {
+            memcpy(b->z0_kept, p, 2 + g_v2_z0_el[0]);
+            if (host) memcpy(b->z0_kept + 2 + g_v2_z0_el[0], p + g_v2_z0_fo[0], g_v2_z0_fl[0]);
+            b->z0_kept_len = len;
+        }
+    }
+    if (b->z0_kept_len && !b->z0_any && b->seat.state == V2S_FALLBACK && net_v2_z0_proven(b)) {   /* rev. 10 */
+        b->n_z0_take++;
+        b->z0_any = 1;
+        net_v2_stock(self, b->z0_kept, spent);
+    }
+    if (!ndrop) { net_v2_stock(self, p, spent); return; }
+    {
+        uint32_t o = 2;
+        v2_wr16(g_v2_z0buf, (uint16_t)(n - ndrop));
+        for (i = 0; i < n; i++) if (!g_v2_z0_drop[i]) { memcpy(g_v2_z0buf + o, p + g_v2_z0_eo[i], g_v2_z0_el[i]); o += g_v2_z0_el[i]; }
+        if (host) for (i = 0; i < n; i++) if (!g_v2_z0_drop[i]) { memcpy(g_v2_z0buf + o, p + g_v2_z0_fo[i], g_v2_z0_fl[i]); o += g_v2_z0_fl[i]; }
+        g_v2_z0len = o;
+    }
+    b->n_z0 += ndrop;
+    b->n_z0_rec++;
+    net_v2_stock(self, g_v2_z0buf, spent);
+    return;
+whole_long:
+    b->n_z0_long++;
+    net_v2_stock(self, p, spent);
+}
+
+static void net_v2_host_begin(LONG seq, uint16_t nsamples);    /* v2_hb2.c (H3) */
+static LONG64 net_steady_ns(void);                             /* v2_hb2.c (H3): the game's steady clock (rev. 8) */
+static void net_v2_guest_begin(LONG seq, uint16_t nsamples);   /* v2_gb2.c (H4; rev. 4, nu038) */
+static void net_v2_h2_begin(LONG seq);                         /* v2_h2.c (H2; rev. 5, nu040) */
+static void net_v2_tm_begin(LONG seq, uint8_t nonce, int peer_seat);   /* v2_tempo.c (S6; rev. 6, nu045) */
+static volatile LONG g_v2h_past0;      /* rev. 2: the guest is past frame 0 (hb2's h1 stops); hb2 reads it */
+
+/* H1 (the setup detour, main thread) begins a v2 battle once PART 41's setup has run (D_new is in cnd+0x74 and
+   g_net_setup_seq counts this setup). `me`: this seat's HELLO, seat and flags included (H1 fills it); `nsamples`: the
+   HELLO's samples behind P. Rev. 2: hb2's state (H3) is begun with it; rev. 4 (nu038): gb2's (H4) too; rev. 5 (nu040):
+   H2's; rev. 6 (nu045): S6's (the peer's seat is 1 - mode). */
+static void net_v2_bat_begin(uintptr_t cnd, int mode, const V2Hello* me, uint16_t nsamples)
+{
+    NetV2Bat* b = &g_v2b;
+    LARGE_INTEGER q;
+    int i;
+    b->seq = 0;                                       /* recv2 passes records on while this is rebuilt */
+    memset(b, 0, sizeof *b);
+    for (i = 0; i < NET_V2_HASHN; i++) b->peer_hash[i].frame = -1;
+    b->cnd = cnd;
+    b->mode = mode;
+    v2s_init(&b->seat, me, net_steady_ns() / 1000);   /* rev. 8: the silence's clock is hb2's / gb2's */
+    QueryPerformanceCounter(&q);
+    b->t_setup = q.QuadPart;
+    g_v2h_past0 = 0;
+    net_v2_host_begin(g_net_setup_seq, nsamples);
+    net_v2_guest_begin(g_net_setup_seq, nsamples);
+    net_v2_h2_begin(g_net_setup_seq);
+    net_v2_tm_begin(g_net_setup_seq, (uint8_t)me->nonce, (mode ^ 1) & 1);
+    b->seq = g_net_setup_seq;                         /* last: the battle is taken from here on */
+}
+
+/* rev. 8 (D-S8-2): hb2 and gb2 ask at every call in HELD -- S2a's silence (nothing of the peer heard for 1,000 ms since
+   the setup), and the battle's record of it: a fallback's time and cause (left_by 4), or a refusal's (`fallback 0`) */
+static void net_v2_silence(NetV2Bat* b, int64_t now_us)
+{
+    if (!v2s_silence(&b->seat, now_us)) return;
+    if (b->seat.state == V2S_FALLBACK) { b->left_by = b->seat.left; net_v2_mark(&b->t_left); }
+    else net_v2_mark(&b->t_decide);
+    b->n_silence++;
+}
+
+/* rev. 2: a count-0 record in NEW's schedule or a fallback (f0req's receive half; h1's evidence on the host) */
+static void net_v2_new_ctl(NetV2Bat* b, const unsigned char* p)
+{
+    V2Rec r;
+    if (v2_decode(p, V2_MAXPAY, 1, &r) != V2_OK || r.seat != (b->mode ^ 1)) { b->n_ctl_bad++; return; }
+    if (v2_is_stale(&r, (uint8_t)b->seat.me.nonce)) { b->n_ctl_stale++; return; }   /* F7: another setup's */
+    b->n_ctl++;
+    b->v2peer = 1;                                    /* rev. 10 (t_v2 is not noted here: AGREED reads it, and this
+                                                         path runs only in NEW's schedule and a fallback, which a
+                                                         battle never leaves) */
+    if (b->mode == 0 && !g_v2h_past0) { g_v2h_past0 = 1; b->n_past0++; }   /* E1 */
+    if (r.blocks & V2B_NAK) {
+        *(volatile int32_t*)(b->cnd + NET_CND_RESEND) = r.nak_frame;
+        b->n_ctl_nak++;
+        if (r.nak_frame == 0) b->n_ctl_nak0++;
+    }
+}
+
+/* the peer's HELLO for the machine: its flags are the header's (s3.2 has none in the block); its settings clamped to
+   the keys' ranges (see the header) */
+static void net_v2_hello_of(const V2Rec* r, V2Hello* h)
+{
+    int dmin = r->hello.dmin < 2 ? 2 : r->hello.dmin > 15 ? 15 : r->hello.dmin;
+    memset(h, 0, sizeof *h);
+    h->P = r->hello.P_ms;
+    h->M = r->hello.M_ms > 50 ? 50 : r->hello.M_ms;
+    h->pctl = r->hello.pctl < 50 ? 50 : r->hello.pctl > 99 ? 99 : r->hello.pctl;
+    h->dmin = dmin;
+    h->dmax = r->hello.dmax < dmin ? dmin : r->hello.dmax > 15 ? 15 : r->hello.dmax;
+    h->rtt = r->hello.rtt_ms;
+    h->dgame = r->hello.d_game;
+    h->dnew = r->hello.d_new;
+    h->newsrc = r->hello.new_src;
+    h->window = r->hello.window;
+    h->nonce = r->hello.nonce;
+    h->build = r->hello.build_id;
+    h->content = r->hello.content_id;
+    h->settings = r->hello.settings_id;
+    h->seat = r->seat;
+    h->flags = r->flags;
+}
+
+/* the agreement (s4.1 item 5): D, and on the host the cap raised to at least window + D (setup wrote window + D_game) */
+static void net_v2_agree(NetV2Bat* b)
+{
+    volatile int* D = (volatile int*)(b->cnd + NET_CND_D);
+    b->D_before = *D;
+    *D = b->seat.D;
+    if (b->mode == 0) {
+        volatile int* cap = (volatile int*)(b->cnd + NET_CND_CAP);
+        int want = *(volatile const int*)(b->cnd + NET_CND_WINDOW) + b->seat.D;
+        b->cap_before = *cap;
+        if (*cap < want) *cap = want;
+        b->cap_after = *cap;
+    }
+}
+
+/* after agreement: the record's blocks, then its INNER record to the stock receiver */
+static void net_v2_apply(NetV2Bat* b, void* self, const unsigned char* p, const V2Rec* r, LONG64* spent)
+{
+    int i;
+    if (r->blocks & V2B_NAK) {
+        *(volatile int32_t*)(b->cnd + NET_CND_RESEND) = r->nak_frame;
+        b->n_nak++;
+        if (r->nak_frame == 0) b->n_nak0++;
+    }
+    if (r->blocks & V2B_MARGIN) {
+        b->peer_margin = 1;
+        b->peer_a = r->margin_a;
+        b->peer_q = r->margin_q;
+    }
+    for (i = 0; i < r->nhash; i++) {
+        NetV2PeerHash* e;
+        if (r->hash[i].frame < 0) continue;
+        e = &b->peer_hash[r->hash[i].frame & (NET_V2_HASHN - 1)];
+        e->frame = r->hash[i].frame;
+        e->h_core = r->hash[i].h_core;
+        e->h_float = r->hash[i].h_float;
+        e->h_pos = r->hash[i].h_pos;
+        b->n_hash++;
+    }
+    if (r->blocks & V2B_SNAP) {
+        if (b->nsnap == NET_V2_SNAPQ) {               /* H2 has not taken them (a freeze): the newest supersedes */
+            memmove(&b->snap[0], &b->snap[1], (NET_V2_SNAPQ - 1) * sizeof b->snap[0]);
+            b->nsnap--;
+            b->n_snapdrop++;
+        }
+        memcpy(b->snap[b->nsnap].b, p + r->snap_off, 44);
+        b->snap[b->nsnap].frame = (int32_t)v2_rd32(p + r->snap_off);
+        b->nsnap++;
+        b->n_snap++;
+    }
+    if (r->blocks & V2B_INNER) {
+        b->n_inner++;
+        net_v2_stock(self, p + r->inner_off, spent);
+    }
+}
+
+/* rev. 8 (D-S8-4): a count >= 1 record with an entry of frame > 255, or a request beyond -255, among the entries the
+   receiver reads (this seat's format: they come first in both; the walk ends at the first negative frame), is not of
+   this battle's start. A walk that leaves 4,096 bytes or a count over 511 decides nothing here (the record goes on as
+   before: the machine and z0 judge it). Rev. 10 (D-S8-14): `base` -- 0, or in NEW's play the frame being played --
+   moves the bounds to base + 255 and -(base + 255). Rev. 11: net_v2_late_hi takes the bound itself (AGREED's, D-S9-4). */
+static int net_v2_late_hi(const unsigned char* p, int64_t hi)
+{
+    uint32_t n = v2_rd16(p), i, k, at = 2;
+    if (n > NET_V2_Z0_ENT) return 0;
+    for (i = 0; i < n; i++) {
+        int32_t f;
+        uint32_t nc;
+        if (at + 8 > NET_V2_Z0_MAX) return 0;
+        f = (int32_t)v2_rd32(p + at);
+        if (f < 0) return (int64_t)f < -hi;            /* the walk ends: a request beyond -(base + 255) is late */
+        if ((int64_t)f > hi) return 1;
+        nc = v2_rd16(p + at + 6);
+        at += 8;
+        for (k = 0; k < nc; k++) {
+            if (at >= NET_V2_Z0_MAX) return 0;
+            at += (uint32_t)v2_cmd_len(p[at]);
+        }
+        if (at > NET_V2_Z0_MAX) return 0;
+    }
+    return 0;
+}
+static int net_v2_late(const unsigned char* p, int32_t base)
+{
+    return net_v2_late_hi(p, (int64_t)(base > 0 ? base : 0) + 255);
+}
+
+static void net_v2_on_stock_rec(NetV2Bat* b, void* self, const unsigned char* p, LONG64* spent)
+{
+    int a;
+    if (net_v2_late(p, 0)) { b->n_late++; b->last_a = -1; return; }   /* rev. 8: dropped, the machine not told */
+    if (b->seat.state == V2S_AGREED && b->seat.have_peer) {           /* rev. 11 (D-S9-4) */
+        int dm = b->seat.peer.dgame > b->seat.peer.dnew ? b->seat.peer.dgame : b->seat.peer.dnew;
+        if (dm >= 0 && dm < 253 && net_v2_late_hi(p, dm + 2)) { b->n_late++; b->n_ag_bound++; b->last_a = -1; return; }
+        if (b->t_v2 && net_v2_ms_since(b->t_v2) < NET_V2_LIVE_MS) { b->n_late++; b->n_ag_live++; b->last_a = -1; return; }
+    }
+    a = v2s_on_stock(&b->seat);
+    b->last_a = a;
+    b->n_stock++;
+    switch (a) {
+    case V2A_FALLBACK:     b->left_by = b->seat.left; net_v2_mark(&b->t_left); net_v2_stock_z0(b, self, p, spent); break;
+    case V2A_LEAVE_STOCK:  b->left_by = 2; net_v2_mark(&b->t_left); net_v2_stock_z0(b, self, p, spent); break;
+    case V2A_STOCK:        net_v2_stock_z0(b, self, p, spent); break;   /* not reached: NEW's schedule passes above */
+    case V2A_REFUSE_STOCK: net_v2_mark(&b->t_decide); b->n_dropped++; break;
+    default:               b->n_dropped++; break;                    /* a protocol error, or a refused seat */
+    }
+}
+
+static void net_v2_on_v2_rec(NetV2Bat* b, void* self, const unsigned char* p, LONG64* spent)
+{
+    V2Rec r;
+    V2Hello h;
+    int rc, a, prev = b->seat.state;
+    rc = v2_decode(p, V2_MAXPAY, 1, &r);
+    if (rc == V2R_VERSION) {                          /* count 0 and v2's magic: another protocol version (s3.2) */
+        b->n_version++;
+        a = v2s_on_v2(&b->seat, p[4], 0, 0, NULL, -1);
+        b->last_a = a;
+        if (a == V2A_REFUSE_VERSION) net_v2_mark(&b->t_decide);
+        b->n_dropped++;                               /* refused, rejected (after agreement) or a refused seat */
+        return;
+    }
+    if (rc != V2_OK) {
+        if (rc == V2R_CRC) b->n_crc++; else b->n_layout++;
+        return;
+    }
+    if (r.seat != (b->mode ^ 1) || ((r.blocks & V2B_SNAP) && r.seat != 0)) {
+        b->n_layout++;
+        return;
+    }
+    b->n_v2++;
+    if (r.length > b->n_largest) b->n_largest = r.length;
+    if (!v2_is_stale(&r, (uint8_t)b->seat.me.nonce)) {
+        b->v2peer = 1;                                /* rev. 10 (D-S8-15) */
+        if (r.blocks & V2B_HELLO) b->t_v2 = net_v2_qpc();   /* rev. 11 (D-S9-4); rev. 12 (D-S9-8): its HELLO phase */
+        if (b->mode == 0 && !g_v2h_past0) {           /* rev. 2: E1 */
+            g_v2h_past0 = 1;
+            b->n_past0++;
+        }
+    }
+    if (r.blocks & V2B_HELLO) net_v2_hello_of(&r, &h);
+    a = v2s_on_v2(&b->seat, 2, r.d, r.flags, (r.blocks & V2B_HELLO) ? &h : NULL,
+                  (r.blocks & V2B_MARGIN) ? r.margin_echo : -1);
+    b->last_a = a;
+    if ((r.blocks & V2B_COMPAT) && a != V2A_STALE && !v2_is_stale(&r, (uint8_t)b->seat.me.nonce)) {   /* rev. 7 */
+        b->compat = 1;                                /* the peer's COMPAT, in any state of the machine: for the log */
+        b->compat_reason = r.compat_reason;
+        b->compat_mask = r.compat_mask;
+    }
+    if (b->seat.decided || a == V2A_REFUSE_CONTENT) net_v2_mark(&b->t_decide);
+    if (b->seat.decided & V2D_COMMIT) { net_v2_agree(b); net_v2_mark(&b->t_commit); }   /* rev. 8: at the commit */
+    if (prev != V2S_NSCHED && b->seat.state == V2S_NSCHED) { b->left_by = 1; net_v2_mark(&b->t_left); }
+    if (a == V2A_APPLY || a == V2A_APPLY_DMISMATCH) {
+        net_v2_apply(b, self, p, &r, spent);
+        return;
+    }
+    if (a == V2A_HELD) {
+        if (r.blocks & (V2B_NAK | V2B_HASH | V2B_SNAP | V2B_INNER)) b->n_early++;
+        return;
+    }
+    b->n_dropped++;                                   /* stale (the machine counts it too), refused, a refused seat */
+}
+
+static void net_v2_cost(NetV2Bat* b, LONG64 ticks)
+{
+    LONG64 us = (g_net_qpf.QuadPart > 0 && ticks > 0) ? ticks * 1000000 / g_net_qpf.QuadPart : 0;
+    if (us > b->cost_max) b->cost_max = us;
+    b->cost[us < NET_V2_COSTB - 1 ? us : NET_V2_COSTB - 1]++;
+}
+
+/* PacketCharacter slot 3 */
+static void net_v2_recv(void* self, const unsigned char* p)
+{
+    NetV2Bat* b = &g_v2b;
+    uintptr_t cnd = *(const uintptr_t*)((const unsigned char*)self + NET_PC_CND);
+    LARGE_INTEGER t0, t1;
+    LONG64 spent = 0;
+    int c0;
+    if (!b->seq || b->seq != g_net_setup_seq || cnd != b->cnd || *(volatile const int*)cnd != b->mode) {
+        g_net_v2_gate++;
+        o_net_pc_recv(self, p);
+        return;
+    }
+    QueryPerformanceCounter(&t0);
+    b->last_a = -1;
+    c0 = *(volatile const int32_t*)(cnd + NET_CND_RESEND);
+    if ((b->seat.state == V2S_NSCHED || b->seat.state == V2S_FALLBACK) && (p[0] | p[1]) &&
+        net_v2_late(p, *(volatile const int32_t*)(cnd + NET_CND_F))) {
+        b->n_late++;                                           /* rev. 10 (D-S8-14): dropped, not noted */
+    } else if (b->seat.state == V2S_NSCHED || b->seat.state == V2S_FALLBACK) {
+        if (p[0] | p[1]) b->last_a = v2s_on_stock(&b->seat);   /* noted: NEW's schedule stops its repeat (nu029) */
+        else net_v2_new_ctl(b, p);                             /* rev. 2 */
+        b->n_pass++;
+        if (p[0] | p[1]) net_v2_stock_z0(b, self, p, &spent); /* rev. 3 */
+        else net_v2_stock(self, p, &spent);
+    } else if (p[0] | p[1]) {
+        net_v2_on_stock_rec(b, self, p, &spent);
+    } else {
+        net_v2_on_v2_rec(b, self, p, &spent);
+    }
+    if ((p[0] | p[1]) && b->mode == 0 && !g_v2h_past0) {       /* rev. 2: E2, the guest asked for a frame >= 1 */
+        int c1 = *(volatile const int32_t*)(cnd + NET_CND_RESEND);
+        if (c1 != c0 && c1 >= 1) { g_v2h_past0 = 1; b->n_past0++; }
+    }
+    QueryPerformanceCounter(&t1);
+    net_v2_cost(b, t1.QuadPart - t0.QuadPart - spent);
+}
+
+/* At DllMain, with `scheme 2` (PART 41's other v2 hooks beside it; any refusal turns v2 off for the session, r3 s13):
+   the slot must hold the stock receiver; claimed (8 bytes of .rdata) before it is written; the stock pointer is
+   saved before the slot changes, so recv2 never runs without it. */
+static const char* net_v2_recv_install(void)
+{
+    void** vt = (void**)(g_net_mod + NET_RVA_PC_VT);
+    void* stock = (void*)(g_net_mod + NET_RVA_PC_RECV);
+    void* saved = NULL;
+    if (vt[3] != stock)
+        return "REFUSED, exe+0x14A37C8 (PacketCharacter's slot 3) is not the stock receiver 0x7FF820";
+    if (!bros_claim(BROS_MASTER_OWNER, NET_RVA_PC_SLOT3, 8,
+                    "PART 41 NETUP v2 (H7): recv2 -- PacketCharacter's vtable slot 3 (the record receiver 0x7FF820) "
+                    "-> protocol v2's receive side, which hands stock records and v2's inner records to 0x7FF820"))
+        return "REFUSED, the slot is claimed by another owner";
+    o_net_pc_recv = (net_pc_recv_t)stock;
+    if (!patch_slot(vt, 3, (void*)&net_v2_recv, &saved) || saved != stock)
+        return "REFUSED, VirtualProtect failed";      /* the claim stays, the slot unchanged */
+    g_net_on_v2recv = 1;
+    return "on (exe+0x14A37C8: PacketCharacter's slot 3 -> recv2)";
+}
+/* ---- end of v2_h7.c ---- */
+/* ---- NETUP part 2: H3 hb2, rev. 6 (nu034-nu038, nu042, nu045, nu057, nu059) (v2_hb2.c, md5 f255ffe0), unchanged ---- */
+/* ---- NETUP part 2, S3 (pass nu): H3 -- hb2, the host's builder at its call site --------------------------------
+   Design: notes\PART2_S3_NOTES.md (nu034). Base: SPEC_BUILD4 r3 s5.1, s6, s3, s4.6, s7, s13; S2c's repeat (nu028-
+   nu030); F-S2c-2's fix (Berg, nu030; nu031-nu033): its host parts here (serve0, h1, f0req's sending), its guest parts
+   in gb2 (S4), its receive half in recv2 (H7 revision 2), the gate in H2 (S5) -- reading this file's built_max.
+   Where. capture_send (0x807190): after PushLocalInput, cnd = [PacketCharacter+0x50]; mode [cnd] 0 calls the host
+   builder 0x1AB7C0 at 0x8072AC (E8 0F 45 9A FF); the return is stored at [PacketCharacter+0x58] and sent (0x806FD0)
+   only when not 0. hb2 has the builder's signature (rcx = cnd; a data object or 0).
+   Which battle. As recv2: the battle H1 began (g_v2b), this setup, this manager, the host. Otherwise the stock
+   builder, its result unchanged.
+   Per state of S2a's machine:
+   - the HELLO phase (HELD, NSW, REFUSED): never the stock builder (r3 s4.6); a HELLO-phase record every 16 ms of wall
+     time (v2s_tick), else 0;
+   - NEW's schedule, a fallback: the stock builder; around it, F-S2c-2's host parts -- serve0 (frame 0 asked for while
+     the stock path cannot resend it: the first record's kept bytes), built_max (a build of label F detected exactly:
+     cnd+0x68 not F before the call, F after it), the first record kept, h1 (after the stock request fired at F >= 1,
+     cnd+0xC0 = 0 for the next call, until the guest shows it is past frame 0); in a call that returned nothing,
+     f0req (NAK -(0 + 1) on Part 1's timer while stalled at frame 0) and S2c's repeat, in one record;
+     Revision 2 (nu038, notes\PART2_S4_NOTES.md s3.3 / s5): the stock "-0" never goes. When the stamp moved during the
+     stock call at F == 0 with last_built 0 (the stock NAK path -- Part 1's frame-0 marker keeps it from firing, but
+     not when Part 1's resend hook is off), the record it returned is the lone request entry: checked (12 bytes, count
+     1, frame 0, no commands, flag 0) it is not sent and f0req goes in its place in the same call (its timer counted as
+     firing now); anything else is sent as before, counted;
+   - V2 (agreed): hb2 builds (r3 s5.1): resend from hb2's history (frame 0 included), NAK -(F + 1) on the stock clock,
+     the first build's burst F .. F + D from slots D .. 0, then F + D from slot 0, the window, option B, INNER newest
+     first, trimmed to 1,194 bytes, CRC. Revision 3 (nu042): option B's trigger and SNAP only when both seats agreed to
+     it (S2a's features, r3 s11: optb is AND-ed); HASH comes from H2, which fills g_v2local only when the hash is agreed.
+   Revision 4 (S6, nu045; notes\PART2_S6_NOTES.md s2.5, s4): every call in this seat's v2 battle first takes MARGIN's
+   two values from S6 (A, or -32,768 unknown; Q = cnd+0x88, the guest's entries in hand, clamped to 255) -- until now
+   zeros; in V2 with the balance agreed (`V2F_TEMPO`, both seats' `vtempo 1`: off by default, D-S6-9) it then runs
+   S6's controller once per frame consumed (the word the sync step left, raised for a burst; never lowered).
+   Revision 5 (S8, VX_P2 F1 / F2 / F3; notes\PART2_S8_PLAN.md D-S8-1, D-S8-2, D-S8-6, D-S8-7): S2a revision 2's AGREED
+   is part of the HELLO phase here (a HELLO-phase record every 16 ms, now with hello_seen; never the stock builder); in
+   HELD every call first asks H7's net_v2_silence (1,000 ms with nothing of the peer heard -> a fallback, whose call
+   then goes on to the stock builder at once); in a fallback stalled at F == 0, against a peer that has sent no valid v2
+   record in this battle (a stock seat, which reads f0req as empty), the kept first record (label 0) goes in f0req's
+   place on f0req's timer (counted f0keep); V2's resend works only on a NAK at or below the newest label built (a NAK
+   beyond it -- up to 2^31 - 1 from the network -- finds nothing, as before, without the loop's int overflow).
+   Revision 6 (S8 step 6, nu059; the two-seat world): in a fallback stalled at F == 0 against a peer that HAS sent v2
+   records, f0req's timer now alternates the kept first record (first) and f0req (counted f0keep and f0keep2). A v2 peer
+   still in its HELLO phase (set up a second or more later, or behind a one-way outage) reads f0req as a v2 record
+   without a HELLO -- heard, still held -- and never left HELD; the kept record is a stock record, on which it falls
+   back. A v2 peer playing NEW gets f0req every other time and takes the kept record as this seat's own label 0.
+   INNER is encoded here (design change, the note's s4): u16 count; per entry i32 frame, u16 word, u16 n, the commands
+   (2 bytes, or 6 for the types 0x03 0x04 0x09 0x1F); a u16 flag per entry, all 0 -- what 0x1AA9A0 / 0x1AA550 write,
+   proven against them in emulation (emu_hb2.py).
+   Threads: capture_send, recv2 and H1 all run on the main thread; the watch thread reads the counters at the battle's
+   end. No allocation, no lock, no I/O. */
+#define NET_RVA_HB_CALL     0x8072ACu   /* capture_send: call 0x1AB7C0 (E8 0F 45 9A FF)                          */
+#define NET_RVA_HB          0x1AB7C0u   /* the stock host builder                                                 */
+#define NET_RVA_HND_VT      0x1433C18u  /* HostNetworkData's vtable: slot 0 -> [obj+8], slot 1 -> [obj+0x10]       */
+#define NET_RVA_SNAP_TRIG   0x1AC750u   /* option B's trigger (cnd+0x50, cnd+0x6C, cnd+0xDC) -> al                */
+#define NET_RVA_SNAP_FILL   0x1AB4A0u   /* (cnd, p1[20], p2[20])                                                  */
+#define NET_CND_RTT         0x08        /* u64 ms: RTT' (the setup's)                                             */
+#define NET_CND_DQ          0x20        /* the delay line: a std::deque (its proxy pointer at +0)                 */
+#define NET_CND_DQOFF       0x38        /* u64 offset                                                             */
+#define NET_CND_DQSIZE      0x40        /* u64 size                                                               */
+#define NET_CND_FIGHTERS    0x50        /* the fighters' records (0x48 bytes each, the fighter at +0x20)           */
+#define NET_CND_LAST        0x68        /* int: last_built                                                        */
+#define NET_CND_TRIG1       0x6C
+#define NET_CND_F           0xB8        /* int: the frame being played                                            */
+#define NET_CND_STAMP       0xC8        /* u64 ns: the stall's (or the last request's) stamp                       */
+#define NET_CND_IVL         0xD0        /* u64 ms: the request interval                                           */
+#define NET_CND_STALL       0xD8        /* u8: stalled                                                            */
+#define NET_CND_TRIG2       0xDC
+#define NET_HB_RING         128         /* hb2's history (r3 s5.1)                                                */
+#define NET_HB_ENTRY_MAX    1162        /* an entry's command bytes that can ever ride in one record              */
+#define NET_P1_NEVER        0x7FFFFFFFu /* Part 1's "no request at frame 0" interval (net_resend_install)          */
+
+typedef unsigned char (*net_hb_trig_t)(void* fighters, void* t1, void* t2);
+typedef void  (*net_hb_fill_t)(void* cnd, unsigned char* p1, unsigned char* p2);
+typedef void* (*net_hb_t)(void* cnd);
+
+typedef struct {                        /* one label hb2 has built (v2): its wire commands, deep-copied           */
+    int32_t  label;                     /* -1: empty                                                              */
+    uint16_t word, n, len;              /* the tick-rate word; commands; their wire bytes                          */
+    uint8_t  oversize;                  /* more command bytes than any record can carry: never sent, counted       */
+    uint8_t  cmd[NET_HB_ENTRY_MAX];
+} NetHbEntry;
+
+typedef struct {                        /* what H2 (S5) and S6 report; zero until they run                         */
+    int16_t a_tenths;                   /* this seat's smoothed arrival margin, 0.1 ms (S6; -32,768 unknown)      */
+    uint8_t q;                          /* entries in hand (S6)                                                   */
+    uint8_t nhash;
+    V2Hash  hash[2];
+} NetV2Local;
+
+typedef struct {
+    LONG     seq;                       /* g_v2b's battle this state belongs to (0: none)                          */
+    uint16_t nsamples;                  /* the HELLO's "samples behind P" (H1)                                     */
+    /* NEW-playing */
+    int      built_max;                 /* the highest label built in this battle (-1 none): H2's gate (S5)        */
+    uint16_t first_len;                 /* the first record's bytes (serve0)                                       */
+    uint8_t  first[V2_MAXPAY + 4];
+    LONG64   f0_stamp, f0_last;         /* f0req's timer: the stall it follows, its last request (ns; 0 none)      */
+                                        /* (the guest past frame 0: g_v2h_past0, recv2's -- H7 rev. 2)             */
+    /* v2 */
+    int      first_build_done;
+    int      pend_lo, pend_hi;          /* burst labels a trim deferred to the next call (lo > hi: none)          */
+    NetHbEntry ring[NET_HB_RING];       /* by label mod 128                                                       */
+    int      newest;                    /* the newest label built (-1 none)                                       */
+    /* counters */
+    LONG64   n_calls, n_stock, n_hello, n_f0req, n_repeat, n_serve0, n_h1, n_first_kept, n_first_bad, n_builds,
+             n_burst, n_resend, n_resend_miss, n_nak, n_nak0, n_snap, n_trim_w, n_trim_b, n_trim_r, n_oversize,
+             n_largest, n_enc_err;
+    LONG64   n_m0, n_m0_bad;            /* rev. 2: the stock "-0" withheld (f0req instead); one not as expected   */
+    LONG64   n_f0keep;                  /* rev. 5: the kept first record sent in f0req's place (a stock peer)       */
+    LONG64   n_f0keep2;                 /* rev. 6: of them, to a peer that has sent v2 records (alternating)       */
+    int      f0_alt;                    /* rev. 6: the alternation's phase (1: the kept record went last)          */
+} NetV2Host;
+
+static NetV2Host     g_v2h;
+static NetV2Local    g_v2local;
+static net_hb_t      o_net_hb;          /* the stock 0x1AB7C0 */
+static net_hb_trig_t o_net_hb_trig;
+static net_hb_fill_t o_net_hb_fill;
+static int           g_net_on_hb2;
+static volatile LONG64 g_net_hb2_unsynced;      /* a v2 battle whose hb2 state H1 did not begin: stock (never seen) */
+static const char*   g_net_why_hb2 = "off";
+static struct { void* vt; unsigned char* buf; uint64_t size; } g_hb2_obj;   /* the data object hb2 returns */
+static unsigned char g_hb2_buf[V2_MAXPAY + 4];
+static unsigned char* g_hb2_thunk;      /* next to the exe: mov rax, imm64; jmp rax */
+
+/* the game's steady clock in ns (0x1AB97B-0x1AB9AF: MSVC's steady_clock over QueryPerformanceCounter) */
+static LONG64 net_steady_ns(void)
+{
+    LARGE_INTEGER c;
+    LONG64 f = g_net_qpf.QuadPart;
+    QueryPerformanceCounter(&c);
+    if (f == 10000000) return c.QuadPart * 100;
+    if (f <= 0) return 0;
+    return (c.QuadPart / f) * 1000000000LL + (c.QuadPart % f) * 1000000000LL / f;
+}
+
+/* Part 1's request timer: the first request min(RTT', first) ms after a stall began, then every `again` ms (Part 1
+   off: RTT' and 300, the stock's) */
+static LONG64 net_hb_first_ms(uintptr_t cnd)
+{
+    LONG64 rtt = (LONG64)*(volatile const uint64_t*)(cnd + NET_CND_RTT);
+    return (g_net_on_first > 0 && rtt > g_net_on_first) ? g_net_on_first : rtt;
+}
+static LONG64 net_hb_again_ms(void) { return g_net_on_again > 0 ? g_net_on_again : 300; }
+
+static int net_rdi(uintptr_t cnd, int off) { return *(volatile const int*)(cnd + off); }
+static void net_wri(uintptr_t cnd, int off, int v) { *(volatile int*)(cnd + off) = v; }
+
+/* called by H1's net_v2_bat_begin for every v2 battle (and by nothing else) */
+static void net_v2_host_begin(LONG seq, uint16_t nsamples)
+{
+    int i;
+    memset(&g_v2h, 0, sizeof g_v2h);
+    g_v2h.built_max = -1;
+    g_v2h.newest = -1;
+    g_v2h.pend_lo = 1; g_v2h.pend_hi = 0;
+    for (i = 0; i < NET_HB_RING; i++) g_v2h.ring[i].label = -1;
+    g_v2h.nsamples = nsamples;
+    memset(&g_v2local, 0, sizeof g_v2local);
+    g_v2h.seq = seq;
+}
+
+/* ------------------------------------------------------------------ records */
+static void net_hb_whello(const V2Hello* m, uint16_t nsamples, V2WHello* w)
+{
+    memset(w, 0, sizeof *w);
+    w->P_ms = (uint16_t)m->P; w->nsamples = nsamples; w->rtt_ms = (uint16_t)m->rtt; w->M_ms = (uint8_t)m->M;
+    w->pctl = (uint8_t)m->pctl; w->dmin = (uint8_t)m->dmin; w->dmax = (uint8_t)m->dmax; w->d_game = (uint8_t)m->dgame;
+    w->window = (uint8_t)m->window; w->d_new = (uint8_t)m->dnew; w->new_src = (uint8_t)m->newsrc;
+    w->nonce = (uint8_t)m->nonce; w->build_id = m->build; w->content_id = m->content; w->settings_id = m->settings;
+}
+
+static void* net_hb_obj(int len)
+{
+    if (len <= 0) { g_v2h.n_enc_err++; return 0; }
+    if (len > g_v2h.n_largest) g_v2h.n_largest = len;
+    g_hb2_obj.vt = g_net_mod + NET_RVA_HND_VT;
+    g_hb2_obj.buf = g_hb2_buf;
+    g_hb2_obj.size = (uint64_t)len;
+    return &g_hb2_obj;
+}
+
+/* a record of the HELLO phase (and, in NEW's schedule or a fallback, f0req's and the repeat's): header by v2s_out,
+   HELLO while the machine says so, MARGIN (always, with the echo), NAK -(nak + 1) when nak >= 0, COMPAT when refused */
+static void* net_hb_control(NetV2Bat* b, int nak)
+{
+    V2Enc e;
+    V2WHello w;
+    int d, flags, hello, echo;
+    v2s_out(&b->seat, &d, &flags, &hello, &echo);
+    v2e_begin(&e, g_hb2_buf, V2_MAXPAY, 0, (uint8_t)d, (uint16_t)flags);
+    if (hello) { net_hb_whello(&b->seat.me, g_v2h.nsamples, &w); v2e_hello(&e, &w); }
+    if (nak >= 0) v2e_nak(&e, nak);
+    v2e_margin(&e, g_v2local.a_tenths, g_v2local.q, (uint8_t)echo);
+    if (b->seat.state == V2S_REFUSED) v2e_compat(&e, (uint8_t)b->seat.reason, (uint8_t)b->seat.mask);
+    return net_hb_obj(v2e_end(&e));
+}
+
+/* ------------------------------------------------------------------ the delay line (the game's own reads) */
+static const unsigned char* net_hb_slot(uintptr_t cnd, uint64_t k)
+{
+    uintptr_t proxy = *(volatile const uintptr_t*)(cnd + NET_CND_DQ), cont, map;
+    uint64_t msize, off = *(volatile const uint64_t*)(cnd + NET_CND_DQOFF);
+    if (k >= *(volatile const uint64_t*)(cnd + NET_CND_DQSIZE) || !proxy) return 0;
+    cont = *(volatile const uintptr_t*)proxy;          /* 0x1ABB01-0x1ABB6F: [[cnd+0x20]] -> +8 map, +0x10 map size */
+    if (!cont) return 0;
+    map = *(volatile const uintptr_t*)(cont + 8);
+    msize = *(volatile const uint64_t*)(cont + 0x10);
+    if (!map || !msize) return 0;
+    return *(const unsigned char* const*)(map + ((off + k) & (msize - 1)) * 8);
+}
+
+static int net_cmd_len(uint8_t t) { return (t == 0x03 || t == 0x04 || t == 0x09 || t == 0x1F) ? 6 : 2; }
+
+/* a delay-line element -> a history entry labelled `label` */
+static NetHbEntry* net_hb_take(const unsigned char* el, int label)
+{
+    NetHbEntry* h = &g_v2h.ring[label & (NET_HB_RING - 1)];
+    const unsigned char* c = *(const unsigned char* const*)(el + 8);
+    const unsigned char* end = *(const unsigned char* const*)(el + 0x10);
+    uint64_t n = (c && end > c) ? (uint64_t)(end - c) / 6 : 0, i;
+    uint32_t len = 0;
+    h->label = label;
+    h->word = *(const uint16_t*)(el + 0x20);
+    h->n = (uint16_t)(n > 0xFFFF ? 0xFFFF : n);
+    h->oversize = 0;
+    for (i = 0; i < n; i++) {
+        int l = net_cmd_len(c[6 * i]);
+        if (len + l > NET_HB_ENTRY_MAX || n > 0xFFFF) { h->oversize = 1; break; }
+        memcpy(h->cmd + len, c + 6 * i, l);
+        len += l;
+    }
+    h->len = (uint16_t)len;
+    if (h->oversize) g_v2h.n_oversize++;
+    if (label > g_v2h.newest) g_v2h.newest = label;
+    return h;
+}
+
+static const NetHbEntry* net_hb_find(int label)
+{
+    const NetHbEntry* h;
+    if (label < 0) return 0;
+    h = &g_v2h.ring[label & (NET_HB_RING - 1)];
+    return h->label == label ? h : 0;
+}
+
+/* INNER: u16 count, the entries, then a u16 flag (0) per entry */
+static uint32_t net_hb_inner(unsigned char* out, const int* lab, int n)
+{
+    uint32_t p = 2;
+    int i;
+    v2_wr16(out, (uint16_t)n);
+    for (i = 0; i < n; i++) {
+        const NetHbEntry* h = net_hb_find(lab[i]);
+        v2_wr32(out + p, (uint32_t)h->label);
+        v2_wr16(out + p + 4, h->word);
+        v2_wr16(out + p + 6, h->n);
+        memcpy(out + p + 8, h->cmd, h->len);
+        p += 8 + h->len;
+    }
+    for (i = 0; i < n; i++) { v2_wr16(out + p, 0); p += 2; }
+    return p;
+}
+
+static uint32_t net_hb_entry_size(int label)
+{
+    const NetHbEntry* h = net_hb_find(label);
+    return h ? 10u + h->len : 0u;                     /* 8 + commands + the u16 flag */
+}
+
+/* ------------------------------------------------------------------ V2: hb2 builds (r3 s5.1) */
+#define NET_HB_MAXLAB 64                               /* burst (<= 15) + window (<= 16) + resend (<= 16) + pending */
+static void* net_hb_v2(NetV2Bat* b, uintptr_t cnd)
+{
+    int F = net_rdi(cnd, NET_CND_F), D = net_rdi(cnd, NET_CND_D), W = net_rdi(cnd, NET_CND_WINDOW);
+    int c0 = net_rdi(cnd, NET_CND_RESEND), last = net_rdi(cnd, NET_CND_LAST);
+    int lab[NET_HB_MAXLAB], cat[NET_HB_MAXLAB], n = 0, nak = -1, snap = 0, i, j, k, built = 0, res[16], nres = 0;
+    unsigned char sb[44], inner[V2_MAXPAY];
+    uint32_t fixed, total, ilen;
+    V2Enc e;
+    int d, flags, hello, echo;
+    if (W < 1) W = 1;
+    if (W > 16) W = 16;
+#define NET_HB_ADD(L, C) do { int _l = (L), _q; for (_q = 0; _q < n && lab[_q] != _l; _q++) {} \
+        if (_q == n && n < NET_HB_MAXLAB && net_hb_find(_l)) { lab[n] = _l; cat[n] = (C); n++; } } while (0)
+    /* 1. the resend asked for (frame 0 included; r3 s6), from what hb2 has built */
+    if (c0 >= 0) {
+        if (c0 <= g_v2h.newest)                        /* rev. 5 (F3): beyond the newest label nothing is held */
+            for (k = c0; k < c0 + W && nres < 16; k++)
+                if (net_hb_find(k)) res[nres++] = k;
+        if (!nres) g_v2h.n_resend_miss++;
+        g_v2h.n_resend++;
+        net_wri(cnd, NET_CND_RESEND, -1);
+    }
+    /* 2. the request (the stock's test, 0x1AB955-0x1ABA1B; Part 1's frame-0 marker read as its first interval) */
+    if (last == F && *(volatile const uint8_t*)(cnd + NET_CND_STALL)) {
+        LONG64 now = net_steady_ns(), el = (now - *(volatile const LONG64*)(cnd + NET_CND_STAMP)) / 1000000;
+        uint64_t ivl = *(volatile const uint64_t*)(cnd + NET_CND_IVL);
+        if (F == 0 && ivl == NET_P1_NEVER) ivl = (uint64_t)net_hb_first_ms(cnd);
+        if (el > 0 && (uint64_t)el > ivl) {
+            *(volatile LONG64*)(cnd + NET_CND_STAMP) = now;
+            *(volatile uint64_t*)(cnd + NET_CND_IVL) = (uint64_t)net_hb_again_ms();
+            nak = F;
+            g_v2h.n_nak++;
+            if (F == 0) g_v2h.n_nak0++;
+        }
+    }
+    /* 3. the build (the stock's condition, 0x1ABAAF: last_built != F and the delay line holds more than D) */
+    if (last != F && D >= 0 && *(volatile const uint64_t*)(cnd + NET_CND_DQSIZE) > (uint64_t)D) {
+        if (!g_v2h.first_build_done) {
+            for (j = D; j >= 0; j--) {                 /* the burst: F .. F + D from slots D .. 0 */
+                const unsigned char* el = net_hb_slot(cnd, (uint64_t)j);
+                if (!el) break;
+                net_hb_take(el, F + D - j);
+            }
+            g_v2h.first_build_done = 1;
+            g_v2h.pend_lo = F; g_v2h.pend_hi = F + D;  /* every burst label is "new" in this record */
+            g_v2h.n_burst++;
+        } else {
+            const unsigned char* el = net_hb_slot(cnd, 0);
+            if (el) net_hb_take(el, F + D);
+            if (g_v2h.pend_lo > g_v2h.pend_hi) { g_v2h.pend_lo = F + D; g_v2h.pend_hi = F + D; }
+            else if (F + D > g_v2h.pend_hi) g_v2h.pend_hi = F + D;
+        }
+        /* option B: once per build, as the stock builder (0x1ABBA8-0x1ABBF1) */
+        {
+            uintptr_t fv = *(volatile const uintptr_t*)(cnd + NET_CND_FIGHTERS);
+            int skip = 0;
+            for (k = 0; k < 2 && fv; k++) {
+                uintptr_t f = *(volatile const uintptr_t*)(fv + 0x48 * k + 0x20);
+                if (f && *(volatile const uint8_t*)(f + 0x9A8)) { skip = 1; break; }
+            }
+            if (!skip && (b->seat.features & V2F_OPTB) && o_net_hb_trig &&      /* rev. 3: option B agreed */
+                o_net_hb_trig((void*)(cnd + NET_CND_FIGHTERS), (void*)(cnd + NET_CND_TRIG1),
+                                                        (void*)(cnd + NET_CND_TRIG2))) {
+                memset(sb, 0, sizeof sb);
+                v2_wr32(sb, (uint32_t)F);              /* the state after tick F - 1 (r3 s7) */
+                o_net_hb_fill((void*)cnd, sb + 4, sb + 24);
+                sb[22] = sb[23] = 0; sb[42] = sb[43] = 0;   /* the u16 0 after each fighter's two state bytes */
+                snap = 1;
+                g_v2h.n_snap++;
+            }
+        }
+        net_wri(cnd, NET_CND_LAST, F);                 /* 0x1ABD72: PushLocalInput's guard holds the line still */
+        if (F + D > g_v2h.built_max) g_v2h.built_max = F + D;
+        g_v2h.n_builds++;
+        built = 1;
+    }
+    /* 4. INNER, newest first, each label once: the new labels (the burst, or F + D, and any a trim deferred), the
+       window's earlier labels, the resend's (r3 F8) */
+    if (built || g_v2h.pend_lo <= g_v2h.pend_hi)
+        for (k = g_v2h.pend_hi; k >= g_v2h.pend_lo; k--) NET_HB_ADD(k, 0);
+    if (built) {
+        int top = n ? lab[n - 1] : F + D;              /* the oldest new label */
+        int w = 0;
+        for (k = top - 1; k >= 0 && w < W - 1 && k > g_v2h.newest - NET_HB_RING; k--)
+            if (net_hb_find(k)) { NET_HB_ADD(k, 1); w++; }
+    }
+    for (i = nres - 1; i >= 0; i--) NET_HB_ADD(res[i], 2);
+    for (i = 0; i < n; i++)                            /* an entry no record can carry: never sent */
+        if (net_hb_find(lab[i])->oversize) { memmove(lab + i, lab + i + 1, (n - i - 1) * sizeof lab[0]);
+                                             memmove(cat + i, cat + i + 1, (n - i - 1) * sizeof cat[0]); n--; i--; }
+    if (!n && nak < 0) {
+        g_v2h.pend_lo = 1; g_v2h.pend_hi = 0;
+        return 0;                                      /* nothing to send, as the stock builder */
+    }
+    /* 5. the size: header 16, HELLO 28 (until the peer holds this seat's HELLO), MARGIN 4, NAK 4, HASH 1 + 16 n,
+       SNAP 44, INNER 2 + entries; trim to 1,194 */
+    v2s_out(&b->seat, &d, &flags, &hello, &echo);
+    fixed = V2_HDR + (hello ? 28 : 0) + 4 + (nak >= 0 ? 4 : 0) + (g_v2local.nhash ? 1 + 16u * g_v2local.nhash : 0) +
+            (snap ? 44 : 0);
+    total = fixed + (n ? 2 : 0);
+    for (i = 0; i < n; i++) total += net_hb_entry_size(lab[i]);
+    while (n && total > V2_MAXPAY) {
+        int drop = -1, best;
+        for (i = 0, best = 0x7FFFFFFF; i < n; i++) if (cat[i] == 1 && lab[i] < best) { best = lab[i]; drop = i; }
+        if (drop >= 0) g_v2h.n_trim_w++;               /* the window's oldest first: each was sent before */
+        else {
+            for (i = 0, best = -1; i < n; i++) if (cat[i] == 0 && lab[i] > best) { best = lab[i]; drop = i; }
+            if (drop >= 0) g_v2h.n_trim_b++;           /* a new label: kept pending for the next call */
+            else {
+                for (i = 0, best = -1; i < n; i++) if (lab[i] > best) { best = lab[i]; drop = i; }
+                g_v2h.n_trim_r++;                      /* the peer asks again for what is left out */
+            }
+        }
+        total -= net_hb_entry_size(lab[drop]);
+        memmove(lab + drop, lab + drop + 1, (n - drop - 1) * sizeof lab[0]);
+        memmove(cat + drop, cat + drop + 1, (n - drop - 1) * sizeof cat[0]);
+        n--;
+        if (!n) total -= 2;
+    }
+    /* the new labels sent now are no longer pending */
+    {
+        int lo = 1, hi = 0;
+        for (k = g_v2h.pend_lo; k <= g_v2h.pend_hi; k++) {
+            for (i = 0; i < n && !(lab[i] == k && cat[i] == 0); i++) {}
+            if (i == n) { if (lo > hi) { lo = k; hi = k; } else hi = k; }
+        }
+        g_v2h.pend_lo = lo; g_v2h.pend_hi = hi;
+    }
+    if (!n && nak < 0) return 0;
+    /* 6. encode */
+    v2e_begin(&e, g_hb2_buf, V2_MAXPAY, 0, (uint8_t)d, (uint16_t)flags);
+    if (hello) { V2WHello w; net_hb_whello(&b->seat.me, g_v2h.nsamples, &w); v2e_hello(&e, &w); }
+    if (nak >= 0) v2e_nak(&e, nak);
+    v2e_margin(&e, g_v2local.a_tenths, g_v2local.q, (uint8_t)echo);
+    if (g_v2local.nhash) v2e_hash(&e, g_v2local.nhash, g_v2local.hash);
+    if (snap) v2e_snap_raw(&e, sb);
+    if (n) { ilen = net_hb_inner(inner, lab, n); v2e_inner(&e, inner, ilen); }
+    return net_hb_obj(v2e_end(&e));
+#undef NET_HB_ADD
+}
+
+/* ------------------------------------------------------------------ NEW-playing: the stock builder, with the fix */
+static void* net_hb_new(NetV2Bat* b, uintptr_t cnd)
+{
+    int F = net_rdi(cnd, NET_CND_F), lb0 = net_rdi(cnd, NET_CND_LAST), c0 = net_rdi(cnd, NET_CND_RESEND), lb1;
+    LONG64 st0 = *(volatile const LONG64*)(cnd + NET_CND_STAMP);
+    int serve0 = c0 == 0 && lb0 == 0 && F == 0 && g_v2h.first_len > 0, m0 = 0;
+    void* r;
+    g_v2h.n_stock++;
+    r = o_net_hb((void*)cnd);
+    lb1 = net_rdi(cnd, NET_CND_LAST);
+    if (r && F == 0 && lb0 == 0 && *(volatile const LONG64*)(cnd + NET_CND_STAMP) != st0) {   /* rev. 2: "-0" */
+        const struct { void* vt; const unsigned char* buf; uint64_t size; }* o = r;
+        if (o->vt == (void*)(g_net_mod + NET_RVA_HND_VT) && o->buf && o->size == 12 && v2_rd16(o->buf) == 1 &&
+            v2_rd32(o->buf + 2) == 0 && v2_rd16(o->buf + 8) == 0 && v2_rd16(o->buf + 10) == 0) {
+            r = 0;
+            m0 = 1;
+            g_v2h.n_m0++;
+        } else g_v2h.n_m0_bad++;
+    }
+    if (r && lb0 != F && lb1 == F) {                   /* the call built label F (0x1ABD72) */
+        if (F > g_v2h.built_max) g_v2h.built_max = F;
+        if (F == 0 && !g_v2h.first_len) {              /* the battle's first record: kept for serve0 */
+            const struct { void* vt; const unsigned char* buf; uint64_t size; }* o = r;
+            if (o->vt == (void*)(g_net_mod + NET_RVA_HND_VT) && o->buf && o->size >= 10 && o->size <= V2_MAXPAY + 4 &&
+                (o->buf[0] | o->buf[1]) && v2_rd32(o->buf + 2) == 0) {
+                memcpy(g_v2h.first, o->buf, (size_t)o->size);
+                g_v2h.first_len = (uint16_t)o->size;
+                g_v2h.n_first_kept++;
+            } else g_v2h.n_first_bad++;
+        }
+    }
+    /* h1: the stock request fired in this call (its stamp moved; 0x1ABA14) at F >= 1, the guest not seen past frame
+       0 and no resend pending: resend from frame 0 in the next call */
+    if (F >= 1 && lb0 == F && *(volatile const LONG64*)(cnd + NET_CND_STAMP) != st0 && !g_v2h_past0 &&
+        net_rdi(cnd, NET_CND_RESEND) < 0) {
+        net_wri(cnd, NET_CND_RESEND, 0);
+        g_v2h.n_h1++;
+    }
+    if (r) return r;                                   /* one record per call: the stock's goes alone */
+    if (serve0) {
+        memcpy(g_hb2_buf, g_v2h.first, g_v2h.first_len);
+        g_v2h.n_serve0++;
+        return net_hb_obj(g_v2h.first_len);
+    }
+    {
+        int f0 = 0, rep;
+        if (F == 0 && *(volatile const uint8_t*)(cnd + NET_CND_STALL)) {
+            LONG64 now = net_steady_ns(), stamp = *(volatile const LONG64*)(cnd + NET_CND_STAMP);
+            if (stamp != g_v2h.f0_stamp) { g_v2h.f0_stamp = stamp; g_v2h.f0_last = 0; }
+            if (m0 || (g_v2h.f0_last == 0 ? (now - stamp) / 1000000 > net_hb_first_ms(cnd)
+                                          : (now - g_v2h.f0_last) / 1000000 > net_hb_again_ms())) {
+                g_v2h.f0_last = now;
+                f0 = 1;
+            }
+        } else g_v2h.f0_stamp = g_v2h.f0_last = 0;
+        rep = b->seat.state == V2S_NSCHED && !b->seat.got_stock &&
+              v2s_tick(&b->seat, net_steady_ns() / 1000);
+        if (f0 && !rep && b->seat.state == V2S_FALLBACK && g_v2h.first_len > 0 &&
+            ((!b->n_v2 && !b->n_ctl) || (g_v2h.f0_alt ^= 1) != 0)) {   /* rev. 6: a v2 peer every other time */
+            memcpy(g_hb2_buf, g_v2h.first, g_v2h.first_len);   /* rev. 5 (D-S8-6): label 0 for a stock guest */
+            g_v2h.n_f0keep++;
+            if (b->n_v2 || b->n_ctl) g_v2h.n_f0keep2++;
+            return net_hb_obj(g_v2h.first_len);
+        }
+        if (!f0 && !rep) return 0;
+        if (f0) g_v2h.n_f0req++;
+        if (rep) g_v2h.n_repeat++;
+        return net_hb_control(b, f0 ? 0 : -1);
+    }
+}
+
+/* ------------------------------------------------------------------ H3 */
+static void net_v2_tm_margin(uintptr_t cnd, int mode, int16_t* a, uint8_t* q);   /* v2_tempo.c (S6; rev. 4) */
+static void net_v2_tm_tick(LONG seq, int a_peer, int d);                         /* v2_tempo.c (S6; rev. 4) */
+
+static void* net_v2_hb2(void* vcnd)
+{
+    NetV2Bat* b = &g_v2b;
+    uintptr_t cnd = (uintptr_t)vcnd;
+    if (!b->seq || b->seq != g_net_setup_seq || cnd != b->cnd || b->mode != 0 || *(volatile const int*)cnd != 0)
+        return o_net_hb(vcnd);
+    if (g_v2h.seq != b->seq) { g_net_hb2_unsynced++; return o_net_hb(vcnd); }
+    g_v2h.n_calls++;
+    net_v2_tm_margin(cnd, 0, &g_v2local.a_tenths, &g_v2local.q);                /* rev. 4: MARGIN's A and Q */
+    if (b->seat.state == V2S_V2 && (b->seat.features & V2F_TEMPO))               /* rev. 4: the balance agreed */
+        net_v2_tm_tick(b->seq, b->peer_margin ? b->peer_a : -32768, b->seat.d);
+    if (b->seat.state == V2S_HELD) net_v2_silence(b, net_steady_ns() / 1000);   /* rev. 5 (D-S8-2) */
+    switch (b->seat.state) {
+    case V2S_HELD: case V2S_NSW: case V2S_REFUSED: case V2S_AGREED:              /* rev. 5: AGREED as the HELLO phase */
+        if (!v2s_tick(&b->seat, net_steady_ns() / 1000)) return 0;
+        g_v2h.n_hello++;
+        return net_hb_control(b, -1);
+    case V2S_NSCHED: case V2S_FALLBACK:
+        return net_hb_new(b, cnd);
+    case V2S_V2:
+        return net_hb_v2(b, cnd);
+    default:
+        return o_net_hb(vcnd);
+    }
+}
+
+/* At DllMain, with `scheme 2`: the call's five bytes compared, claimed, then its rel32 pointed at a thunk next to the
+   exe (`mov rax, imm64; jmp rax`, 12 bytes); the stock target kept for every pass-through. */
+static const char* net_v2_hb2_install(void)
+{
+    static const unsigned char stock[5] = { 0xE8, 0x0F, 0x45, 0x9A, 0xFF };
+    unsigned char* site = g_net_mod + NET_RVA_HB_CALL;
+    unsigned char* th;
+    long long rel;
+    DWORD old;
+    if (memcmp(site, stock, 5) != 0) return "REFUSED, exe+0x8072AC is not the stock call to the host builder";
+    th = (unsigned char*)gauge_alloc_near(site, 32);
+    if (!th) return "REFUSED, no thunk within +/-2 GB";
+    rel = (long long)th - (long long)(site + 5);
+    if (rel > 0x7FFFFFFFLL || rel < -0x80000000LL) { VirtualFree(th, 0, MEM_RELEASE); return "REFUSED, the thunk is out of rel32 reach"; }
+    if (!bros_claim(BROS_MASTER_OWNER, NET_RVA_HB_CALL, 5,
+                    "PART 41 NETUP v2 (H3): hb2 -- capture_send's call to the host builder 0x1AB7C0 -> protocol v2's "
+                    "host builder, which calls 0x1AB7C0 in every battle that does not play v2")) {
+        VirtualFree(th, 0, MEM_RELEASE);
+        return "REFUSED, the bytes are claimed by another owner";
+    }
+    o_net_hb = (net_hb_t)(g_net_mod + NET_RVA_HB);
+    o_net_hb_trig = (net_hb_trig_t)(g_net_mod + NET_RVA_SNAP_TRIG);
+    o_net_hb_fill = (net_hb_fill_t)(g_net_mod + NET_RVA_SNAP_FILL);
+    th[0] = 0x48; th[1] = 0xB8;                        /* mov rax, imm64 */
+    {   uint64_t a = (uint64_t)(uintptr_t)&net_v2_hb2; memcpy(th + 2, &a, 8); }
+    th[10] = 0xFF; th[11] = 0xE0;                      /* jmp rax */
+    FlushInstructionCache(GetCurrentProcess(), th, 12);
+    if (!VirtualProtect(site, 5, PAGE_EXECUTE_READWRITE, &old)) {
+        VirtualFree(th, 0, MEM_RELEASE);               /* the claim stays (as H7's); the site unchanged */
+        return "REFUSED, VirtualProtect failed";
+    }
+    {   int32_t r32 = (int32_t)rel; memcpy(site + 1, &r32, 4); }
+    VirtualProtect(site, 5, old, &old);
+    FlushInstructionCache(GetCurrentProcess(), site, 5);
+    g_hb2_thunk = th;
+    g_net_on_hb2 = 1;
+    return "on (exe+0x8072AC: capture_send's host builder call -> hb2)";
+}
+/* ---- end of v2_hb2.c ---- */
+/* ---- NETUP part 2: H4 gb2, rev. 3 (nu038, nu045, nu057) (v2_gb2.c, md5 df9cf1c1), unchanged ---- */
+/* ---- NETUP part 2, S4 (pass nu): H4 -- gb2, the guest's builder at its call site -------------------------------
+   Design: notes\PART2_S4_NOTES.md (nu038). Base: SPEC_BUILD4 r3 s5.2, s6, s3, s4.6, s9, s13; S2c's repeat (nu028-
+   nu030); F-S2c-2's fix (Berg, nu030; nu031-nu033): its guest parts here (f0req's sending on the guest, g1), its host
+   parts in hb2 (S3), its receive half in recv2 (H7), the gate in H2 (S5).
+   Where. capture_send (0x807190): mode [cnd] 1 calls the guest builder 0x1AC130 at 0x8072B8 (E8 73 4E 9A FF); the
+   return is stored at [PacketCharacter+0x58] and sent (0x806FD0) only when not 0. gb2 has the builder's signature
+   (rcx = cnd; a data object or 0).
+   Which battle. As recv2: the battle H1 began (g_v2b), this setup, this manager, the guest. Otherwise the stock
+   builder, its result unchanged.
+   The stock guest builder (0x1AC130, read for this note): its object GuestNetworkData exe+0x18D8F00 (vtable
+   exe+0x1433C00) zeroed at entry; (1) cnd+0xC0 >= 0 and < seq (cnd+0xBC): the entries labelled cnd+0xC0, +1, ... (W
+   at most) from its history 0x1CE82A0, then cnd+0xC0 = -1 (always, when it was >= 0); (2) seq <= F + D + 1: label seq
+   from map78[seq] (word 0), the window (W - 1 older labels, newest first), seq + 1 -- one build per call; else the
+   request: stalled and (now - cnd+0xC8) / 10^6 > cnd+0xD0 -> cnd+0xC8 = now, cnd+0xD0 = 300 (Part 1: again), the
+   entry -F (word 0, no commands) appended LAST; (3) 0x1AA550 serializes the entries in order (u16 count; i32 frame,
+   u16 word, u16 n, n commands of 2 or 6 bytes); no entries: it returns 0.
+   Per state of S2a's machine:
+   - the HELLO phase (HELD, NSW, REFUSED): never the stock builder (r3 s4.6); a HELLO-phase record (seat 1) every 16 ms
+     of wall time (v2s_tick), else 0;
+   - NEW's schedule, a fallback: the stock builder; a stock "-0" (the request entry at F == 0: it fires only when Part
+     1's resend hook is off) is removed and f0req stands in (s3.3); g1 (after the stock request at F == 1, and with each
+     f0req at F == 0: cnd+0xC0 = 0 for the next call, the guest's own frames 0 .. W - 1, for a 3.x host); in a call that
+     returned nothing, f0req (NAK -(0 + 1) on Part 1's timer while stalled at frame 0) and S2c's repeat, in one record;
+   - V2 (agreed): gb2 wraps the stock builder (r3 s5.2): its entries become INNER; the stock request entry (the last,
+     frame -F) becomes the NAK block -(F + 1) (s6); at F == 0 under Part 1's frame-0 marker (0x7FFFFFFF: the stock
+     request never fires there) gb2 makes the request itself on the stock clock, the marker read as min(RTT', first),
+     as hb2; HELLO while v2s_out says so, MARGIN, HASH; trimmed to 1,194 bytes (s3.5); the entries that went are kept
+     for H2's self-check (r3 s9).
+   Revision 2 (S6, nu045; notes\PART2_S6_NOTES.md s2.5, s4): as hb2's revision 4 -- every call in this seat's v2
+   battle first takes MARGIN's two values from S6 (A, or -32,768 unknown; Q = cnd+0xF0, the host's entries in hand,
+   clamped to 255); in V2 with the balance agreed (`V2F_TEMPO`: off by default, D-S6-9) S6's controller runs once per
+   frame consumed.
+   Revision 3 (S8, VX_P2 F1 / F2; notes\PART2_S8_PLAN.md D-S8-1, D-S8-2): S2a revision 2's AGREED is part of the HELLO
+   phase here (a HELLO-phase record every 16 ms, now with hello_seen; never the stock builder); in HELD every call first
+   asks H7's net_v2_silence (1,000 ms with nothing of the peer heard -> a fallback, whose call then goes on to the stock
+   builder at once). The guest's own frame 0 for a stock host was already there: g1 resends frames 0 .. W - 1 with each
+   f0req at F == 0.
+   Threads: capture_send, recv2 and H1 all run on the main thread; the watch thread reads the counters at the battle's
+   end. No allocation, no lock, no I/O. */
+#define NET_RVA_GB_CALL     0x8072B8u   /* capture_send: call 0x1AC130 (E8 73 4E 9A FF)                          */
+#define NET_RVA_GB          0x1AC130u   /* the stock guest builder                                                */
+#define NET_RVA_GND_VT      0x1433C00u  /* GuestNetworkData's vtable: slot 0 -> [obj+8], slot 1 -> [obj+0x10]      */
+#define NET_CND_SEQ         0xBC        /* int: the guest's next label                                            */
+#define NET_GB_RING         128         /* the self-check's copy of what gb2 sent, by label mod 128               */
+#define NET_GB_ENTRY_MAX    1164        /* a guest entry's command bytes that can ever ride in one record         */
+#define NET_GB_REC_MAX      0x1000      /* a stock guest record's bytes at most (a batch slot)                    */
+#define NET_GB_ENT          511         /* entries 4,096 bytes can hold                                           */
+
+typedef struct {                        /* one label gb2 sent in v2: its wire commands, deep-copied               */
+    int32_t  label;                     /* -1: empty                                                              */
+    uint16_t n, len;
+    uint8_t  cmd[NET_GB_ENTRY_MAX];
+} NetGbEntry;
+
+typedef struct {
+    LONG     seq;                       /* g_v2b's battle this state belongs to (0: none)                          */
+    uint16_t nsamples;                  /* the HELLO's "samples behind P" (H1)                                     */
+    LONG64   f0_stamp, f0_last;         /* f0req's timer (NEW-playing): the stall it follows, its last request     */
+    int      f0_force;                  /* a "-0" was removed while resend entries still went: f0req next idle call */
+    NetGbEntry ring[NET_GB_RING];
+    int      newest;
+    LONG64   n_calls, n_stock, n_hello, n_f0req, n_repeat, n_g1, n_m0, n_m0_bad, n_v2, n_nak, n_nak0, n_own0,
+             n_rejected, n_bad, n_trim_w, n_trim_r, n_oversize, n_largest, n_enc_err;
+} NetV2Guest;
+
+static NetV2Guest    g_v2g;
+static net_hb_t      o_net_gb;          /* the stock 0x1AC130 */
+static int           g_net_on_gb2;
+static volatile LONG64 g_net_gb2_unsynced;      /* a v2 battle whose gb2 state H1 did not begin: stock (never seen) */
+static const char*   g_net_why_gb2 = "off";
+static struct { void* vt; unsigned char* buf; uint64_t size; } g_gb2_obj;   /* the data object gb2 returns */
+static unsigned char g_gb2_buf[NET_GB_REC_MAX];
+static unsigned char* g_gb2_thunk;
+static uint32_t      g_gb_eo[NET_GB_ENT], g_gb_el[NET_GB_ENT];             /* a parsed stock record's entries */
+static uint8_t       g_gb_keep[NET_GB_ENT];
+
+/* called by H1's net_v2_bat_begin for every v2 battle (and by nothing else) */
+static void net_v2_guest_begin(LONG seq, uint16_t nsamples)
+{
+    int i;
+    memset(&g_v2g, 0, sizeof g_v2g);
+    for (i = 0; i < NET_GB_RING; i++) g_v2g.ring[i].label = -1;
+    g_v2g.newest = -1;
+    g_v2g.nsamples = nsamples;
+    g_v2g.seq = seq;
+}
+
+static void* net_gb_obj(uint32_t len)
+{
+    if (len == 0) { g_v2g.n_enc_err++; return 0; }
+    if ((LONG64)len > g_v2g.n_largest) g_v2g.n_largest = len;
+    g_gb2_obj.vt = g_net_mod + NET_RVA_GND_VT;
+    g_gb2_obj.buf = g_gb2_buf;
+    g_gb2_obj.size = (uint64_t)len;
+    return &g_gb2_obj;
+}
+
+/* a v2 record of the HELLO phase (and, in NEW's schedule or a fallback, f0req's and the repeat's), seat 1: header by
+   v2s_out, HELLO while the machine says so, MARGIN (always, with the echo), NAK -(nak + 1) when nak >= 0, COMPAT when
+   refused */
+static void* net_gb_control(NetV2Bat* b, int nak)
+{
+    V2Enc e;
+    V2WHello w;
+    int d, flags, hello, echo;
+    v2s_out(&b->seat, &d, &flags, &hello, &echo);
+    v2e_begin(&e, g_gb2_buf, V2_MAXPAY, 1, (uint8_t)d, (uint16_t)flags);
+    if (hello) { net_hb_whello(&b->seat.me, g_v2g.nsamples, &w); v2e_hello(&e, &w); }
+    if (nak >= 0) v2e_nak(&e, nak);
+    v2e_margin(&e, g_v2local.a_tenths, g_v2local.q, (uint8_t)echo);
+    if (b->seat.state == V2S_REFUSED) v2e_compat(&e, (uint8_t)b->seat.reason, (uint8_t)b->seat.mask);
+    {   int len = v2e_end(&e); return len > 0 ? net_gb_obj((uint32_t)len) : (g_v2g.n_enc_err++, (void*)0); }
+}
+
+/* the stock builder's object, read: GuestNetworkData, its bytes parsed in the guest's format (every read bounded by
+   the size, the walk ending exactly at it); returns the entry count, or -1 */
+static int net_gb_parse(void* r, const unsigned char** pbuf, uint32_t* psize)
+{
+    const struct { void* vt; const unsigned char* buf; uint64_t size; }* o = r;
+    const unsigned char* p;
+    uint32_t size, at = 2, n, i, k;
+    if (o->vt != (void*)(g_net_mod + NET_RVA_GND_VT) || !o->buf || o->size < 2 || o->size > NET_GB_REC_MAX) return -1;
+    p = o->buf;
+    size = (uint32_t)o->size;
+    n = v2_rd16(p);
+    if (n > NET_GB_ENT) return -1;
+    for (i = 0; i < n; i++) {
+        uint32_t nc;
+        if (at + 8 > size) return -1;
+        g_gb_eo[i] = at;
+        nc = v2_rd16(p + at + 6);
+        at += 8;
+        for (k = 0; k < nc; k++) {
+            if (at >= size) return -1;
+            at += (uint32_t)v2_cmd_len(p[at]);
+        }
+        if (at > size) return -1;
+        g_gb_el[i] = at - g_gb_eo[i];
+    }
+    if (at != size) return -1;
+    *pbuf = p;
+    *psize = size;
+    return (int)n;
+}
+
+/* the stock record's entries that are kept, as a stock record: u16 count, the entries */
+static uint32_t net_gb_rewrite(unsigned char* out, const unsigned char* p, int n)
+{
+    uint32_t o = 2;
+    int i, m = 0;
+    for (i = 0; i < n; i++) if (g_gb_keep[i]) { memcpy(out + o, p + g_gb_eo[i], g_gb_el[i]); o += g_gb_el[i]; m++; }
+    v2_wr16(out, (uint16_t)m);
+    return o;
+}
+
+/* f0req's timer (as hb2's): the first request min(RTT', first) ms after the stall's stamp, then every `again` */
+static int net_gb_f0_due(uintptr_t cnd, int force)
+{
+    LONG64 now = net_steady_ns(), stamp = *(volatile const LONG64*)(cnd + NET_CND_STAMP);
+    if (stamp != g_v2g.f0_stamp) { g_v2g.f0_stamp = stamp; g_v2g.f0_last = 0; }
+    if (force || (g_v2g.f0_last == 0 ? (now - stamp) / 1000000 > net_hb_first_ms(cnd)
+                                     : (now - g_v2g.f0_last) / 1000000 > net_hb_again_ms())) {
+        g_v2g.f0_last = now;
+        return 1;
+    }
+    return 0;
+}
+
+/* ------------------------------------------------------------------ NEW's schedule, a fallback */
+static void* net_gb_new(NetV2Bat* b, uintptr_t cnd)
+{
+    int F = net_rdi(cnd, NET_CND_F), m0 = 0, moved;
+    LONG64 st0 = *(volatile const LONG64*)(cnd + NET_CND_STAMP);
+    void* r;
+    g_v2g.n_stock++;
+    r = o_net_gb((void*)cnd);
+    moved = *(volatile const LONG64*)(cnd + NET_CND_STAMP) != st0;
+    if (r && F == 0 && moved) {                        /* the stock "-0" (s3.3): the request entry, last, frame 0 */
+        const unsigned char* p; uint32_t size; int n = net_gb_parse(r, &p, &size), i;
+        if (n >= 1 && v2_rd32(p + g_gb_eo[n - 1]) == 0 && v2_rd16(p + g_gb_eo[n - 1] + 6) == 0) {
+            for (i = 0; i < n; i++) g_gb_keep[i] = (uint8_t)(i < n - 1);
+            g_v2g.n_m0++;
+            m0 = 1;
+            if (n == 1) r = 0;
+            else { r = net_gb_obj(net_gb_rewrite(g_gb2_buf, p, n)); g_v2g.f0_force = 1; }
+        } else g_v2g.n_m0_bad++;
+    }
+    /* g1 at F == 1: the stock request for frame 1 went out in this call; the host may still wait at frame 0 */
+    if (F == 1 && moved && net_rdi(cnd, NET_CND_RESEND) < 0) {
+        net_wri(cnd, NET_CND_RESEND, 0);
+        g_v2g.n_g1++;
+    }
+    if (r) return r;                                   /* one record per call: the stock's goes alone */
+    {
+        int f0 = 0, rep;
+        if (F == 0 && *(volatile const uint8_t*)(cnd + NET_CND_STALL)) {
+            f0 = net_gb_f0_due(cnd, m0 || g_v2g.f0_force);
+            if (f0) {
+                g_v2g.f0_force = 0;
+                if (net_rdi(cnd, NET_CND_RESEND) < 0) {   /* g1 at F == 0: the guest's own frame 0 again, next call */
+                    net_wri(cnd, NET_CND_RESEND, 0);
+                    g_v2g.n_g1++;
+                }
+            }
+        } else { g_v2g.f0_stamp = g_v2g.f0_last = 0; g_v2g.f0_force = 0; }
+        rep = b->seat.state == V2S_NSCHED && !b->seat.got_stock &&
+              v2s_tick(&b->seat, net_steady_ns() / 1000);
+        if (!f0 && !rep) return 0;
+        if (f0) g_v2g.n_f0req++;
+        if (rep) g_v2g.n_repeat++;
+        return net_gb_control(b, f0 ? 0 : -1);
+    }
+}
+
+/* ------------------------------------------------------------------ V2 */
+static void net_gb_keep_sent(const unsigned char* e, uint32_t len)
+{
+    int32_t label = (int32_t)v2_rd32(e);
+    NetGbEntry* g;
+    if (label < 0) return;
+    g = &g_v2g.ring[label % NET_GB_RING];
+    if (g->label == label) return;                     /* written once: a later copy is the same bytes */
+    g->label = label;
+    g->n = v2_rd16(e + 6);
+    g->len = (uint16_t)(len - 8);
+    memcpy(g->cmd, e + 8, len - 8);
+    if (label > g_v2g.newest) g_v2g.newest = label;
+}
+
+static void* net_gb_v2(NetV2Bat* b, uintptr_t cnd)
+{
+    int F = net_rdi(cnd, NET_CND_F), D = net_rdi(cnd, NET_CND_D), seq0 = net_rdi(cnd, NET_CND_SEQ);
+    LONG64 st0 = *(volatile const LONG64*)(cnd + NET_CND_STAMP);
+    const unsigned char* p = 0;
+    uint32_t size = 0, fixed, total, ilen;
+    int n = 0, i, nak = -1, built, newi = -1, keepn;
+    void* r;
+    static unsigned char inner[NET_GB_REC_MAX];       /* main thread only */
+    V2Enc e;
+    int d, flags, hello, echo;
+    g_v2g.n_stock++;
+    r = o_net_gb((void*)cnd);
+    built = net_rdi(cnd, NET_CND_SEQ) == seq0 + 1;
+    if (r) {
+        n = net_gb_parse(r, &p, &size);
+        if (n < 0) { g_v2g.n_bad++; return 0; }        /* the stock builder never makes one: not sent, counted */
+    }
+    for (i = 0; i < n; i++) g_gb_keep[i] = 1;
+    if (*(volatile const LONG64*)(cnd + NET_CND_STAMP) != st0) {
+        /* the stock request ran: its entry -F is the last (0x1AC398-0x1AC3C3), after the resend's (r3 F4) */
+        nak = F;
+        if (n >= 1 && (int32_t)v2_rd32(p + g_gb_eo[n - 1]) == -F && v2_rd16(p + g_gb_eo[n - 1] + 6) == 0)
+            g_gb_keep[n - 1] = 0;
+        else { g_v2g.n_rejected++; for (i = 0; i < n; i++) g_gb_keep[i] = 0; }
+    } else if (F == 0 && seq0 > F + D + 1 && *(volatile const uint8_t*)(cnd + NET_CND_STALL) &&
+               *(volatile const uint64_t*)(cnd + NET_CND_IVL) == NET_P1_NEVER) {
+        /* Part 1's frame-0 marker: the stock request never fires at frame 0; gb2 makes it, as hb2 (s6) */
+        LONG64 now = net_steady_ns(), el = (now - *(volatile const LONG64*)(cnd + NET_CND_STAMP)) / 1000000;
+        if (el > 0 && (uint64_t)el > (uint64_t)net_hb_first_ms(cnd)) {
+            *(volatile LONG64*)(cnd + NET_CND_STAMP) = now;
+            *(volatile uint64_t*)(cnd + NET_CND_IVL) = (uint64_t)net_hb_again_ms();
+            nak = 0;
+            g_v2g.n_own0++;
+        }
+    }
+    if (nak >= 0) { g_v2g.n_nak++; if (nak == 0) g_v2g.n_nak0++; }
+    if (built)                                         /* the build part starts at the new label, seq0 */
+        for (i = 0; i < n; i++) if (g_gb_keep[i] && (int32_t)v2_rd32(p + g_gb_eo[i]) == seq0) { newi = i; break; }
+    /* trim to 1,194 bytes (s3.5): the window's entries, oldest (last) first; then the resend's, newest (last) first;
+       then the new entry (one no record can carry) */
+    v2s_out(&b->seat, &d, &flags, &hello, &echo);
+    fixed = 16 + (hello ? 28u : 0u) + (nak >= 0 ? 4u : 0u) + 4u +
+            (g_v2local.nhash ? 1u + 16u * g_v2local.nhash : 0u);
+    total = fixed;
+    keepn = 0;
+    for (i = 0; i < n; i++) if (g_gb_keep[i]) { total += g_gb_el[i]; keepn++; }
+    if (keepn) total += 2;
+    while (keepn && total > V2_MAXPAY) {
+        int at = -1;
+        if (newi >= 0) for (i = n - 1; i > newi; i--) if (g_gb_keep[i]) { at = i; g_v2g.n_trim_w++; break; }
+        if (at < 0) for (i = (newi >= 0 ? newi : n) - 1; i >= 0; i--) if (g_gb_keep[i]) { at = i; g_v2g.n_trim_r++; break; }
+        if (at < 0 && newi >= 0 && g_gb_keep[newi]) { at = newi; g_v2g.n_oversize++; }
+        if (at < 0) break;
+        g_gb_keep[at] = 0;
+        total -= g_gb_el[at];
+        if (--keepn == 0) total -= 2;
+    }
+    if (!keepn && nak < 0) return 0;
+    for (i = 0; i < n; i++) if (g_gb_keep[i]) net_gb_keep_sent(p + g_gb_eo[i], g_gb_el[i]);
+    v2e_begin(&e, g_gb2_buf, V2_MAXPAY, 1, (uint8_t)d, (uint16_t)flags);
+    if (hello) { V2WHello w; net_hb_whello(&b->seat.me, g_v2g.nsamples, &w); v2e_hello(&e, &w); }
+    if (nak >= 0) v2e_nak(&e, nak);
+    v2e_margin(&e, g_v2local.a_tenths, g_v2local.q, (uint8_t)echo);
+    if (g_v2local.nhash) v2e_hash(&e, g_v2local.nhash, g_v2local.hash);
+    if (keepn) {
+        ilen = net_gb_rewrite(inner, p, n);
+        v2e_inner(&e, inner, ilen);
+    }
+    g_v2g.n_v2++;
+    {   int len = v2e_end(&e); return len > 0 ? net_gb_obj((uint32_t)len) : (g_v2g.n_enc_err++, (void*)0); }
+}
+
+/* ------------------------------------------------------------------ H4 */
+static void net_v2_tm_margin(uintptr_t cnd, int mode, int16_t* a, uint8_t* q);   /* v2_tempo.c (S6; rev. 2) */
+static void net_v2_tm_tick(LONG seq, int a_peer, int d);                         /* v2_tempo.c (S6; rev. 2) */
+
+static void* net_v2_gb2(void* vcnd)
+{
+    NetV2Bat* b = &g_v2b;
+    uintptr_t cnd = (uintptr_t)vcnd;
+    if (!b->seq || b->seq != g_net_setup_seq || cnd != b->cnd || b->mode != 1 || *(volatile const int*)cnd != 1)
+        return o_net_gb(vcnd);
+    if (g_v2g.seq != b->seq) { g_net_gb2_unsynced++; return o_net_gb(vcnd); }
+    g_v2g.n_calls++;
+    net_v2_tm_margin(cnd, 1, &g_v2local.a_tenths, &g_v2local.q);                /* rev. 2: MARGIN's A and Q */
+    if (b->seat.state == V2S_V2 && (b->seat.features & V2F_TEMPO))               /* rev. 2: the balance agreed */
+        net_v2_tm_tick(b->seq, b->peer_margin ? b->peer_a : -32768, b->seat.d);
+    if (b->seat.state == V2S_HELD) net_v2_silence(b, net_steady_ns() / 1000);   /* rev. 3 (D-S8-2) */
+    switch (b->seat.state) {
+    case V2S_HELD: case V2S_NSW: case V2S_REFUSED: case V2S_AGREED:              /* rev. 3: AGREED as the HELLO phase */
+        if (!v2s_tick(&b->seat, net_steady_ns() / 1000)) return 0;
+        g_v2g.n_hello++;
+        return net_gb_control(b, -1);
+    case V2S_NSCHED: case V2S_FALLBACK:
+        return net_gb_new(b, cnd);
+    case V2S_V2:
+        return net_gb_v2(b, cnd);
+    default:
+        return o_net_gb(vcnd);
+    }
+}
+
+/* At DllMain, with `scheme 2` (PART 41's other v2 hooks beside it; any refusal turns v2 off for the session, r3 s13):
+   the five bytes must be the stock call; a 12-byte thunk within +/-2 GB; claimed (5 bytes) before the write; the
+   thunk released on every refusal after its allocation. */
+static const char* net_v2_gb2_install(void)
+{
+    static const unsigned char stock[5] = { 0xE8, 0x73, 0x4E, 0x9A, 0xFF };
+    unsigned char* site = g_net_mod + NET_RVA_GB_CALL;
+    unsigned char* th;
+    long long rel;
+    DWORD old;
+    if (memcmp(site, stock, 5) != 0) return "REFUSED, exe+0x8072B8 is not the stock call to the guest builder";
+    th = (unsigned char*)gauge_alloc_near(site, 32);
+    if (!th) return "REFUSED, no thunk within +/-2 GB";
+    rel = (long long)th - (long long)(site + 5);
+    if (rel > 0x7FFFFFFFLL || rel < -0x80000000LL) { VirtualFree(th, 0, MEM_RELEASE); return "REFUSED, the thunk is out of rel32 reach"; }
+    if (!bros_claim(BROS_MASTER_OWNER, NET_RVA_GB_CALL, 5,
+                    "PART 41 NETUP v2 (H4): gb2 -- capture_send's call to the guest builder 0x1AC130 -> protocol v2's "
+                    "guest builder, which calls 0x1AC130 in every battle that does not hold its builder")) {
+        VirtualFree(th, 0, MEM_RELEASE);
+        return "REFUSED, the bytes are claimed by another owner";
+    }
+    o_net_gb = (net_hb_t)(g_net_mod + NET_RVA_GB);
+    th[0] = 0x48; th[1] = 0xB8;                        /* mov rax, imm64 */
+    {   uint64_t a = (uint64_t)(uintptr_t)&net_v2_gb2; memcpy(th + 2, &a, 8); }
+    th[10] = 0xFF; th[11] = 0xE0;                      /* jmp rax */
+    FlushInstructionCache(GetCurrentProcess(), th, 12);
+    if (!VirtualProtect(site, 5, PAGE_EXECUTE_READWRITE, &old)) {
+        VirtualFree(th, 0, MEM_RELEASE);               /* the claim stays (as H3's); the site unchanged */
+        return "REFUSED, VirtualProtect failed";
+    }
+    {   int32_t r32 = (int32_t)rel; memcpy(site + 1, &r32, 4); }
+    VirtualProtect(site, 5, old, &old);
+    FlushInstructionCache(GetCurrentProcess(), site, 5);
+    g_gb2_thunk = th;
+    g_net_on_gb2 = 1;
+    return "on (exe+0x8072B8: capture_send's guest builder call -> gb2)";
+}
+/* ---- end of v2_gb2.c ---- */
+/* ---- NETUP part 2: H2, rev. 4 (nu039-nu040, nu042, nu045, nu051, nu058) (v2_h2.c, md5 d659419f), unchanged ---- */
+/* ---- NETUP part 2, S5 (pass nu): H2 -- the GetFrameInputs detour ------------------------------------------------
+   Design: notes\PART2_S5_NOTES.md (nu039). Base: SPEC_BUILD4 r3 s7 (option B), s8 (the state hash), s9 (the
+   self-check), s13 (H2), s14; the gate of PART2_S3_NOTES.md s5 (nu033).
+   Where. GetFrameInputs 0x1AB0B0 (rcx cnd, rdx hostIn, r8 guestIn, r9 int* frame, [rsp+0x28] u16* word; al), called
+   only by the sync step (0x801AEA) right after StallTimer. Ready: it fills the two inputs and the word, erases F from
+   both maps and increments F (cnd+0xB8); not ready: nothing; either way it returns `[cnd+0xD8] == 0`, which after
+   StallTimer is the readiness. A detour (5 stolen bytes `48 89 6C 24 18`, position-independent) with a trampoline.
+   Which battle. As recv2 / hb2 / gb2: the battle H1 began (g_v2b), this setup, this manager, its seat, H2's state begun
+   for it. Otherwise the stock function, its result unchanged.
+   Every state of the battle: the gate -- a seat never plays a frame its own builder has not built in this battle:
+   host g_v2h.built_max >= F (hb2), guest cnd+0xBC > F (its next label); else 0 without the stock call (the sync step
+   freezes as for a frame not yet received; StallTimer has already run, so no stall or request starts for it).
+   V2 only (reached before frame 0, never left):
+   - the first call for X (F differing from the last call's), whatever the gate or readiness then say: the world tick
+     counter [[exe+0x1CFBD70]+0x78] tells whether X is in step (the lockstep tick X - 1 alone since this seat consumed
+     X - 1) or a barrier (a cinematic's local ticks, the battle's first frame); the KO test as the sync step's
+     (0x801C10: [f+0x10C0] <= 0.0f and [f+0x1128] == 0); the stock fill 0x1AB4A0 of both fighters (position, the
+     rotation's +4 word, the two state bytes); the hash (core: the fighters' discrete fields and X, CRC-32C, its low
+     byte the RNG engine index's low byte; float; pos), its class (k a KO in the 60 frames before, c a barrier in them,
+     n), g_v2local's two newest hashes for hb2 / gb2's HASH block, every pending comparison with recv2's copy of the
+     peer's; on the guest, option B: the ring of 16, then the host snapshots recv2 queued for frames <= X in increasing
+     frame -- dropped up to the barrier, at or below the last taken (r3 F5), past the ring; the state bytes compared;
+     each fighter the stock adoption would move ([f+0x137] != 0) set through its vtable +0x28 / +0x30 to its own value
+     at X plus the difference at Y (a yaw difference above pi not applied), the correction added to the ring after Y;
+   - after the stock call consumed X: the self-check -- the own fighter's input (host hostIn and the word, guest
+     guestIn) projected to its wire bytes against what hb2 / gb2 sent labelled X.
+   Revision 1 (nu042): the hash and option B run only when both seats agreed to them (S2a's AND-ed features, r3 s11:
+   `hash`, `optb`); the gate, the barrier's bookkeeping and the self-check always.
+   Revision 2 (S6, nu045; notes\PART2_S6_NOTES.md s2.2, s2.3): in V2, S6's t_need at the first call for X (this
+   call's QPC, t0) and A(X) at X's consumption, with the barrier as it stands then -- in every V2 battle, the balance
+   agreed or not (the measure is S7's log too).
+   Revision 3 (S7 step 6, nu051; F-S7-1): "the first call for X" is counted among V2's calls only (`cur` is set in V2).
+   H2 runs from frame 0's first frozen pass, in the HELLO phase; before, those held calls set `cur` to 0, so V2's first
+   call (always at frame 0) was no first call: frame 0 was never a barrier, hashed or put in the ring, and S6 had no
+   t_need for it and left none of the battle's first 60 frames out. Now V2's first call does frame 0's work.
+   Revision 4 (S8 step 5, nu058; PART2_S8_PLAN.md D-S8-9, VX_P2 F7): option B does not apply a difference of more than
+   100 m on any position axis (no stage is that large): that fighter's correction is skipped and counted with the
+   non-finite ones (n_badval). S2a rev. 2's AGREED is not V2: H2 holds there as in the HELLO phase (the gate; nothing is
+   built in AGREED), with no first-call work.
+   Threads: the sync step, recv2 (Dispatch), the builders and H1 all run on the main thread; the watch thread reads the
+   counters at the battle's end. No allocation, no lock, no I/O. */
+#define NET_RVA_GFI         0x1AB0B0u   /* GetFrameInputs                                                         */
+#define NET_RVA_CM_PTR      0x1CFBD70u  /* the ComponentManager singleton; +0x78 its world tick counter           */
+#define NET_CM_TICK         0x78
+#define NET_RVA_RNG         0x1CE3F40u  /* the game's mt19937_64: its u32 index first (312 at 0xA161)              */
+#define NET_RVA_H2_FILL     0x1AB4A0u   /* the stock fill (cnd, p1[20], p2[20])                                    */
+#define NET_RVA_H2_GETROT   0x8B5D00u   /* GetRotation(fighter, out16): writes with movaps                        */
+#define NET_RVA_SETPOS      0x8B4450u   /* the fighters' vtable slot 5 (+0x28)                                    */
+#define NET_RVA_SETROT      0x8B45B0u   /* slot 6 (+0x30)                                                         */
+#define NET_RVA_VT_PLAYABLE 0x1463F70u  /* OPlayableBase                                                          */
+#define NET_RVA_VT_ONLINE   0x142C178u  /* OOnlinePlayable                                                        */
+#define NET_CND_FV_END      0x58        /* the fighters' vector: begin cnd+0x50 (NET_CND_FIGHTERS), end +0x58      */
+#define NET_F_KO_HP         0x10C0
+#define NET_F_KO_MODE       0x1128
+#define NET_F_ACTIVE        0x137
+#define NET_H2_OWN          64          /* this seat's hashes kept (r3 s8)                                         */
+#define NET_H2_RING         16          /* option B's ring (r3 s7)                                                 */
+#define NET_H2_WIN          60          /* a KO / a barrier and the 60 frames after it keep its class              */
+#define NET_H2_COSTB        257
+#define NET_H2_LATEB        16          /* how late a correction was: 0 .. 15 frames                              */
+#define NET_H2_SIZEB        6           /* PART 41's NET/snap bins: 0, <1e-5, <1e-3, <0.01, <0.1, >=0.1            */
+#define NET_H2_PI           3.14159265f
+#define NET_H2_BIG          100.0f      /* rev. 4: option B's bound on a position difference, per axis (D-S8-9) */
+
+typedef unsigned char (*net_gfi_t)(void* cnd, void* hin, void* gin, int* frame, uint16_t* word);
+typedef void  (*net_h2_fill_t)(void* cnd, unsigned char* p1, unsigned char* p2);
+typedef float* (*net_h2_get16_t)(void* f, float* out);
+typedef void  (*net_h2_set16_t)(void* f, const float* v);
+
+typedef struct { int32_t frame; uint32_t h[3]; uint8_t cls, done; } NetH2Own;        /* h: core, float, pos      */
+typedef struct { int32_t frame; float v[2][4]; uint8_t sa[2], sb[2]; } NetH2Ring;      /* x y z yaw per fighter    */
+typedef struct {                        /* per class (0 k, 1 c, 2 n)                                               */
+    LONG64  frames;                     /* frames compared                                                         */
+    LONG64  n[4];                       /* mismatches: core (24 bits), rng (8 bits), float, pos                    */
+    int32_t first[4];                   /* the first mismatching frame of each (-1 none)                           */
+    int32_t cf_frame;                   /* the first core-or-float mismatch (-1 none) ...                          */
+    uint32_t cf_own[3], cf_peer[3];     /* ... and both seats' three words there                                   */
+} NetH2Cls;
+
+typedef struct {
+    LONG     seq;                       /* g_v2b's battle this state belongs to (0: none)                          */
+    int      cur;                       /* F at the last call (-1 none)                                            */
+    int      consumed;                  /* the last frame this seat consumed in this battle (-1 none)              */
+    uint64_t t_consume;                 /* the tick counter at that call ...                                       */
+    int      t_consume_ok;              /* ... when the ComponentManager was there to read it                      */
+    int      barrier;                   /* B: the latest frame not in step (-1 none)                               */
+    int      last_ko;                   /* the latest frame with a KO at its first call (-1 none)                  */
+    int      last_taken;                /* option B: the last snapshot frame taken past the drop tests (-1 none)   */
+    int      held_frame;                /* the last frame the gate held (-1 none)                                  */
+    NetH2Own  own[NET_H2_OWN];
+    NetH2Ring ring[NET_H2_RING];
+    NetH2Cls  cls[3];
+    /* counters */
+    LONG64   n_calls, n_held, n_held_frames, n_frames, n_barrier, n_ko, n_nofighters, n_cmp;
+    LONG64   n_self, n_self_missing, n_self_differ;
+    int32_t  self_first;
+    LONG64   n_snap, n_snap_barrier, n_snap_older, n_snap_past, n_snap_cmp, n_sa_diff, n_sb_diff, n_applied, n_corr,
+             n_inactive, n_wrap, n_badval;
+    LONG64   late[NET_H2_LATEB], size[NET_H2_SIZEB];
+    float    max_dp, max_dth;
+    LONG64   cost[NET_H2_COSTB], cost_max;
+} NetV2H2;
+
+static NetV2H2         g_v2h2;
+static net_gfi_t       o_net_gfi;       /* the trampoline: the stolen instruction, then 0x1AB0B5                   */
+static net_h2_fill_t   o_net_h2_fill;
+static net_h2_get16_t  o_net_h2_getrot;
+static int             g_net_on_h2;
+static volatile LONG64 g_net_h2_unsynced;       /* a v2 battle whose H2 state H1 did not begin: stock (never seen)  */
+static const char*     g_net_why_h2 = "off";
+static unsigned char*  g_h2_stub;       /* the trampoline (+0) and the relay (+32), next to the exe                */
+
+/* called by H1's net_v2_bat_begin for every v2 battle (and by nothing else) */
+static void net_v2_h2_begin(LONG seq)
+{
+    int i, k;
+    memset(&g_v2h2, 0, sizeof g_v2h2);
+    g_v2h2.cur = g_v2h2.consumed = g_v2h2.barrier = g_v2h2.last_ko = g_v2h2.last_taken = g_v2h2.held_frame = -1;
+    g_v2h2.self_first = -1;
+    for (i = 0; i < NET_H2_OWN; i++) g_v2h2.own[i].frame = -1;
+    for (i = 0; i < NET_H2_RING; i++) g_v2h2.ring[i].frame = -1;
+    for (i = 0; i < 3; i++) {
+        g_v2h2.cls[i].cf_frame = -1;
+        for (k = 0; k < 4; k++) g_v2h2.cls[i].first[k] = -1;
+    }
+    g_v2h2.seq = seq;
+}
+
+static uint32_t net_h2_rd32(uintptr_t a) { uint32_t v; memcpy(&v, (const void*)a, 4); return v; }
+static float    net_h2_rdf(const unsigned char* p) { float v; memcpy(&v, p, 4); return v; }
+static int      net_h2_finite(float v) { return v - v == 0.0f; }
+static uint32_t net_h2_crc(const unsigned char* p, size_t n)
+{
+    v2_crc_init();
+    return v2_crc32c_part(0xFFFFFFFFu, p, n) ^ 0xFFFFFFFFu;
+}
+
+/* the sync step's KO test (0x801C10-0x801C34): [f+0x10C0] <= 0.0f (not NaN) and [f+0x1128] == 0 */
+static int net_h2_ko(uintptr_t f)
+{
+    float v;
+    memcpy(&v, (const void*)(f + NET_F_KO_HP), 4);
+    return v <= 0.0f && net_h2_rd32(f + NET_F_KO_MODE) == 0;
+}
+
+/* the hash of frame X (r3 s8; core's low byte the RNG index's, nu039) */
+static void net_h2_hash(uintptr_t f0, uintptr_t f1, int X, const unsigned char* p1, const unsigned char* p2, uint32_t* h)
+{
+    static const int core_off[6] = { 0x918, 0x1094, 0xFA4, 0x1098, 0x11D4, 0x1128 };
+    static const int flt_off[11] = { 0x10BC, 0x10B8, 0x10B4, 0x10C0, 0x10CC, 0x1144, 0x1110, 0x1114, 0x1118, 0x111C, 0x1120 };
+    unsigned char b[128];
+    uintptr_t f[2];
+    int i, k, n = 0;
+    f[0] = f0; f[1] = f1;
+    for (i = 0; i < 2; i++) {
+        b[n++] = *(const unsigned char*)(f[i] + 0xFA0);
+        for (k = 0; k < 6; k++) { memcpy(b + n, (const void*)(f[i] + core_off[k]), 4); n += 4; }
+    }
+    v2_wr32(b + n, (uint32_t)X); n += 4;
+    h[0] = (net_h2_crc(b, (size_t)n) & 0xFFFFFF00u) | (net_h2_rd32((uintptr_t)(g_net_mod + NET_RVA_RNG)) & 0xFFu);
+    n = 0;
+    for (i = 0; i < 2; i++)
+        for (k = 0; k < 11; k++) { memcpy(b + n, (const void*)(f[i] + flt_off[k]), 4); n += 4; }
+    h[1] = net_h2_crc(b, (size_t)n);
+    memcpy(b, p1, 16); memcpy(b + 16, p2, 16);
+    h[2] = net_h2_crc(b, 32);
+}
+
+/* every own hash not yet compared whose frame the peer's ring (recv2) holds */
+static void net_h2_compare(NetV2Bat* b)
+{
+    int k, c;
+    for (k = 0; k < NET_H2_OWN; k++) {
+        NetH2Own* e = &g_v2h2.own[k];
+        const NetV2PeerHash* p;
+        NetH2Cls* s;
+        int m[4];
+        if (e->frame < 0 || e->done) continue;
+        p = &b->peer_hash[e->frame & (NET_V2_HASHN - 1)];
+        if (p->frame != e->frame) continue;
+        e->done = 1;
+        s = &g_v2h2.cls[e->cls];
+        s->frames++;
+        g_v2h2.n_cmp++;
+        m[0] = ((e->h[0] ^ p->h_core) & 0xFFFFFF00u) != 0;
+        m[1] = ((e->h[0] ^ p->h_core) & 0xFFu) != 0;
+        m[2] = e->h[1] != p->h_float;
+        m[3] = e->h[2] != p->h_pos;
+        for (c = 0; c < 4; c++)
+            if (m[c]) {
+                s->n[c]++;
+                if (s->first[c] < 0 || e->frame < s->first[c]) s->first[c] = e->frame;
+            }
+        if ((m[0] || m[2]) && (s->cf_frame < 0 || e->frame < s->cf_frame)) {
+            s->cf_frame = e->frame;
+            memcpy(s->cf_own, e->h, sizeof s->cf_own);
+            s->cf_peer[0] = p->h_core; s->cf_peer[1] = p->h_float; s->cf_peer[2] = p->h_pos;
+        }
+    }
+}
+
+/* option B: one snapshot (frame Y) at frame X */
+static void net_h2_snap(const NetV2Snap* s, int X, uintptr_t* f)
+{
+    int Y = s->frame, i, k, moved = 0;
+    NetH2Ring* r = &g_v2h2.ring[Y & (NET_H2_RING - 1)];
+    NetH2Ring* x = &g_v2h2.ring[X & (NET_H2_RING - 1)];
+    g_v2h2.n_snap++;
+    if (g_v2h2.barrier >= 0 && Y <= g_v2h2.barrier) { g_v2h2.n_snap_barrier++; return; }
+    if (g_v2h2.last_taken >= 0 && Y <= g_v2h2.last_taken) { g_v2h2.n_snap_older++; return; }
+    if (r->frame != Y) { g_v2h2.n_snap_past++; return; }
+    g_v2h2.last_taken = Y;
+    g_v2h2.n_snap_cmp++;
+    for (i = 0; i < 2; i++) {
+        const unsigned char* h = s->b + 4 + 20 * i;
+        float d[4], m;
+        int dp, dt, j;
+        if (h[16] != r->sa[i]) g_v2h2.n_sa_diff++;
+        if (h[17] != r->sb[i]) g_v2h2.n_sb_diff++;
+        for (j = 0; j < 4; j++) d[j] = net_h2_rdf(h + 4 * j) - r->v[i][j];
+        if (!net_h2_finite(d[0]) || !net_h2_finite(d[1]) || !net_h2_finite(d[2]) || !net_h2_finite(d[3]) ||
+            d[0] > NET_H2_BIG || d[0] < -NET_H2_BIG || d[1] > NET_H2_BIG || d[1] < -NET_H2_BIG ||
+            d[2] > NET_H2_BIG || d[2] < -NET_H2_BIG) {      /* rev. 4: over 100 m on an axis, as a non-finite value */
+            g_v2h2.n_badval++;
+            continue;
+        }
+        if (d[3] > NET_H2_PI || d[3] < -NET_H2_PI) { g_v2h2.n_wrap++; d[3] = 0.0f; }
+        dp = d[0] != 0.0f || d[1] != 0.0f || d[2] != 0.0f;
+        dt = d[3] != 0.0f;
+        if (!dp && !dt) continue;
+        if (!*(const unsigned char*)(f[i] + NET_F_ACTIVE)) { g_v2h2.n_inactive++; continue; }
+        if (dp) {
+            __attribute__((aligned(16))) float v[4];
+            v[0] = x->v[i][0] + d[0]; v[1] = x->v[i][1] + d[1]; v[2] = x->v[i][2] + d[2]; v[3] = 1.0f;
+            ((net_h2_set16_t)(*(void* const* const*)f[i])[5])((void*)f[i], v);
+        }
+        if (dt) {
+            __attribute__((aligned(16))) float v[4];
+            o_net_h2_getrot((void*)f[i], v);
+            v[1] = x->v[i][3] + d[3];
+            ((net_h2_set16_t)(*(void* const* const*)f[i])[6])((void*)f[i], v);
+        }
+        for (k = Y + 1; k <= X; k++) {
+            NetH2Ring* e = &g_v2h2.ring[k & (NET_H2_RING - 1)];
+            if (e->frame != k) continue;
+            for (j = 0; j < 4; j++) e->v[i][j] += d[j];
+        }
+        m = d[0] < 0 ? -d[0] : d[0];
+        if ((d[1] < 0 ? -d[1] : d[1]) > m) m = d[1] < 0 ? -d[1] : d[1];
+        if ((d[2] < 0 ? -d[2] : d[2]) > m) m = d[2] < 0 ? -d[2] : d[2];
+        g_v2h2.size[m == 0.0f ? 0 : m < 1e-5f ? 1 : m < 1e-3f ? 2 : m < 1e-2f ? 3 : m < 1e-1f ? 4 : 5]++;
+        if (m > g_v2h2.max_dp) g_v2h2.max_dp = m;
+        if ((d[3] < 0 ? -d[3] : d[3]) > g_v2h2.max_dth) g_v2h2.max_dth = d[3] < 0 ? -d[3] : d[3];
+        g_v2h2.n_corr++;
+        moved = 1;
+    }
+    if (moved) {
+        g_v2h2.n_applied++;
+        g_v2h2.late[X - Y < NET_H2_LATEB ? X - Y : NET_H2_LATEB - 1]++;
+    }
+}
+
+/* the snapshots recv2 queued for frames <= X, in increasing frame (arrival order among equals); the rest stay */
+static void net_h2_snaps(NetV2Bat* b, int X, uintptr_t* f)
+{
+    int idx[NET_V2_SNAPQ], n = 0, i, j, keep = 0;
+    for (i = 0; i < b->nsnap; i++) if (b->snap[i].frame <= X) idx[n++] = i;
+    for (i = 1; i < n; i++)                             /* insertion sort: stable */
+        for (j = i; j > 0 && b->snap[idx[j - 1]].frame > b->snap[idx[j]].frame; j--) { int t = idx[j]; idx[j] = idx[j - 1]; idx[j - 1] = t; }
+    for (i = 0; i < n; i++) net_h2_snap(&b->snap[idx[i]], X, f);
+    for (i = 0; i < b->nsnap; i++) if (b->snap[i].frame > X) { if (keep != i) b->snap[keep] = b->snap[i]; keep++; }
+    b->nsnap = keep;
+}
+
+/* V2: the first call for X */
+static void net_h2_first(NetV2Bat* b, uintptr_t cnd, int X, uintptr_t cm, uint64_t T)
+{
+    uintptr_t fb = *(volatile const uintptr_t*)(cnd + NET_CND_FIGHTERS), fe = *(volatile const uintptr_t*)(cnd + NET_CND_FV_END);
+    uintptr_t f[2];
+    unsigned char p[2][20];
+    NetH2Own* o;
+    int cls, i, hash = (b->seat.features & V2F_HASH) != 0, optb = b->mode == 1 && (b->seat.features & V2F_OPTB) != 0;
+    g_v2h2.n_frames++;
+    if (!(g_v2h2.consumed >= 0 && g_v2h2.consumed == X - 1 && g_v2h2.t_consume_ok && cm && T == g_v2h2.t_consume + 1)) {
+        g_v2h2.barrier = X;
+        g_v2h2.n_barrier++;
+    }
+    if (!hash && !optb) return;                        /* rev. 1: neither agreed */
+    if (!fb || fe < fb || fe - fb < 0x90 || !(f[0] = *(const uintptr_t*)(fb + 0x20)) || !(f[1] = *(const uintptr_t*)(fb + 0x68))) {
+        g_v2h2.n_nofighters++;
+        g_v2h2.barrier = X;                            /* nothing taken at X: nothing before it is used */
+        return;
+    }
+    memset(p, 0, sizeof p);
+    o_net_h2_fill((void*)cnd, p[0], p[1]);
+    if (hash) {
+        if (net_h2_ko(f[0]) || net_h2_ko(f[1])) { g_v2h2.last_ko = X; g_v2h2.n_ko++; }
+        o = &g_v2h2.own[X & (NET_H2_OWN - 1)];
+        net_h2_hash(f[0], f[1], X, p[0], p[1], o->h);
+        cls = (g_v2h2.last_ko >= 0 && X - g_v2h2.last_ko <= NET_H2_WIN) ? 0 :
+              (g_v2h2.barrier >= 0 && X - g_v2h2.barrier <= NET_H2_WIN) ? 1 : 2;
+        o->frame = X; o->cls = (uint8_t)cls; o->done = 0;
+        g_v2local.hash[0].frame = X;
+        g_v2local.hash[0].h_core = o->h[0]; g_v2local.hash[0].h_float = o->h[1]; g_v2local.hash[0].h_pos = o->h[2];
+        g_v2local.nhash = 1;
+        {   const NetH2Own* q = &g_v2h2.own[(X - 1) & (NET_H2_OWN - 1)];
+            if (X >= 1 && q->frame == X - 1) {
+                g_v2local.hash[1].frame = X - 1;
+                g_v2local.hash[1].h_core = q->h[0]; g_v2local.hash[1].h_float = q->h[1]; g_v2local.hash[1].h_pos = q->h[2];
+                g_v2local.nhash = 2;
+            } }
+        net_h2_compare(b);
+    }
+    if (!optb) return;
+    {   NetH2Ring* r = &g_v2h2.ring[X & (NET_H2_RING - 1)];
+        r->frame = X;
+        for (i = 0; i < 2; i++) {
+            r->v[i][0] = net_h2_rdf(p[i]); r->v[i][1] = net_h2_rdf(p[i] + 4);
+            r->v[i][2] = net_h2_rdf(p[i] + 8); r->v[i][3] = net_h2_rdf(p[i] + 12);
+            r->sa[i] = p[i][16]; r->sb[i] = p[i][17];
+        } }
+    net_h2_snaps(b, X, f);
+}
+
+/* V2: the self-check (r3 s9) -- the input injected for this seat's fighter against what it sent labelled X */
+static void net_h2_self(int mode, int X, const void* hin, const void* gin, const uint16_t* word)
+{
+    static unsigned char w[NET_GB_ENTRY_MAX];
+    const unsigned char* const* vec = (const unsigned char* const*)(mode == 0 ? hin : gin);
+    const unsigned char* c = vec[0];
+    const unsigned char* e = vec[1];
+    uint64_t n = (c && e > c) ? (uint64_t)(e - c) / 6 : 0, i;
+    uint32_t len = 0;
+    int over = 0, missing, differ = 0;
+    for (i = 0; i < n; i++) {
+        int l = v2_cmd_len(c[6 * i]);
+        if (len + l > sizeof w) { over = 1; break; }
+        memcpy(w + len, c + 6 * i, (size_t)l);
+        len += (uint32_t)l;
+    }
+    g_v2h2.n_self++;
+    if (mode == 0) {
+        const NetHbEntry* h = net_hb_find(X);
+        missing = !h || h->oversize;
+        if (!missing) differ = over || (c && e > c && (uint64_t)(e - c) % 6) || n != h->n || len != h->len ||
+                               memcmp(w, h->cmd, len) != 0 || (word && *word != h->word);
+    } else {
+        const NetGbEntry* g = &g_v2g.ring[X % NET_GB_RING];
+        missing = X < 0 || g->label != X;
+        if (!missing) differ = over || (c && e > c && (uint64_t)(e - c) % 6) || n != g->n || len != g->len ||
+                               memcmp(w, g->cmd, len) != 0;
+    }
+    if (missing) g_v2h2.n_self_missing++;
+    else if (differ) g_v2h2.n_self_differ++;
+    if ((missing || differ) && g_v2h2.self_first < 0) g_v2h2.self_first = X;
+}
+
+static void net_h2_cost(LONG64 ticks)
+{
+    LONG64 us = (g_net_qpf.QuadPart > 0 && ticks > 0) ? ticks * 1000000 / g_net_qpf.QuadPart : 0;
+    if (us > g_v2h2.cost_max) g_v2h2.cost_max = us;
+    g_v2h2.cost[us < NET_H2_COSTB - 1 ? us : NET_H2_COSTB - 1]++;
+}
+
+/* ------------------------------------------------------------------ H2 */
+static void net_v2_tm_need(LONG seq, int X, int64_t t0);           /* v2_tempo.c (S6; rev. 2) */
+static void net_v2_tm_take(LONG seq, int X, int barrier);          /* v2_tempo.c (S6; rev. 2) */
+
+static unsigned char net_v2_h2(void* vcnd, void* hin, void* gin, int* frame, uint16_t* word)
+{
+    NetV2Bat* b = &g_v2b;
+    uintptr_t cnd = (uintptr_t)vcnd, cm;
+    LARGE_INTEGER t0, t1, t2, t3;
+    uint64_t T = 0;
+    unsigned char r;
+    int F, built;
+    if (!b->seq || b->seq != g_net_setup_seq || cnd != b->cnd || *(volatile const int*)cnd != b->mode)
+        return o_net_gfi(vcnd, hin, gin, frame, word);
+    if (g_v2h2.seq != b->seq) { g_net_h2_unsynced++; return o_net_gfi(vcnd, hin, gin, frame, word); }
+    QueryPerformanceCounter(&t0);
+    g_v2h2.n_calls++;
+    F = *(volatile const int*)(cnd + NET_CND_F);
+    cm = *(volatile const uintptr_t*)(g_net_mod + NET_RVA_CM_PTR);
+    if (cm) T = *(volatile const uint64_t*)(cm + NET_CM_TICK);
+    if (b->seat.state == V2S_V2) {                    /* rev. 3: cur follows V2's calls only (F-S7-1) */
+        if (F != g_v2h2.cur) {
+            net_v2_tm_need(b->seq, F, t0.QuadPart);                             /* rev. 2: t_need */
+            net_h2_first(b, cnd, F, cm, T);
+        }
+        g_v2h2.cur = F;
+    }
+    built = b->mode == 0 ? g_v2h.built_max >= F : *(volatile const int*)(cnd + NET_CND_SEQ) > F;
+    if (!built) {
+        g_v2h2.n_held++;
+        if (g_v2h2.held_frame != F) { g_v2h2.held_frame = F; g_v2h2.n_held_frames++; }
+        QueryPerformanceCounter(&t3);
+        net_h2_cost(t3.QuadPart - t0.QuadPart);
+        return 0;
+    }
+    QueryPerformanceCounter(&t1);
+    r = o_net_gfi(vcnd, hin, gin, frame, word);
+    QueryPerformanceCounter(&t2);
+    if (*(volatile const int*)(cnd + NET_CND_F) != F) {
+        g_v2h2.consumed = F;
+        g_v2h2.t_consume = T;
+        g_v2h2.t_consume_ok = cm != 0;
+        if (b->seat.state == V2S_V2) {
+            net_h2_self(b->mode, F, hin, gin, word);
+            net_v2_tm_take(b->seq, F, g_v2h2.barrier);                          /* rev. 2: A(X) */
+        }
+    }
+    QueryPerformanceCounter(&t3);
+    net_h2_cost((t3.QuadPart - t0.QuadPart) - (t2.QuadPart - t1.QuadPart));
+    return r;
+}
+
+/* At DllMain, with `scheme 2`: the five bytes and every anchor H2's reads rest on compared (any difference: REFUSED);
+   claimed; a stub within +/-2 GB holding the trampoline (the stolen instruction, then jmp 0x1AB0B5) at +0 and the relay
+   (mov rax, imm64; jmp rax) at +32; o_net_gfi set to the trampoline before the site is rewritten. */
+static const char* net_v2_h2_install(void)
+{
+    static const unsigned char pro[5] = { 0x48, 0x89, 0x6C, 0x24, 0x18 };
+    static const struct { uint32_t rva; uint8_t n; const char* hex; const char* why; } A[] = {
+        { 0x801C14, 16, "0f2fb0c0100000730983b82811000000",
+          "REFUSED, exe+0x801C14 is not the sync step's KO test (+0x10C0, +0x1128)" },
+        { 0x1AC7B8, 14, "8b9118090000480fbe81a00f0000",
+          "REFUSED, exe+0x1AC7B8 is not the snapshot trigger's reads (+0x918, +0xFA0)" },
+        { 0x1AB4CE, 5,  "e8ada67000", "REFUSED, exe+0x1AB4CE is not 0x1AB4A0's call of GetPosition 0x8B5B80" },
+        { 0x1AB4FB, 5,  "e800a87000", "REFUSED, exe+0x1AB4FB is not 0x1AB4A0's call of GetRotation 0x8B5D00" },
+        { 0x00A161, 10, "c705d59dcd0138010000", "REFUSED, exe+0xA161 is not the RNG engine's index at 0x1CE3F40 (312)" },
+        { 0x80495A, 7,  "488d0ddff54d01", "REFUSED, exe+0x80495A is not the RNG engine's per-battle copy (0x1CE3F40)" },
+        { 0x8C2FBA, 7,  "488b0daf8d4301", "REFUSED, exe+0x8C2FBA is not the ComponentManager singleton (0x1CFBD70)" },
+        { 0x8C5BFE, 24, "488b417848ffc048b9ffffffffffffff7f4823c148894678",
+          "REFUSED, exe+0x8C5BFE is not the world tick's [CM+0x78] += 1" },
+    };
+    unsigned char* site = g_net_mod + NET_RVA_GFI;
+    unsigned char* st;
+    long long rel;
+    DWORD old;
+    int i, k;
+    if (memcmp(site, pro, 5) != 0) return "REFUSED, exe+0x1AB0B0 is not GetFrameInputs' stock first instruction";
+    for (i = 0; i < (int)(sizeof A / sizeof A[0]); i++)
+        for (k = 0; k < A[i].n; k++) {
+            int hi = A[i].hex[2 * k], lo = A[i].hex[2 * k + 1];
+            int v = ((hi <= '9' ? hi - '0' : hi - 'a' + 10) << 4) | (lo <= '9' ? lo - '0' : lo - 'a' + 10);
+            if (g_net_mod[A[i].rva + k] != (unsigned char)v) return A[i].why;
+        }
+    {   const uint64_t* p = (const uint64_t*)(g_net_mod + NET_RVA_VT_PLAYABLE);
+        const uint64_t* q = (const uint64_t*)(g_net_mod + NET_RVA_VT_ONLINE);
+        uint64_t sp = (uint64_t)(uintptr_t)(g_net_mod + NET_RVA_SETPOS), sr = (uint64_t)(uintptr_t)(g_net_mod + NET_RVA_SETROT);
+        if (p[5] != sp || p[6] != sr || q[5] != sp || q[6] != sr)
+            return "REFUSED, the fighters' vtable slots 5 / 6 are not SetPosition 0x8B4450 / SetRotation 0x8B45B0"; }
+    st = (unsigned char*)gauge_alloc_near(site, 64);
+    if (!st) return "REFUSED, no stub within +/-2 GB";
+    rel = (long long)(site + 5) - (long long)(st + 10);
+    if (rel > 0x7FFFFFFFLL || rel < -0x80000000LL) { VirtualFree(st, 0, MEM_RELEASE); return "REFUSED, the stub is out of rel32 reach"; }
+    {   long long r2 = (long long)(st + 32) - (long long)(site + 5);
+        if (r2 > 0x7FFFFFFFLL || r2 < -0x80000000LL) { VirtualFree(st, 0, MEM_RELEASE); return "REFUSED, the stub is out of rel32 reach"; } }
+    if (!bros_claim(BROS_MASTER_OWNER, NET_RVA_GFI, 5,
+                    "PART 41 NETUP v2 (H2): GetFrameInputs 0x1AB0B0 -> protocol v2's frame gate, state hash, option B "
+                    "and self-check, which call 0x1AB0B0 through a trampoline in every battle")) {
+        VirtualFree(st, 0, MEM_RELEASE);
+        return "REFUSED, the bytes are claimed by another owner";
+    }
+    memcpy(st, pro, 5);                                /* the trampoline */
+    st[5] = 0xE9;
+    {   int32_t r32 = (int32_t)rel; memcpy(st + 6, &r32, 4); }
+    st[32] = 0x48; st[33] = 0xB8;                      /* the relay: mov rax, imm64; jmp rax */
+    {   uint64_t a = (uint64_t)(uintptr_t)&net_v2_h2; memcpy(st + 34, &a, 8); }
+    st[42] = 0xFF; st[43] = 0xE0;
+    FlushInstructionCache(GetCurrentProcess(), st, 64);
+    o_net_h2_fill = (net_h2_fill_t)(g_net_mod + NET_RVA_H2_FILL);
+    o_net_h2_getrot = (net_h2_get16_t)(g_net_mod + NET_RVA_H2_GETROT);
+    o_net_gfi = (net_gfi_t)st;
+    if (!VirtualProtect(site, 5, PAGE_EXECUTE_READWRITE, &old)) {
+        VirtualFree(st, 0, MEM_RELEASE);               /* the claim stays (as the other hooks'); the site unchanged */
+        o_net_gfi = 0;
+        return "REFUSED, VirtualProtect failed";
+    }
+    site[0] = 0xE9;
+    {   int32_t r32 = (int32_t)((long long)(st + 32) - (long long)(site + 5)); memcpy(site + 1, &r32, 4); }
+    VirtualProtect(site, 5, old, &old);
+    FlushInstructionCache(GetCurrentProcess(), site, 5);
+    g_h2_stub = st;
+    g_net_on_h2 = 1;
+    return "on (exe+0x1AB0B0: GetFrameInputs -> H2, the stock function through a trampoline)";
+}
+/* ---- end of v2_h2.c ---- */
+/* ---- NETUP part 2: S6 the arrival measure and the dormant balance (nu043-nu046) (v2_tempo.c, md5 c0d5d41f), unchanged ---- */
+/* ---- NETUP part 2, S6 (pass nu): the tempo balance ----------------------------------------------------------------
+   Design: notes\PART2_S6_NOTES.md (nu043; the controller revised in nu044 on the model, e13, and shipped OFF: `vtempo`
+   0 by default, D-S6-9 -- the measure runs in every V2 battle). Base: SPEC_BUILD4 r3 s10.1, s3.2 (MARGIN), s3.4
+   (F8); SPEC_31 s3.1 (I1's definitions, never built). Callers: H7 rev. 6 (begin), H2 rev. 2 (need, take), hb2 rev. 4
+   and gb2 rev. 2 (MARGIN; the controller); PART 41's `net_update` (the scan) and start-up (the install) come with S7.
+   Four parts, each called by an existing hook; S6 writes no exe byte:
+   - the scan (`net_v2_arr_scan`, the network thread): PART 41's `net_update` calls it after Transmission::Update
+     returned and the send-queue lock is left. It walks the transport's channel-1 receive ring (impl+0x258: {raw, buf,
+     cap, used}; entries at 32-byte steps, {u64 sender, i32 size, 4 bytes} then the message = the 4-byte key and the
+     record) and stamps, in a table tagged with the battle, the QPC time at which each frame of the peer's v2 records
+     was first read: t_read. Only records S1's decoder accepts (magic, version, length within the entry, the CRC,
+     every block bounded), from the peer's seat, with hello_seen and this setup's echo; each INNER entry's own frame.
+     A closed transport is not a fault (nu045): Update itself returns at once while [impl] is 0 (0xA78CC3); the close
+     (0xA78B40, WinMain's, at exit) zeroes [impl], frees the rings and zeroes their raw and buf (used kept); the open
+     (0xA78970, WinMain's, before the main loop) sets [impl] before it allocates them. So [impl] 0 or buf 0 -> nothing
+     this pass (counted `closed`); only a ring that is there and breaks its checks turns the scan off for the process.
+     A held pass is not read either (nu046): when channel 0 dropped anything in this Update (its ring full: an
+     eviction, or a datagram larger than the ring), Update leaves -1 in impl+0x278 (0xA7983A, 0xA798B5-0xA798EE) and
+     this pass's Transmission::Recv returns it at once, clearing it and handing nothing out (0xA79EA6) -- the entries
+     wait for the next pass (if not evicted): they are stamped then, when Recv hands them out (counted `held`).
+   - t_need and A(X) (`net_v2_tm_need`, `net_v2_tm_take`, H2 on the main thread): QPC at the first call for X; at X's
+     consumption a = t_need - t_read in 0.1 ms, left out within 60 frames of H2's barrier, clamped to the smoothed
+     margin +- 16.7 ms, smoothed by 1/16 in fixed point (A16).
+   - MARGIN (`net_v2_tm_margin`, hb2 / gb2): A (or -32,768, unknown) and Q, the peer's entries in hand.
+   - the controller (`net_v2_tm_tick`, hb2 / gb2, V2 with the balance agreed -- `V2F_TEMPO`, both seats' `vtempo 1`,
+     which is not the default): after a consumption, the word at
+     [[exe+0x1CFCB40]+0x10]+0x80 -- which the sync step has just set to the stock rule's value -- is raised to 60 + k
+     for a burst that gains the measured lead (behind > 4 ms; at most two frames' time), then a settle of 48 + 2d
+     frames; never below the stock rule's word.
+   The integers are tempo_ref.py's. Threads: the scan is the table's one writer; the main thread reads it with a
+   tag-value-tag check. The battle is published by H1 (`net_v2_tm_begin`) with its setup counter last. */
+#define NET_TM_UNKNOWN      (-32768)
+#define NET_TM_WIN          60          /* frames left out after H2's barrier                                      */
+#define NET_TM_CLAMP        167         /* the sample clamp, 0.1 ms                                               */
+#define NET_TM_ON16         1280        /* behind > 4 ms: D16 = A16 - 16 A_peer > 1,280                            */
+#define NET_TM_KMAX         12
+#define NET_TM_SETTLE       48
+#define NET_TM_NEEDMAX      33333       /* one burst gains at most two frames' time, us                            */
+#define NET_TM_HB           802         /* A's histogram: 0.5 ms bins, -100 .. +300 ms, plus under / over          */
+#define NET_AR_N            256
+#define NET_AR_RING         0x258       /* impl + : channel 1's receive ring                                       */
+#define NET_AR_CAP          0x800
+#define NET_AR_FLAG         0x278       /* impl + : Update's channel-0 drop flag, -1: this pass's Recv hands nothing out */
+#define NET_RVA_TM_FWK      0x1CFCB40u  /* FrameworkFullAsync's singleton (0x9E7510 reads it at 0x9E751F)          */
+#define NET_TM_FWK_IMPL     0x10
+#define NET_TM_WORD         0x80        /* the update rate, u16 Hz (the pacing reads it at 0x9E72D4)               */
+#define NET_CND_Q_HOST      0x88        /* map78's size: the guest's entries in hand                               */
+#define NET_CND_Q_GUEST     0xF0        /* mapE0's size: the host's entries in hand                                */
+#define NET_TM_CB()         __asm__ __volatile__("" ::: "memory")
+
+/* the table: written by the scan (network thread), read by H2 (main thread) */
+static volatile uint64_t g_ar_tag[NET_AR_N];          /* (seq << 32) | frame; 0 while being written              */
+static volatile int64_t  g_ar_t[NET_AR_N];            /* QPC                                                     */
+/* the battle, published by the main thread: id first, seq last; 0 none */
+static volatile LONG     g_ar_pub_seq;
+static volatile LONG     g_ar_pub_id;                 /* this seat's nonce | the peer's seat << 8                */
+/* the scan's own state (network thread) and its counters (read by the watch thread at a battle's end) */
+static struct {
+    LONG     seq;
+    int      hi;
+    volatile int off;                                 /* 1: a ring that failed its checks; off for the process  */
+    const char* why;
+    LONG64   n_pass, n_entries, n_v2, n_other, n_foreign, n_bad, n_implausible, n_stamped;
+    LONG64   n_closed;                                /* passes with the transport closed or its rings not there   */
+    LONG64   n_held;                                  /* passes whose Recv hands nothing out (nu046)               */
+} g_ar;
+
+/* the main thread's */
+typedef struct {
+    LONG     seq;                       /* the battle (0: none)                                                     */
+    int      need_frame;                /* the frame whose first call was stamped (-1 none) ...                    */
+    int64_t  t_need;                    /* ... its QPC                                                             */
+    int      consumed;                  /* the newest frame consumed in V2 (-1 none) ...                            */
+    int      tick_seen;                 /* ... and the newest one the controller has acted on                      */
+    int      a_valid;
+    int32_t  a16;                       /* 16 x the smoothed margin, 0.1 ms                                         */
+    int      st, k, until;              /* the controller: 0 idle, 1 burst (k), 2 settle (until frame `until`)     */
+    int32_t  need, got;                 /* the burst's us to gain, gained                                          */
+    LONG64   n_samples, n_left, n_noread, n_noneed, n_clamped, n_other;
+    LONG64   hist[NET_TM_HB];
+    int32_t  a_min, a_max;
+    LONG64   n_ticks, n_unknown, n_bursts, n_written, n_noptr, n_word[14];   /* words 60 .. 72, other            */
+} NetV2Tempo;
+static NetV2Tempo g_v2tm;
+static int         g_net_on_tm;
+static const char* g_net_why_tm = "off";
+
+static int64_t net_tm_fdiv(int64_t a, int64_t b)     /* floor division, b > 0 */
+{
+    int64_t q = a / b;
+    if ((a % b) != 0 && a < 0) q--;
+    return q;
+}
+
+/* H1 (net_v2_bat_begin): a v2 battle begins. The CRC table is built here, before the scan can see the battle. */
+static void net_v2_tm_begin(LONG seq, uint8_t nonce, int peer_seat)
+{
+    v2_crc_init();
+    InterlockedExchange(&g_ar_pub_seq, 0);
+    memset(&g_v2tm, 0, sizeof g_v2tm);
+    g_v2tm.need_frame = g_v2tm.consumed = g_v2tm.tick_seen = -1;
+    g_v2tm.a_min = 0x7FFFFFFF; g_v2tm.a_max = -0x7FFFFFFF;
+    g_v2tm.seq = seq;
+    InterlockedExchange(&g_ar_pub_id, (LONG)nonce | ((LONG)(peer_seat & 1) << 8));
+    InterlockedExchange(&g_ar_pub_seq, seq);
+}
+
+/* ------------------------------------------------------------------ the scan (network thread) */
+static void net_ar_off(const char* why) { g_ar.why = why; g_ar.off = 1; }
+
+static void net_v2_arr_scan(uintptr_t impl)
+{
+    LARGE_INTEGER q;
+    LONG seq, id, seq2;
+    uintptr_t ring, buf;
+    int32_t cap, used, o;
+    uint8_t nonce;
+    int peer;
+    if (g_ar.off || !impl) return;
+    seq = g_ar_pub_seq;
+    NET_TM_CB();
+    id = g_ar_pub_id;
+    NET_TM_CB();
+    seq2 = g_ar_pub_seq;
+    if (!seq || seq != seq2) return;
+    nonce = (uint8_t)(id & 0xFF);
+    peer = (id >> 8) & 1;
+    QueryPerformanceCounter(&q);
+    if (seq != g_ar.seq) { g_ar.seq = seq; g_ar.hi = -1; }
+    g_ar.n_pass++;
+    if (!*(volatile const uintptr_t*)impl) { g_ar.n_closed++; return; }   /* closed: Update's own test (0xA78CC3) */
+    ring = impl + NET_AR_RING;
+    buf = *(volatile const uintptr_t*)(ring + 8);
+    cap = *(volatile const int32_t*)(ring + 0x10);
+    used = *(volatile const int32_t*)(ring + 0x14);
+    if (!buf) { g_ar.n_closed++; return; }              /* not allocated yet, or freed by the close: nothing here */
+    if (buf & 31) { net_ar_off("the ring's buffer is not 32-aligned"); return; }
+    if (cap < NET_AR_CAP - 31 || cap > NET_AR_CAP) { net_ar_off("the ring's capacity is not 2,017-2,048"); return; }
+    if (used < 0 || used > cap) { net_ar_off("the ring's used is outside 0..cap"); return; }
+    if (*(volatile const int32_t*)(impl + NET_AR_FLAG) < 0) { g_ar.n_held++; return; }   /* Recv returns -1 this pass */
+    for (o = 0; o + 16 <= used; ) {
+        const uint8_t* e = (const uint8_t*)(buf + (uint32_t)o);
+        int32_t size;
+        memcpy(&size, e + 8, 4);
+        if (size < 0 || size > used - o - 16) { g_ar.n_bad++; break; }
+        g_ar.n_entries++;
+        if (size >= 4 + (int32_t)V2_HDR) {
+            V2Rec r;
+            const uint8_t* b = e + 16 + 4;            /* the record, after the 4-byte key */
+            if (v2_decode(b, (size_t)size - 4, 1, &r) == V2_OK && (r.blocks & V2B_INNER)) {
+                if (r.seat != peer || !(r.flags & V2F_HELLO_SEEN) || r.margin_echo != nonce) g_ar.n_foreign++;
+                else {
+                    uint32_t p = (uint32_t)r.inner_off + 2, i, n = r.inner_count;
+                    g_ar.n_v2++;
+                    for (i = 0; i < n; i++) {
+                        int32_t k = (int32_t)v2_rd32(b + p);
+                        uint32_t nc = v2_rd16(b + p + 6), c;
+                        p += 8;
+                        for (c = 0; c < nc; c++) p += (uint32_t)v2_cmd_len(b[p]);
+                        if (k < 0 || (g_ar.hi < 0 ? k > 64 : (k > g_ar.hi + 64 || k <= g_ar.hi - 192))) {
+                            g_ar.n_implausible++;
+                            continue;
+                        }
+                        {   uint64_t tag = ((uint64_t)(uint32_t)seq << 32) | (uint32_t)k;
+                            int x = k & (NET_AR_N - 1);
+                            if (g_ar_tag[x] != tag) {
+                                g_ar_tag[x] = 0;
+                                NET_TM_CB();
+                                g_ar_t[x] = q.QuadPart;
+                                NET_TM_CB();
+                                g_ar_tag[x] = tag;
+                                g_ar.n_stamped++;
+                            } }
+                        if (k > g_ar.hi) g_ar.hi = k;
+                    }
+                }
+            } else g_ar.n_other++;
+        } else g_ar.n_other++;
+        o = (o + 16 + size + 31) & ~31;
+    }
+}
+
+/* ------------------------------------------------------------------ H2 (main thread) */
+/* the first call for X in V2 (t0: that call's QPC) */
+static void net_v2_tm_need(LONG seq, int X, int64_t t0)
+{
+    if (g_v2tm.seq != seq) return;
+    g_v2tm.need_frame = X;
+    g_v2tm.t_need = t0;
+}
+
+static void net_tm_hist(int32_t a)
+{
+    int32_t b = a < -1000 ? 0 : a >= 3000 ? NET_TM_HB - 1 : 1 + (int32_t)net_tm_fdiv(a + 1000, 5);
+    g_v2tm.hist[b]++;
+    if (a < g_v2tm.a_min) g_v2tm.a_min = a;
+    if (a > g_v2tm.a_max) g_v2tm.a_max = a;
+}
+
+/* X consumed in V2 (barrier: H2's latest frame not in step) */
+static void net_v2_tm_take(LONG seq, int X, int barrier)
+{
+    int x = X & (NET_AR_N - 1);
+    uint64_t tag = ((uint64_t)(uint32_t)seq << 32) | (uint32_t)X, t1, t2;
+    int64_t tr, d;
+    int32_t a;
+    if (g_v2tm.seq != seq) return;
+    g_v2tm.consumed = X;
+    if (g_v2tm.need_frame != X) { g_v2tm.n_noneed++; return; }
+    if (barrier >= 0 && X - barrier <= NET_TM_WIN) { g_v2tm.n_left++; return; }
+    if (g_ar.off) { g_v2tm.n_noread++; return; }
+    t1 = g_ar_tag[x];
+    NET_TM_CB();
+    tr = g_ar_t[x];
+    NET_TM_CB();
+    t2 = g_ar_tag[x];
+    if (t1 != tag || t2 != tag) { g_v2tm.n_noread++; return; }
+    d = g_v2tm.t_need - tr;
+    if (g_net_qpf.QuadPart <= 0) { g_v2tm.n_other++; return; }
+    if (d > ((int64_t)1 << 40)) d = (int64_t)1 << 40;
+    if (d < -((int64_t)1 << 40)) d = -((int64_t)1 << 40);
+    d = net_tm_fdiv(d * 10000, g_net_qpf.QuadPart);
+    a = d > 32767 ? 32767 : d < -32767 ? -32767 : (int32_t)d;
+    g_v2tm.n_samples++;
+    net_tm_hist(a);
+    if (!g_v2tm.a_valid) { g_v2tm.a_valid = 1; g_v2tm.a16 = 16 * a; return; }
+    {   int32_t cur = (int32_t)net_tm_fdiv(g_v2tm.a16, 16), lo = cur - NET_TM_CLAMP, hi = cur + NET_TM_CLAMP;
+        if (a < lo || a > hi) { g_v2tm.n_clamped++; a = a < lo ? lo : hi; } }
+    g_v2tm.a16 += (int32_t)net_tm_fdiv((int64_t)16 * a - g_v2tm.a16, 16);
+}
+
+/* ------------------------------------------------------------------ hb2 / gb2 (main thread) */
+static int16_t net_v2_tm_a(void)
+{
+    if (!g_v2tm.a_valid || g_ar.off) return (int16_t)NET_TM_UNKNOWN;
+    {   int64_t v = net_tm_fdiv((int64_t)g_v2tm.a16 + 8, 16);
+        return (int16_t)(v > 32767 ? 32767 : v < -32767 ? -32767 : v); }
+}
+
+/* MARGIN's two values, at every build of a v2 battle (mode: 0 host, 1 guest) */
+static void net_v2_tm_margin(uintptr_t cnd, int mode, int16_t* a, uint8_t* q)
+{
+    int n = *(volatile const int*)(cnd + (mode == 0 ? NET_CND_Q_HOST : NET_CND_Q_GUEST));
+    *a = net_v2_tm_a();
+    *q = (uint8_t)(n < 0 ? 0 : n > 255 ? 255 : n);
+}
+
+static int32_t net_tm_gain(int w) { return w > 60 ? (int32_t)((1000000LL * (w - 60)) / (60LL * w)) : 0; }
+
+/* the controller (tempo_ref.Balance): the word to leave for the next tick, from the stock rule's `stock` */
+static int net_tm_balance(int X, int a_peer, int d, int stock)
+{
+    NetV2Tempo* t = &g_v2tm;
+    int w;
+    if (t->st == 2 && X >= t->until) t->st = 0;
+    if (t->st == 0) {
+        if (!t->a_valid || g_ar.off || a_peer == NET_TM_UNKNOWN) { t->n_unknown++; return stock; }
+        {   int64_t d16 = (int64_t)t->a16 - 16LL * a_peer;
+            if (d16 > NET_TM_ON16) {
+                int64_t k = net_tm_fdiv(d16 - 320, 640), need = net_tm_fdiv(d16 * 100, 32);
+                t->k = (int)(k < 1 ? 1 : k > NET_TM_KMAX ? NET_TM_KMAX : k);
+                t->need = (int32_t)(need > NET_TM_NEEDMAX ? NET_TM_NEEDMAX : need);
+                t->got = 0;
+                t->st = 1;
+                t->n_bursts++;
+            } }
+    }
+    if (t->st != 1) return stock;
+    w = stock > 60 + t->k ? stock : 60 + t->k;
+    t->got += net_tm_gain(w);
+    if (t->got >= t->need) { t->st = 2; t->until = X + NET_TM_SETTLE + 2 * d; }
+    return w;
+}
+
+/* V2 with the balance agreed: after a consumption, the word (a_peer: recv2's newest MARGIN A, or unknown) */
+static void net_v2_tm_tick(LONG seq, int a_peer, int d)
+{
+    uintptr_t fw, impl;
+    int w, nw, X;
+    if (g_v2tm.seq != seq || g_v2tm.consumed < 0 || g_v2tm.consumed == g_v2tm.tick_seen) return;
+    X = g_v2tm.consumed;
+    g_v2tm.tick_seen = X;
+    fw = *(volatile const uintptr_t*)(g_net_mod + NET_RVA_TM_FWK);
+    impl = fw ? *(volatile const uintptr_t*)(fw + NET_TM_FWK_IMPL) : 0;
+    if (!impl) { g_v2tm.n_noptr++; return; }
+    g_v2tm.n_ticks++;
+    w = *(volatile const uint16_t*)(impl + NET_TM_WORD);
+    nw = net_tm_balance(X, a_peer, d, w);
+    g_v2tm.n_word[nw >= 60 && nw <= 72 ? nw - 60 : 13]++;
+    if (nw != w) { *(volatile uint16_t*)(impl + NET_TM_WORD) = (uint16_t)nw; g_v2tm.n_written++; }
+}
+
+/* ------------------------------------------------------------------ install: the stock bytes S6 relies on */
+static int net_tm_hexeq(const unsigned char* p, const char* hex)
+{
+    size_t i, n = strlen(hex) / 2;
+    for (i = 0; i < n; i++) {
+        unsigned v = 0;
+        int k;
+        for (k = 0; k < 2; k++) {
+            char c = hex[2 * i + k];
+            v = v * 16 + (unsigned)(c >= '0' && c <= '9' ? c - '0' : c >= 'a' && c <= 'f' ? c - 'a' + 10 : 99);
+        }
+        if (v > 255 || p[i] != (unsigned char)v) return 0;
+    }
+    return 1;
+}
+
+static const struct { unsigned rva; const char* hex; const char* refusal; } g_tm_anchors[] = {
+    { 0x801828u, "e8e35c1e00488b501041be3c000000664489b280000000",
+      "REFUSED, exe+0x801828 is not the sync step's top write (60) at 0x801837" },
+    { 0x80245Cu, "e8af501e00488b48108b85d002000066898180000000",
+      "REFUSED, exe+0x80245C is not the played tick's write of the stock rule's word at 0x80246B" },
+    { 0x801C58u, "e8b3581e00488b4810b81027000066898180000000c605c5004e0101",
+      "REFUSED, exe+0x801C58 is not the freeze's 10,000 and the skip byte at 0x801C66" },
+    { 0x9E751Fu, "488b051a563101",
+      "REFUSED, exe+0x9E751F is not the framework accessor's singleton load (exe+0x1CFCB40)" },
+    { 0x9E7581u, "c783800000003c003c00",
+      "REFUSED, exe+0x9E7581 is not the update / render words' initial 60 at impl+0x80" },
+    { 0x9E7599u, "48895f10",
+      "REFUSED, exe+0x9E7599 is not the impl at the singleton's +0x10" },
+    { 0x9E72D4u, "0fb79080000000",
+      "REFUSED, exe+0x9E72D4 is not the pacing's read of the word at impl+0x80" },
+    { 0x8096A8u, "e85381ffff",
+      "REFUSED, exe+0x8096A8 is not the sync step's call from its dynamic callback" },
+    { 0x857456u, "e835cd0100",
+      "REFUSED, exe+0x857456 is not the root task's dynamic callbacks (the sync step)" },
+    { 0x8575AAu, "803d88a7480100740cc6057fa7480100e950090000",
+      "REFUSED, exe+0x8575AA is not the root task's skip test (a freeze returns)" },
+    { 0x85763Eu, "e83db80600",
+      "REFUSED, exe+0x85763E is not the root task's world tick" },
+    { 0x857EF0u, "e8cb8e0400",
+      "REFUSED, exe+0x857EF0 is not the root task's capture (after the tick)" },
+    { 0x8A0E64u, "ff5078",
+      "REFUSED, exe+0x8A0E64 is not the capture's call through SOnlineAction's slot 15" },
+    { 0x890141u, "e86a8b1e00",
+      "REFUSED, exe+0x890141 is not the network thread's Transmission::Update" },
+    { 0x890177u, "e8a467deff",
+      "REFUSED, exe+0x890177 is not the network thread's NetworkManager::Recv after it" },
+    { 0xA7302Bu, "c7806802000000080000",
+      "REFUSED, exe+0xA7302B is not channel 1's receive ring asked at 0x800 bytes" },
+    { 0xA78A8Bu, "48638f68020000e8dd8562004889875802000089b76c020000488d481f4883e1e02bc148898f60020000018768020000",
+      "REFUSED, exe+0xA78A8B is not the receive rings' open (buf = align32(raw), cap adjusted)" },
+    { 0xA7955Fu, "488d8758020000",
+      "REFUSED, exe+0xA7955F is not Update's channel-1 receive ring at impl+0x258" },
+    { 0xA79A12u, "418b7b14498b430883c71f83e7e08975d70f1045cf4863cf83c710448bc60f1104014863cf49034b08e8b0c562004c8b5dbf8d043741894314",
+      "REFUSED, exe+0xA79A12 is not Update's append ({sender, size, 4 bytes} at align32(used), then the message)" },
+    { 0xA79F70u, "443b69140f8d5d010000488b4108418d4d104d63cd448d691f4c03c84c63d14c03d04c894c24304d6349084503e94183e5e0",
+      "REFUSED, exe+0xA79F70 is not Transmission::Recv's walk of the rings" },
+    { 0xA78CC3u, "48833900488bf90f841e0c0000",
+      "REFUSED, exe+0xA78CC3 is not Transmission::Update's open test ([impl] 0: it returns)" },
+    { 0xA78B4Au, "488b39488bd94885ff0f844501000048896c243033ed",
+      "REFUSED, exe+0xA78B4A is not the transport's close (open test; rbp = 0)" },
+    { 0xA78BCEu, "e85d84620048892b",
+      "REFUSED, exe+0xA78BCE is not the close's [impl] = 0" },
+    { 0xA78C5Au, "8b83600200002b8358020000488b8b58020000018368020000e8b88362004889ab580200004889ab60020000",
+      "REFUSED, exe+0xA78C5A is not the close's channel-1 ring freed (raw = buf = 0)" },
+    { 0xA79577u, "895daf895d7f",
+      "REFUSED, exe+0xA79577 is not Update's drop flags cleared before the receive loop" },
+    { 0xA7983Au, "488b45b7c74485afffffffff",
+      "REFUSED, exe+0xA7983A is not Update's drop flag set for the channel that dropped" },
+    { 0xA798B5u, "8b45af4c8bbc24a80000004c8bb424b00000004c8bac24b80000004c8ba424c0000000488bb424c8000000488b9c24d0000000898778020000",
+      "REFUSED, exe+0xA798B5 is not Update's channel-0 flag stored at impl+0x278" },
+    { 0xA79EA6u, "8bb97802000085ff791b899978020000",
+      "REFUSED, exe+0xA79EA6 is not Recv's return on a negative impl+0x278 (cleared, nothing handed out)" },
+};
+
+/* start-up (PART 41, before any battle): every anchor or nothing; S6 writes no byte, claims none */
+static const char* net_v2_tm_install(void)
+{
+    size_t i;
+    if (!g_net_mod) return "REFUSED, no exe image";
+    for (i = 0; i < sizeof g_tm_anchors / sizeof g_tm_anchors[0]; i++)
+        if (!net_tm_hexeq(g_net_mod + g_tm_anchors[i].rva, g_tm_anchors[i].hex)) return g_tm_anchors[i].refusal;
+    v2_crc_init();
+    g_net_on_tm = 1;
+    return "on (the arrival scan and the margin; the balance only where both seats have vtempo 1; no exe byte written)";
+}
+/* ---- end of v2_tempo.c ---- */
+/* ---- NETUP part 2: S7 the glue, rev. 5 (nu048, nu058, nu059, nu060, nu068, nu074) (v2_s7.c, md5 fd3acef3), unchanged ---- */
+/* ---- NETUP part 2, S7 (pass nu): the glue -- H1's HELLO setup, the scan's call, the install of every v2 hook, the
+   per-battle report and its NET lines. Pasted into PART 41 after the ten units (S1 v2wire, S2a v2core / v2keys, H6,
+   H1's P, H7, hb2, gb2, H2, S6), before net_read_cfg. Design: notes\PART2_S7_PLAN.md (D-S7-1 .. D-S7-9).
+   - The keys: net_read_cfg reads bros_net.txt with S2a's parser into g_net_v2k and copies Part 1's keys out of it into
+     the g_net_cfg_* they always were. v2 needs `scheme 2` (the parser forces 0 without `lock 1`).
+   - The install (net_v2_install, from net_early_install after Part 1's, before any game thread): v2 also needs the
+     send-queue lock (Send and Update detoured) and the setup detour; then S6 (its 28 anchors: no byte written), H7, H3,
+     H4, H2, H6, each comparing its stock bytes first. Any refusal turns v2 off for the session (r3 s13), and the bytes
+     of every v2 hook installed before it are written back (D-S7-5): with v2 off the exe's bytes are Part 1's. The
+     claims made stay in the registry (it has no release); the start-up line says which hook refused and why.
+   - H1 (net_v2_on_setup, from PART 41's net_setup, main thread, after g_net_setup_seq counts the setup): with v2 on
+     and the manager's seat ([cnd], written by the setup at 0x1AAD5D) 0 or 1, this seat's HELLO -- P and its samples
+     from H6's ring (net_v2_p_frozen), M, pctl, dmin, dmax, RTT' (cnd+8), the game's D and NEW's (net_setup's d0 / d1),
+     NEW's source (0 the `delay` key, 2 the game's own D), the window (cnd+0x14), the nonce (the setup counter mod 255,
+     plus 1), the build id (CRC-32C of PATCH_BUILD_ID), the content id (g_issuer: D-S7-1), the settings id (CRC-32C of
+     the v2 keys in force: D-S7-3), the flags (optb, hash, vtempo, fallback, nsched; never option L: D-S7-6) -- and
+     net_v2_bat_begin. Before the begin resets the units' state, the previous v2 battle's report is archived.
+   - The scan (net_v2_on_update, from PART 41's net_update on the network thread, after the stock Update and the
+     lock): S6's net_v2_arr_scan, only with v2 on.
+   - The report (the watch thread, at a battle's end): one snapshot of the battle's state -- the live state while it
+     still belongs to the battle, else H1's archive -- validated by an epoch H1 holds odd while it archives and resets
+     (D-S7-7); then the lines, every counter bounded to 9 digits so that each line's worst case is known and below
+     log_line's 511 characters (s7_ref.py). The scan's counters are the process's (S6 resets only its newest frame per
+     battle): the report prints this battle's part, from the values H1 noted at its begin.
+   Revision 2 (S8 step 5, nu058; notes\PART2_S8_PLAN.md):
+   - D-S8-10 (VX_P2 F9), the room gate: v2 begins only in a two-member lobby. The room hook (hk_NumMembers, PART 27)
+     notes every count it returns with its lobby in g_net_v2_room (one 64-bit word: the lobby's low 56 bits, the count
+     clamped to 0-255 in the top 8). H1 reads it with the lobby the client is in (g_room3_lobby): the same lobby and a
+     count above 2 (a spectator's room, a Tag / Team room) -> no v2 battle is begun, so every v2 hook passes this battle
+     to Part 1, and its report is one line saying why; any other case (no count, another lobby, none) -> v2 as before.
+   - The outcomes of S2a rev. 2 / H7 rev. 8: agreed and committed (V2: both times), agreed but never committed (AGREED
+     at the end), a fallback by its cause (H7's left_by 3 a stock record before the peer's HELLO, 4 silence, 5 a stock
+     record after this seat agreed), a refusal on silence (reason 4).
+   - The new counters: v2net -- late stock records (D-S8-4), the silence (D-S8-2); v2ctl -- z0's lone records (D-S8-5)
+     and, for the host, the kept first record sent in f0req's place (hb2's f0keep, D-S8-6; tx[24]).
+   Revision 3 (S8 step 6, nu059): v2ctl adds hb2 rev. 6's f0keep2 (of the kept records, those sent to a peer that had
+   sent v2 records; tx[25]) after the host's f0keep.
+   Revision 4 (S8 step 6, nu060): v2ctl's z0 part adds H7 rev. 10's lone records of a v2 peer handed on (D-S8-15) and
+   the kept lone records handed on once the peer's requests proved Part 1's resend stub (D-S8-16): "(long L, lone N,
+   v2 peer's V, taken T)". The late records H7 rev. 10 drops in NEW's play count in v2net's "late" as before.
+   Revision 5 (S9 step 3, nu068; notes\PART2_S9_PLAN.md D-S9-7): H7 rev. 11's three counters. v2net's stock part
+   "stock N (late L; in AGREED past the HELLO's bound B, the peer live V)" -- of the late records, those AGREED's rules
+   dropped (D-S9-4: n_ag_bound, n_ag_live; both also in L); v2ctl's z0 part adds "near requests Q" -- the peer's
+   requests not counted for the stub's proof, under 25 ms after the run's last counted one (D-S9-3: n_rq_near).
+   With H7 rev. 13 (S9, nu073; D-S9-11) that guard is 10 ms; the field, its text and this file's code are unchanged. */
+#define NET_V2_C9           999999999LL
+
+static V2Keys        g_net_v2k;                 /* bros_net.txt as S2a's parser read it (its defaults: no file) */
+static int           g_net_on_v2;               /* 1: protocol v2 is on for this session */
+static const char*   g_net_why_v2 = "off";
+static char          g_net_early_v2[480];       /* the start-up line */
+static uint32_t      g_net_v2_build, g_net_v2_settings;
+static volatile LONG g_net_v2_began, g_net_v2_noseat;   /* v2 battles begun; setups on a seat other than 0 / 1 */
+
+/* the five sites v2 writes (S6 writes none), in the install's order; snapshotted before the first install */
+#define NET_V2_NSITES 5
+static const struct { unsigned rva, len; const char* name; } g_v2_sites[NET_V2_NSITES] = {
+    { NET_RVA_PC_SLOT3, 8, "H7" }, { NET_RVA_HB_CALL, 5, "H3" }, { NET_RVA_GB_CALL, 5, "H4" },
+    { NET_RVA_GFI, 5, "H2" }, { NET_RVA_V2_SAMPLE, 7, "H6" } };
+
+/* ------------------------------------------------------------------ the report's snapshot */
+#define NET_V2_ARN 10
+#define NET_V2_TXN 26                           /* rev. 2: + hb2's f0keep (tx[24]); rev. 3: f0keep2 (tx[25]) */
+typedef struct {
+    LONG       seq;                             /* the battle's setup (g_net_setup_seq); 0: none */
+    int        mode, d0, d1, nsamples;          /* the seat; the game's D and NEW's at the setup; P's samples */
+    NetV2Bat   bat;                             /* H7 and S2a's machine, whole */
+    LONG64     tx[NET_V2_TXN];                  /* hb2's (host) or gb2's (guest) counters */
+    NetV2H2    h2;                              /* H2, whole */
+    NetV2Tempo tm;                              /* S6's main-thread state, whole */
+    LONG64     ar[NET_V2_ARN];                  /* S6's scan: this battle's part */
+    int        ar_off;
+    const char* ar_why;
+    LONG64     gate, uns[3];                    /* H7's passed-on records; hb2 / gb2 / H2 never-seen: this battle's part */
+} NetV2Rep;
+typedef struct { LONG seq; int d0, d1, nsamples; LONG64 ar[NET_V2_ARN], gate, uns[3]; } NetV2Base;
+static NetV2Rep      g_v2_arch;                 /* the previous battle's report, archived by H1 */
+static NetV2Rep      g_v2_rep;                  /* the watch thread's copy */
+static NetV2Base     g_v2_base;                 /* the current battle's d0 / d1 and the process counters at its begin */
+static volatile LONG g_v2_rep_epoch;            /* odd while H1 archives and resets */
+/* rev. 2 (D-S8-10): the last setup the room gate kept from v2, (uint32_t)seq << 32 | members, one word for the watch
+   thread; 0: none */
+#define NET_V2_LOBBY56 0x00FFFFFFFFFFFFFFull
+static volatile uint64_t g_v2_skip;
+static volatile LONG     g_net_v2_roomskip;     /* setups the room gate kept from v2 */
+
+static void net_v2_ar_now(LONG64* a)
+{
+    a[0] = g_ar.n_pass; a[1] = g_ar.n_entries; a[2] = g_ar.n_v2; a[3] = g_ar.n_other; a[4] = g_ar.n_foreign;
+    a[5] = g_ar.n_bad; a[6] = g_ar.n_implausible; a[7] = g_ar.n_stamped; a[8] = g_ar.n_closed; a[9] = g_ar.n_held;
+}
+
+/* the live state into r (r->seq: the battle it belongs to) */
+static void net_v2_rep_fill(NetV2Rep* r)
+{
+    LONG64 a[NET_V2_ARN];
+    int i;
+    memset(r->tx, 0, sizeof r->tx);
+    r->seq = g_v2b.seq;
+    r->mode = g_v2b.mode;
+    r->d0 = g_v2_base.d0;
+    r->d1 = g_v2_base.d1;
+    r->nsamples = g_v2_base.nsamples;
+    r->bat = g_v2b;
+    if (g_v2b.mode == 0) {
+        const NetV2Host* h = &g_v2h;
+        r->tx[0] = h->n_calls; r->tx[1] = h->n_stock; r->tx[2] = h->n_hello; r->tx[3] = h->n_repeat;
+        r->tx[4] = h->n_f0req; r->tx[5] = h->n_serve0; r->tx[6] = h->n_h1; r->tx[7] = h->n_first_kept;
+        r->tx[8] = h->n_first_bad; r->tx[9] = h->n_m0; r->tx[10] = h->n_m0_bad; r->tx[11] = h->n_builds;
+        r->tx[12] = h->n_burst; r->tx[13] = h->n_resend; r->tx[14] = h->n_resend_miss; r->tx[15] = h->n_nak;
+        r->tx[16] = h->n_nak0; r->tx[17] = h->n_snap; r->tx[18] = h->n_trim_w; r->tx[19] = h->n_trim_b;
+        r->tx[20] = h->n_trim_r; r->tx[21] = h->n_oversize; r->tx[22] = h->n_largest; r->tx[23] = h->n_enc_err;
+        r->tx[24] = h->n_f0keep; r->tx[25] = h->n_f0keep2;
+    } else {
+        const NetV2Guest* g = &g_v2g;
+        r->tx[0] = g->n_calls; r->tx[1] = g->n_stock; r->tx[2] = g->n_hello; r->tx[3] = g->n_repeat;
+        r->tx[4] = g->n_f0req; r->tx[5] = g->n_g1; r->tx[6] = g->n_m0; r->tx[7] = g->n_m0_bad;
+        r->tx[8] = g->n_v2; r->tx[9] = g->n_own0; r->tx[10] = g->n_nak; r->tx[11] = g->n_nak0;
+        r->tx[12] = g->n_rejected; r->tx[13] = g->n_bad; r->tx[14] = g->n_trim_w; r->tx[15] = g->n_trim_r;
+        r->tx[16] = g->n_oversize; r->tx[17] = g->n_largest; r->tx[18] = g->n_enc_err;
+    }
+    r->h2 = g_v2h2;
+    r->tm = g_v2tm;
+    net_v2_ar_now(a);
+    for (i = 0; i < NET_V2_ARN; i++) r->ar[i] = a[i] - g_v2_base.ar[i];
+    r->ar_off = g_ar.off;
+    r->ar_why = g_ar.why;
+    r->gate = g_net_v2_gate - g_v2_base.gate;
+    r->uns[0] = g_net_hb2_unsynced - g_v2_base.uns[0];
+    r->uns[1] = g_net_gb2_unsynced - g_v2_base.uns[1];
+    r->uns[2] = g_net_h2_unsynced - g_v2_base.uns[2];
+}
+
+/* the watch thread: the report of the battle set up as `seq`. 1 the live state, 2 H1's archive, 0 no v2 battle had
+   that setup, -1 none could be taken (H1 kept resetting: never seen) */
+static int net_v2_report_take(LONG seq, NetV2Rep* r)
+{
+    int tries, from;
+    for (tries = 0; tries < 50; tries++) {
+        LONG e0 = g_v2_rep_epoch;
+        MemoryBarrier();
+        if (e0 & 1) { Sleep(1); continue; }
+        if (g_v2b.seq == seq) { net_v2_rep_fill(r); from = 1; }
+        else if (g_v2_arch.seq == seq) { *r = g_v2_arch; from = 2; }
+        else from = 0;
+        MemoryBarrier();
+        if (g_v2_rep_epoch != e0) continue;           /* H1 began a battle during the copy: again */
+        if (from == 0) return 0;
+        if (r->seq == seq) return from;
+    }
+    return -1;
+}
+
+/* ------------------------------------------------------------------ the ids (D-S7-2, D-S7-3) */
+static uint32_t net_v2_crc(const void* p, size_t n)
+{
+    v2_crc_init();
+    return v2_crc32c_part(0xFFFFFFFFu, (const uint8_t*)p, n) ^ 0xFFFFFFFFu;
+}
+
+static void net_v2_ids(void)
+{
+    uint8_t s[18];
+    int first = g_net_on_first < 0 ? 0 : g_net_on_first > 0xFFFF ? 0xFFFF : g_net_on_first;
+    int again = g_net_on_again < 0 ? 0 : g_net_on_again > 0xFFFF ? 0xFFFF : g_net_on_again;
+    const V2Keys* k = &g_net_v2k;
+    g_net_v2_build = net_v2_crc(PATCH_BUILD_ID, strlen(PATCH_BUILD_ID));
+    s[0] = 1;                                         /* this layout */
+    s[1] = (uint8_t)k->vmargin; s[2] = (uint8_t)k->pctl; s[3] = (uint8_t)k->dmin; s[4] = (uint8_t)k->dmax;
+    s[5] = (uint8_t)k->optb; s[6] = (uint8_t)k->hash; s[7] = (uint8_t)k->late; s[8] = (uint8_t)k->fallback;
+    s[9] = (uint8_t)k->nsched; s[10] = (uint8_t)k->vtempo; s[11] = (uint8_t)g_net_window_live;
+    s[12] = (uint8_t)first; s[13] = (uint8_t)(first >> 8); s[14] = (uint8_t)again; s[15] = (uint8_t)(again >> 8);
+    s[16] = (uint8_t)g_net_on_tempo; s[17] = (uint8_t)g_net_on_sleep;
+    g_net_v2_settings = net_v2_crc(s, sizeof s);
+}
+
+/* ------------------------------------------------------------------ H1 */
+static void net_v2_hello_fill(uintptr_t cnd, int seat, int d0, int d1, V2Hello* me, uint16_t* nsamples)
+{
+    uint64_t r64 = *(volatile const uint64_t*)(cnd + NET_CND_RTT);
+    int rtt = r64 > 0xFFFEu ? 0xFFFE : (int)r64, n = 0, w = *(volatile const int*)(cnd + NET_CND_WINDOW);
+    const V2Keys* k = &g_net_v2k;
+    memset(me, 0, sizeof *me);
+    me->P = net_v2_p_frozen(k->pctl, rtt, NULL, &n);
+    me->M = k->vmargin;
+    me->pctl = k->pctl;
+    me->dmin = k->dmin;
+    me->dmax = k->dmax;
+    me->rtt = rtt;
+    me->dgame = d0 < 0 ? 0 : d0 > 0xFE ? 0xFE : d0;
+    me->dnew = d1 < 0 ? 0 : d1 > 0xFE ? 0xFE : d1;
+    me->newsrc = k->delay != 0 ? 0 : 2;
+    me->window = w < 0 ? 0 : w > 0xFF ? 0xFF : w;
+    me->nonce = (int)((uint32_t)g_net_setup_seq % 255u) + 1;
+    me->build = g_net_v2_build;
+    me->content = (uint32_t)g_issuer;
+    me->settings = g_net_v2_settings;
+    me->seat = seat;
+    me->flags = (k->optb ? V2F_OPTB : 0) | (k->hash ? V2F_HASH : 0) | (k->vtempo ? V2F_TEMPO : 0) |
+                (k->fallback ? V2F_FALLBACK : 0) | (k->nsched ? V2F_NSCHED : 0);
+    *nsamples = (uint16_t)n;                          /* n <= 512 (net_v2_p_frozen) */
+}
+
+/* PART 41's net_setup, after its own work: d0 the game's D, d1 NEW's (after `delay`) */
+static void net_v2_on_setup(uintptr_t cnd, int d0, int d1)
+{
+    V2Hello me;
+    uint16_t ns;
+    int seat;
+    if (!g_net_on_v2 || !cnd) return;
+    seat = *(volatile const int*)cnd;
+    if (seat != 0 && seat != 1) { InterlockedIncrement(&g_net_v2_noseat); return; }
+    {   /* rev. 2 (D-S8-10): the room gate -- the count the room hook last returned, for the lobby the client is in */
+        uint64_t room = g_net_v2_room, cur = g_room3_lobby;
+        int members = (cur && room && ((room ^ cur) & NET_V2_LOBBY56) == 0) ? (int)(room >> 56) : -1;
+        if (members > 2) {
+            g_v2_skip = ((uint64_t)(uint32_t)g_net_setup_seq << 32) | (uint32_t)members;
+            InterlockedIncrement(&g_net_v2_roomskip);
+            return;                                   /* no v2 battle: every v2 hook passes it to Part 1 */
+        }
+    }
+    net_v2_hello_fill(cnd, seat, d0, d1, &me, &ns);
+    InterlockedIncrement(&g_v2_rep_epoch);            /* odd: a copy made from now on is not trusted */
+    if (g_v2b.seq) net_v2_rep_fill(&g_v2_arch);       /* the previous v2 battle's report, before its state goes */
+    net_v2_bat_begin(cnd, seat, &me, ns);
+    g_v2_base.seq = g_v2b.seq;
+    g_v2_base.d0 = d0;
+    g_v2_base.d1 = d1;
+    g_v2_base.nsamples = ns;
+    net_v2_ar_now(g_v2_base.ar);
+    g_v2_base.gate = g_net_v2_gate;
+    g_v2_base.uns[0] = g_net_hb2_unsynced;
+    g_v2_base.uns[1] = g_net_gb2_unsynced;
+    g_v2_base.uns[2] = g_net_h2_unsynced;
+    InterlockedIncrement(&g_v2_rep_epoch);            /* even */
+    InterlockedIncrement(&g_net_v2_began);
+}
+
+/* PART 41's net_update (the network thread), after the stock Update and the send-queue lock */
+static void net_v2_on_update(uintptr_t impl)
+{
+    if (g_net_on_v2) net_v2_arr_scan(impl);
+}
+
+/* ------------------------------------------------------------------ the install */
+static void net_v2_install(void)
+{
+    static unsigned char snap[NET_V2_NSITES][8];
+    const char* who = 0;
+    const char* why = 0;
+    char done[40] = "", kept[40] = "";
+    const V2Keys* k = &g_net_v2k;
+    int i;
+    if (k->scheme != 2) {
+        g_net_why_v2 = k->lock ? "off (scheme 0)" : "off (scheme 0: lock 0 always means it)";
+        snprintf(g_net_early_v2, sizeof g_net_early_v2, "NET: NETUP part 2 (protocol v2) -> %s", g_net_why_v2);
+        return;
+    }
+    if (!g_net_on_lock || !g_net_on_setup) {
+        g_net_why_v2 = !g_net_on_lock ? "OFF: the send-queue lock is not on (Send and Update detoured)"
+                                      : "OFF: the setup detour is not on";
+        snprintf(g_net_early_v2, sizeof g_net_early_v2, "NET: NETUP part 2 (protocol v2) -> %s", g_net_why_v2);
+        return;
+    }
+    net_v2_ids();
+    for (i = 0; i < NET_V2_NSITES; i++) memcpy(snap[i], g_net_mod + g_v2_sites[i].rva, g_v2_sites[i].len);
+    why = g_net_why_tm = net_v2_tm_install();             if (!g_net_on_tm)       { who = "S6"; goto off; }
+    why = g_net_why_v2recv = net_v2_recv_install();       if (!g_net_on_v2recv)   { who = "H7"; goto off; }
+    why = g_net_why_hb2 = net_v2_hb2_install();           if (!g_net_on_hb2)      { who = "H3"; goto off; }
+    why = g_net_why_gb2 = net_v2_gb2_install();           if (!g_net_on_gb2)      { who = "H4"; goto off; }
+    why = g_net_why_h2 = net_v2_h2_install();             if (!g_net_on_h2)       { who = "H2"; goto off; }
+    why = g_net_why_v2sample = net_v2_sample_install();   if (!g_net_on_v2sample) { who = "H6"; goto off; }
+    g_net_on_v2 = 1;
+    g_net_why_v2 = "ON";
+    snprintf(g_net_early_v2, sizeof g_net_early_v2,
+             "NET: NETUP part 2 (protocol v2) -> ON | vmargin %d ms, pctl %d, d %d-%d, optb %d, hash %d, vtempo %d, "
+             "fallback %d, nsched %d%s | build %08X, settings %08X | hooks S6 H7 H3 H4 H2 H6 on",
+             k->vmargin, k->pctl, k->dmin, k->dmax, k->optb, k->hash, k->vtempo, k->fallback, k->nsched,
+             k->late ? ", late 1 ignored (option L is not in this build)" : "", g_net_v2_build, g_net_v2_settings);
+    return;
+off:
+    for (i = 0; i < NET_V2_NSITES; i++) {             /* every site this install changed, written back */
+        unsigned char* p = g_net_mod + g_v2_sites[i].rva;
+        int ok;
+        if (memcmp(p, snap[i], g_v2_sites[i].len) == 0) continue;
+        if (i == 0) {
+            void* stock;
+            void* saved = 0;
+            memcpy(&stock, snap[0], sizeof stock);
+            ok = patch_slot((void**)(g_net_mod + NET_RVA_PC_VT), 3, stock, &saved);
+        } else
+            ok = net_poke(g_v2_sites[i].rva, snap[i], (int)g_v2_sites[i].len);
+        ok = ok && memcmp(p, snap[i], g_v2_sites[i].len) == 0;
+        strcat(ok ? done : kept, " ");
+        strcat(ok ? done : kept, g_v2_sites[i].name);
+        if (!ok) continue;
+        if (i == 0) g_net_on_v2recv = 0;
+        else if (i == 1) g_net_on_hb2 = 0;
+        else if (i == 2) g_net_on_gb2 = 0;
+        else if (i == 3) g_net_on_h2 = 0;
+        else g_net_on_v2sample = 0;
+    }
+    g_net_why_v2 = "OFF: a hook refused";
+    snprintf(g_net_early_v2, sizeof g_net_early_v2,
+             "NET: NETUP part 2 (protocol v2) -> OFF: %s %s | written back:%s%s%s%s",
+             who, why, done[0] ? done : " none", kept[0] ? " | NOT written back (inert: no v2 battle begins):" : "",
+             kept, done[0] || kept[0] ? " (their claims stay registered)" : "");
+}
+
+/* ------------------------------------------------------------------ the lines */
+static long long net_v2_n(LONG64 v)                   /* a counter, at most 9 digits ("at least" above) */
+{
+    return v > NET_V2_C9 ? NET_V2_C9 : v < -99999999LL ? -99999999LL : (long long)v;
+}
+static long long net_v2_ms(LONG64 t, LONG64 t0)       /* ms from t0 to t; -1: t not set */
+{
+    LONG64 d;
+    if (!t || g_net_qpf.QuadPart <= 0) return -1;
+    d = (t - t0) * 1000 / g_net_qpf.QuadPart;
+    return net_v2_n(d);
+}
+static int net_v2_i(int v) { return v > 99999999 ? 99999999 : v < -99999999 ? -99999999 : v; }
+static const char* net_v2_tenths(char* b, size_t n, int v)   /* 0.1 ms -> "-3.5" */
+{
+    unsigned u = v < 0 ? (unsigned)(-(long long)v) : (unsigned)v;
+    if (u > 999999u) u = 999999u;
+    snprintf(b, n, "%s%u.%u", v < 0 ? "-" : "", u / 10u, u % 10u);
+    return b;
+}
+/* the nearest-rank percentile's bin of a histogram, -1 when it is empty */
+static int net_v2_pct(const LONG64* h, int nb, int pct)
+{
+    LONG64 n = 0, k, c = 0;
+    int i;
+    for (i = 0; i < nb; i++) n += h[i];
+    if (n <= 0) return -1;
+    k = (pct * n + 99) / 100;
+    if (k < 1) k = 1;
+    for (i = 0; i < nb; i++) { c += h[i]; if (c >= k) return i; }
+    return nb - 1;
+}
+static const char* net_v2_abin(char* b, size_t n, int bin)   /* S6's histogram: 0.5 ms bins from -100 ms */
+{
+    if (bin < 0) return "-";
+    if (bin == 0) return "<-100.0";
+    if (bin >= NET_TM_HB - 1) return ">=300.0";
+    return net_v2_tenths(b, n, -1000 + 5 * (bin - 1));
+}
+static const char* net_v2_ubin(char* b, size_t n, int bin, int nb)   /* a cost histogram: 1 us bins, the last open */
+{
+    if (bin < 0) return "-";
+    if (bin >= nb - 1) { snprintf(b, n, ">=%d", nb - 1); return b; }
+    snprintf(b, n, "%d", bin);
+    return b;
+}
+static const char* net_v2_feat(char* b, int f)        /* "oht": option B, hash, tempo balance */
+{
+    b[0] = (f & V2F_OPTB) ? 'o' : '-'; b[1] = (f & V2F_HASH) ? 'h' : '-'; b[2] = (f & V2F_TEMPO) ? 't' : '-'; b[3] = 0;
+    return b;
+}
+static const char* net_v2_hex8(char* b, size_t n, int have, uint32_t v)
+{
+    if (have) snprintf(b, n, "%08X", v); else snprintf(b, n, "--------");
+    return b;
+}
+
+/* the battle's outcome: agreed, NEW's schedule, a fallback, a refusal, or no decision */
+static void net_v2_line_outcome(const NetV2Rep* r, int n, const char* side)
+{
+    const NetV2Bat* b = &r->bat;
+    const V2Seat* s = &b->seat;
+    const V2Hello* me = &s->me;
+    const V2Hello* pe = &s->peer;
+    long long t_dec = net_v2_ms(b->t_decide, b->t_setup), t_left = net_v2_ms(b->t_left, b->t_setup);
+    long long t_com = net_v2_ms(b->t_commit, b->t_setup);
+    char f0[4], f1[4], f2[4], cap[40], h[8][24];
+    switch (s->state) {
+    case V2S_V2:
+        cap[0] = 0;
+        if (r->mode == 0) snprintf(cap, sizeof cap, ", the cap %d -> %d", net_v2_i(b->cap_before), net_v2_i(b->cap_after));
+        log_line("NET/v2 #%d %s: agreed d %d in %lld ms, committed in %lld ms -- plays D %d (NEW's %d, the game's %d)%s | "
+                 "P %d / %d ms (this seat's from %d samples, pctl %d / %d), M %d / %d ms, RTT' %d / %d ms, d %d-%d / %d-%d | "
+                 "features %s (offered %s / %s) | build %s, settings %s",
+                 n, side, s->d, t_dec, t_com, s->D, net_v2_i(r->d1), net_v2_i(r->d0), cap,
+                 me->P, pe->P, r->nsamples, me->pctl, pe->pctl, me->M, pe->M, me->rtt, pe->rtt,
+                 me->dmin, me->dmax, pe->dmin, pe->dmax,
+                 net_v2_feat(f0, s->features), net_v2_feat(f1, me->flags), net_v2_feat(f2, pe->flags),
+                 pe->build == me->build ? "same" : "differ", pe->settings == me->settings ? "same" : "differ");
+        break;
+    case V2S_NSW:
+    case V2S_NSCHED:
+        log_line("NET/v2 #%d %s: NEW's schedule (d %d against NEW's D %d / %d, nsched %d / %d) decided in %lld ms, %s%s | "
+                 "P %d / %d ms (this seat's from %d samples, pctl %d / %d), M %d / %d ms, RTT' %d / %d ms, d %d-%d / %d-%d",
+                 n, side, s->d, me->dnew, pe->dnew, (me->flags & V2F_NSCHED) != 0, (pe->flags & V2F_NSCHED) != 0, t_dec,
+                 s->state == V2S_NSW ? "still in the HELLO phase at the end" :
+                 b->left_by == 1 ? "left on the peer's hello_seen in " : "left on a stock record in ",
+                 s->state == V2S_NSW ? "" : (snprintf(h[7], sizeof h[7], "%lld ms", t_left), h[7]),
+                 me->P, pe->P, r->nsamples, me->pctl, pe->pctl, me->M, pe->M, me->rtt, pe->rtt,
+                 me->dmin, me->dmax, pe->dmin, pe->dmax);
+        break;
+    case V2S_AGREED:                                  /* rev. 2: agreed, the peer's hello_seen never came */
+        log_line("NET/v2 #%d %s: agreed d %d in %lld ms, never committed -- the battle ended before the peer's "
+                 "hello_seen (records of the peer: v2 %lld, stock %lld)",
+                 n, side, s->d, t_dec, net_v2_n(b->n_v2), net_v2_n(b->n_stock));
+        break;
+    case V2S_FALLBACK:                                /* rev. 2: the cause, H7's left_by */
+        log_line("NET/v2 #%d %s: fallback to NEW in %lld ms -- %s; plays NEW's D %d (the game's %d) | P %d ms (from %d "
+                 "samples, pctl %d), M %d ms, RTT' %d ms",
+                 n, side, t_left,
+                 b->left_by == 3 ? "a stock record before the peer's HELLO" :
+                 b->left_by == 4 ? "nothing heard from the peer in the 1,000 ms after the setup" :
+                 b->left_by == 5 ? "a stock record after this seat agreed (the peer had fallen back)" : "another cause",
+                 net_v2_i(r->d1), net_v2_i(r->d0), me->P, r->nsamples, me->pctl, me->M, me->rtt);
+        break;
+    case V2S_REFUSED:
+        log_line("NET/v2 #%d %s: refused in %lld ms -- %s | version 2 / %s, build %s / %s, content %s / %s, "
+                 "settings %s / %s | the peer %s%d, mask %d",
+                 n, side, t_dec,
+                 s->reason == 1 ? "the peer speaks another protocol version" :
+                 s->reason == 2 ? "the peer's content id differs (another issuer)" :
+                 s->reason == 3 ? "a stock record of the peer, and fallback 0" :
+                 s->reason == 4 ? "nothing heard from the peer in the 1,000 ms after the setup, and fallback 0" :
+                 "another reason",
+                 s->reason == 1 ? "other" : s->have_peer ? "2" : "-",
+                 net_v2_hex8(h[0], sizeof h[0], 1, me->build), net_v2_hex8(h[1], sizeof h[1], s->have_peer, pe->build),
+                 net_v2_hex8(h[2], sizeof h[2], 1, me->content), net_v2_hex8(h[3], sizeof h[3], s->have_peer, pe->content),
+                 net_v2_hex8(h[4], sizeof h[4], 1, me->settings),
+                 net_v2_hex8(h[5], sizeof h[5], s->have_peer, pe->settings),
+                 b->compat ? "sent COMPAT, reason " : "sent no COMPAT; this seat's reason ",
+                 b->compat ? (int)b->compat_reason : s->reason, b->compat ? (int)b->compat_mask : s->mask);
+        break;
+    default:
+        log_line("NET/v2 #%d %s: no decision -- the battle ended in the HELLO phase (the peer's HELLO %s; records of "
+                 "the peer: v2 %lld, stock %lld)",
+                 n, side, s->have_peer ? "held" : "never held", net_v2_n(b->n_v2), net_v2_n(b->n_stock));
+        break;
+    }
+}
+
+/* recv2 (H7) and S2a's machine; then NEW's schedule's and a fallback's control records (rev. 2) and z0 (rev. 3; the glue's
+   rev. 4: H7 rev. 10's v2 peer's and taken lone records; rev. 5: H7 rev. 11's AGREED drops and near requests);
+   the glue's rev. 2: late stock records and the silence (v2net), z0's lone records and the host's f0keep (v2ctl) */
+static void net_v2_line_net(const NetV2Rep* r, int n, const char* side)
+{
+    const NetV2Bat* b = &r->bat;
+    char f0k[64] = "";
+    log_line("NET/v2net #%d %s: recv2 v2 %lld (largest %lld B), stock %lld (late %lld; in AGREED past the HELLO's bound "
+             "%lld, the peer live %lld), in NEW %lld, early %lld, dropped %lld | rejected crc %lld, layout %lld, version "
+             "%lld; stale %u, protocol %u, d %u, ignored %u, silence %lld | NAK %lld (f0 %lld), inner %lld, snap %lld "
+             "(dropped %lld), hash %lld | passed on %lld",
+             n, side, net_v2_n(b->n_v2), net_v2_n(b->n_largest), net_v2_n(b->n_stock), net_v2_n(b->n_late),
+             net_v2_n(b->n_ag_bound), net_v2_n(b->n_ag_live), net_v2_n(b->n_pass), net_v2_n(b->n_early),
+             net_v2_n(b->n_dropped), net_v2_n(b->n_crc), net_v2_n(b->n_layout), net_v2_n(b->n_version),
+             (unsigned)net_v2_n(b->seat.n_stale), (unsigned)net_v2_n(b->seat.n_proto),
+             (unsigned)net_v2_n(b->seat.n_dmismatch), (unsigned)net_v2_n(b->seat.n_ignored), net_v2_n(b->n_silence),
+             net_v2_n(b->n_nak), net_v2_n(b->n_nak0), net_v2_n(b->n_inner), net_v2_n(b->n_snap), net_v2_n(b->n_snapdrop),
+             net_v2_n(b->n_hash), net_v2_n(r->gate));
+    if (r->mode == 0) snprintf(f0k, sizeof f0k, " | f0keep %lld (v2 peer %lld)", net_v2_n(r->tx[24]), net_v2_n(r->tx[25]));
+    log_line("NET/v2ctl #%d %s: NEW's control %lld (bad %lld, stale %lld, NAK %lld, f0 %lld) | z0 %lld in %lld "
+             "(long %lld, lone %lld, v2 peer's %lld, taken %lld, near requests %lld) | past0 %lld%s",
+             n, side, net_v2_n(b->n_ctl), net_v2_n(b->n_ctl_bad), net_v2_n(b->n_ctl_stale), net_v2_n(b->n_ctl_nak),
+             net_v2_n(b->n_ctl_nak0), net_v2_n(b->n_z0), net_v2_n(b->n_z0_rec), net_v2_n(b->n_z0_long),
+             net_v2_n(b->n_z0_lone), net_v2_n(b->n_z0_v2), net_v2_n(b->n_z0_take), net_v2_n(b->n_rq_near),
+             net_v2_n(b->n_past0), f0k);
+}
+
+/* hb2 (host) or gb2 (guest) */
+static void net_v2_line_send(const NetV2Rep* r, int n, const char* side)
+{
+    const LONG64* t = r->tx;
+    if (r->mode == 0)
+        log_line("NET/v2send #%d %s: hb2 calls %lld, stock %lld | HELLO %lld, repeat %lld, f0req %lld, serve0 %lld, "
+                 "h1 %lld, first kept %lld (bad %lld), -0 withheld %lld (unexpected %lld) | v2 builds %lld, burst %lld, "
+                 "resent %lld (missing %lld), NAK %lld (f0 %lld), snap %lld | trimmed window %lld, burst %lld, "
+                 "resend %lld; oversize %lld; largest %lld B; encode errors %lld; unsynced %lld",
+                 n, side, net_v2_n(t[0]), net_v2_n(t[1]), net_v2_n(t[2]), net_v2_n(t[3]), net_v2_n(t[4]),
+                 net_v2_n(t[5]), net_v2_n(t[6]), net_v2_n(t[7]), net_v2_n(t[8]), net_v2_n(t[9]), net_v2_n(t[10]),
+                 net_v2_n(t[11]), net_v2_n(t[12]), net_v2_n(t[13]), net_v2_n(t[14]), net_v2_n(t[15]),
+                 net_v2_n(t[16]), net_v2_n(t[17]), net_v2_n(t[18]), net_v2_n(t[19]), net_v2_n(t[20]),
+                 net_v2_n(t[21]), net_v2_n(t[22]), net_v2_n(t[23]), net_v2_n(r->uns[0]));
+    else
+        log_line("NET/v2send #%d %s: gb2 calls %lld, stock %lld | HELLO %lld, repeat %lld, f0req %lld, g1 %lld, "
+                 "-0 withheld %lld (unexpected %lld) | v2 records %lld, own frame 0 %lld, NAK %lld (f0 %lld), "
+                 "stock record refused %lld, unparsed %lld | trimmed window %lld, resend %lld; oversize %lld; "
+                 "largest %lld B; encode errors %lld; unsynced %lld",
+                 n, side, net_v2_n(t[0]), net_v2_n(t[1]), net_v2_n(t[2]), net_v2_n(t[3]), net_v2_n(t[4]),
+                 net_v2_n(t[5]), net_v2_n(t[6]), net_v2_n(t[7]), net_v2_n(t[8]), net_v2_n(t[9]), net_v2_n(t[10]),
+                 net_v2_n(t[11]), net_v2_n(t[12]), net_v2_n(t[13]), net_v2_n(t[14]), net_v2_n(t[15]),
+                 net_v2_n(t[16]), net_v2_n(t[17]), net_v2_n(t[18]), net_v2_n(r->uns[1]));
+}
+
+/* H2: the gate, the frames, the self-check */
+static void net_v2_line_frames(const NetV2Rep* r, int n, const char* side)
+{
+    const NetV2H2* h = &r->h2;
+    log_line("NET/v2frames #%d %s: H2 calls %lld, held %lld (%lld frames) | V2 frames %lld, barriers %lld, KO %lld, "
+             "no fighters %lld | self-check %lld, missing %lld, differ %lld (first frame %d) | unsynced %lld",
+             n, side, net_v2_n(h->n_calls), net_v2_n(h->n_held), net_v2_n(h->n_held_frames), net_v2_n(h->n_frames),
+             net_v2_n(h->n_barrier), net_v2_n(h->n_ko), net_v2_n(h->n_nofighters), net_v2_n(h->n_self),
+             net_v2_n(h->n_self_missing), net_v2_n(h->n_self_differ), net_v2_i(h->self_first), net_v2_n(r->uns[2]));
+}
+
+/* the state hash: per class (k a KO and the 60 frames after it, c 60 frames after a barrier, n the rest) */
+static void net_v2_line_hash(const NetV2Rep* r, int n, const char* side)
+{
+    const NetV2H2* h = &r->h2;
+    char c[3][160];
+    int i;
+    for (i = 0; i < 3; i++) {
+        const NetH2Cls* k = &h->cls[i];
+        snprintf(c[i], sizeof c[i], "%c %lld frames: core %lld, rng %lld, float %lld, pos %lld (first %d, %d, %d, %d)",
+                 "kcn"[i], net_v2_n(k->frames), net_v2_n(k->n[0]), net_v2_n(k->n[1]), net_v2_n(k->n[2]),
+                 net_v2_n(k->n[3]), net_v2_i(k->first[0]), net_v2_i(k->first[1]), net_v2_i(k->first[2]),
+                 net_v2_i(k->first[3]));
+    }
+    log_line("NET/v2hash #%d %s: compared %lld | %s | %s | %s", n, side, net_v2_n(h->n_cmp), c[0], c[1], c[2]);
+    for (i = 0; i < 3; i++) {
+        const NetH2Cls* k = &h->cls[i];
+        if (k->cf_frame < 0) continue;
+        log_line("NET/hash #%d %s: the first core-or-float mismatch of class %c at frame %d -- this seat %08X %08X %08X, "
+                 "the peer %08X %08X %08X", n, side, "kcn"[i], net_v2_i(k->cf_frame), k->cf_own[0], k->cf_own[1],
+                 k->cf_own[2], k->cf_peer[0], k->cf_peer[1], k->cf_peer[2]);
+    }
+}
+
+/* option B, the guest */
+static void net_v2_line_corr(const NetV2Rep* r, int n, const char* side)
+{
+    const NetV2H2* h = &r->h2;
+    char dp[24], dt[24], late[NET_H2_LATEB * 11 + 1], size[NET_H2_SIZEB * 11 + 1];
+    int i, o;
+    float mp = h->max_dp, mt = h->max_dth;
+    if (!(mp > 0.0f)) mp = 0.0f;                      /* NaN never reaches it (counted bad); bounded for the text */
+    if (mp > 99999.0f) mp = 99999.0f;
+    if (!(mt > 0.0f)) mt = 0.0f;
+    if (mt > 99999.0f) mt = 99999.0f;
+    snprintf(dp, sizeof dp, "%.4f", (double)mp);
+    snprintf(dt, sizeof dt, "%.4f", (double)mt);
+    log_line("NET/v2corr #%d %s: option B -- snapshots %lld: dropped at a barrier %lld, older %lld, past the ring %lld; "
+             "compared %lld (state byte a differs %lld, b %lld); bad values %lld, wrapped %lld, inactive %lld; applied "
+             "%lld (%lld fighter corrections) | largest dp %s m, dth %s rad",
+             n, side, net_v2_n(h->n_snap), net_v2_n(h->n_snap_barrier), net_v2_n(h->n_snap_older),
+             net_v2_n(h->n_snap_past), net_v2_n(h->n_snap_cmp), net_v2_n(h->n_sa_diff), net_v2_n(h->n_sb_diff),
+             net_v2_n(h->n_badval), net_v2_n(h->n_wrap), net_v2_n(h->n_inactive), net_v2_n(h->n_applied),
+             net_v2_n(h->n_corr), dp, dt);
+    for (i = 0, o = 0; i < NET_H2_LATEB; i++) o += snprintf(late + o, sizeof late - (size_t)o, "%s%lld", i ? " " : "", net_v2_n(h->late[i]));
+    for (i = 0, o = 0; i < NET_H2_SIZEB; i++) o += snprintf(size + o, sizeof size - (size_t)o, "%s%lld", i ? " " : "", net_v2_n(h->size[i]));
+    log_line("NET/v2bins #%d %s: applied by lateness 0..15 frames: %s | corrections by size 0, <1e-5, <1e-3, <0.01, "
+             "<0.1, >=0.1 m: %s", n, side, late, size);
+}
+
+/* S6: the margin (main thread) and the scan (network thread) */
+static void net_v2_line_tempo(const NetV2Rep* r, int n, const char* side)
+{
+    const NetV2Tempo* m = &r->tm;
+    const LONG64* a = r->ar;
+    char p1[16], p50[16], lo[16], hi[16], pa[24];
+    int have = m->n_samples > 0;
+    log_line("NET/v2tempo #%d %s: A p1 %s p50 %s, min %s max %s ms of %lld samples (left out %lld, no read %lld, "
+             "no need %lld, clamped %lld, other %lld) | the peer's last A %s, Q %d",
+             n, side, net_v2_abin(p1, sizeof p1, net_v2_pct(m->hist, NET_TM_HB, 1)),
+             net_v2_abin(p50, sizeof p50, net_v2_pct(m->hist, NET_TM_HB, 50)),
+             have ? net_v2_tenths(lo, sizeof lo, m->a_min) : "-", have ? net_v2_tenths(hi, sizeof hi, m->a_max) : "-",
+             net_v2_n(m->n_samples), net_v2_n(m->n_left), net_v2_n(m->n_noread), net_v2_n(m->n_noneed),
+             net_v2_n(m->n_clamped), net_v2_n(m->n_other),
+             !r->bat.peer_margin ? "none" : r->bat.peer_a == NET_TM_UNKNOWN ? "unknown" :
+             (net_v2_tenths(pa, sizeof pa - 3, r->bat.peer_a), strcat(pa, " ms")),
+             (int)r->bat.peer_q);
+    log_line("NET/v2scan #%d %s: passes %lld (closed %lld, held %lld), entries %lld: v2 %lld, other %lld, foreign %lld; "
+             "bad %lld, implausible %lld; frames stamped %lld%s%s",
+             n, side, net_v2_n(a[0]), net_v2_n(a[8]), net_v2_n(a[9]), net_v2_n(a[1]), net_v2_n(a[2]), net_v2_n(a[3]),
+             net_v2_n(a[4]), net_v2_n(a[5]), net_v2_n(a[6]), net_v2_n(a[7]),
+             r->ar_off ? " | OFF for the session: " : "", r->ar_off && r->ar_why ? r->ar_why : "");
+}
+
+/* S6's balance, where both seats agreed to it */
+static void net_v2_line_bal(const NetV2Rep* r, int n, const char* side)
+{
+    const NetV2Tempo* m = &r->tm;
+    char w[13 * 11 + 1];
+    int i, o;
+    for (i = 0, o = 0; i < 13; i++) o += snprintf(w + o, sizeof w - (size_t)o, "%s%lld", i ? " " : "", net_v2_n(m->n_word[i]));
+    log_line("NET/v2bal #%d %s: the balance -- ticks %lld, unknown %lld, bursts %lld, words written %lld, no framework "
+             "%lld | words 60..72: %s, other %lld",
+             n, side, net_v2_n(m->n_ticks), net_v2_n(m->n_unknown), net_v2_n(m->n_bursts), net_v2_n(m->n_written),
+             net_v2_n(m->n_noptr), w, net_v2_n(m->n_word[13]));
+}
+
+/* the main thread's new work: recv2 per record (the stock receiver left out), H2 per call */
+static void net_v2_line_cost(const NetV2Rep* r, int n, const char* side)
+{
+    char a[4][16];
+    LONG64 nr = 0, nh = 0;
+    int i;
+    for (i = 0; i < NET_V2_COSTB; i++) nr += r->bat.cost[i];
+    for (i = 0; i < NET_H2_COSTB; i++) nh += r->h2.cost[i];
+    log_line("NET/v2cost #%d %s: recv2 %lld records, p50 %s p99 %s max %lld us | H2 %lld calls, p50 %s p99 %s max %lld us",
+             n, side, net_v2_n(nr), net_v2_ubin(a[0], sizeof a[0], net_v2_pct(r->bat.cost, NET_V2_COSTB, 50), NET_V2_COSTB),
+             net_v2_ubin(a[1], sizeof a[1], net_v2_pct(r->bat.cost, NET_V2_COSTB, 99), NET_V2_COSTB),
+             net_v2_n(r->bat.cost_max), net_v2_n(nh),
+             net_v2_ubin(a[2], sizeof a[2], net_v2_pct(r->h2.cost, NET_H2_COSTB, 50), NET_H2_COSTB),
+             net_v2_ubin(a[3], sizeof a[3], net_v2_pct(r->h2.cost, NET_H2_COSTB, 99), NET_H2_COSTB),
+             net_v2_n(r->h2.cost_max));
+}
+
+/* every line of one report */
+static void net_v2_lines_of(const NetV2Rep* r, int n, const char* side)
+{
+    net_v2_line_outcome(r, n, side);
+    net_v2_line_net(r, n, side);
+    net_v2_line_send(r, n, side);
+    if (r->bat.seat.state != V2S_V2) return;          /* H2's work, the hash, option B and S6 run only in V2 */
+    net_v2_line_frames(r, n, side);
+    if (r->bat.seat.features & V2F_HASH) net_v2_line_hash(r, n, side);
+    if (r->mode == 1 && (r->bat.seat.features & V2F_OPTB)) net_v2_line_corr(r, n, side);
+    net_v2_line_tempo(r, n, side);
+    if (r->bat.seat.features & V2F_TEMPO) net_v2_line_bal(r, n, side);
+    net_v2_line_cost(r, n, side);
+}
+
+/* PART 41's net_match_end (the watch thread): the battle set up as `seq`, reported as match #n */
+static void net_v2_lines(LONG seq, int n, const char* side)
+{
+    int got;
+    if (!g_net_on_v2) return;
+    got = net_v2_report_take(seq, &g_v2_rep);
+    if (got == 0) {                                   /* not a v2 battle: a spectator's seat, or the room gate (rev. 2) */
+        uint64_t k = g_v2_skip;
+        if (k && (LONG)(uint32_t)(k >> 32) == seq)
+            log_line("NET/v2 #%d %s: not begun -- the lobby had %d members (v2 plays in two-member lobbies only); the "
+                     "battle played as part 1", n, side, (int)(k & 0xFF));
+        return;
+    }
+    if (got < 0) { log_line("NET/v2 #%d %s: the report was lost (the next battle's setup kept resetting it)", n, side); return; }
+    net_v2_lines_of(&g_v2_rep, n, side);
+}
+/* ---- end of v2_s7.c ---- */
+
 /* bros_net.txt: `key value` per line, `#` starts a comment. Missing file ->
    the defaults. Read with kernel32 only, because this runs in DllMain. */
 static void net_read_cfg(void)
 {
-    char path[MAX_PATH], buf[2048], key[32];
+    char path[MAX_PATH], buf[2048];
     HANDLE h;
     DWORD n = 0;
-    char* p;
-    int k, val;
+    v2_keys_defaults(&g_net_v2k);                 /* NETUP part 2: no file -> every default, scheme 0 */
     exe_dir_path("bros_net.txt", path, sizeof(path));
     h = CreateFileA(path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
     if (h == INVALID_HANDLE_VALUE) return;
@@ -18921,45 +23082,26 @@ static void net_read_cfg(void)
     CloseHandle(h);
     buf[n] = 0;
     g_net_cfg_file = 1;
-    p = buf;
-    if ((unsigned char)p[0] == 0xEF && (unsigned char)p[1] == 0xBB && (unsigned char)p[2] == 0xBF)
-        p += 3;                                   /* a UTF-8 BOM from an editor */
-    while (*p) {
-        while (*p == ' ' || *p == '\t' || *p == '\r' || *p == '\n') p++;
-        if (!*p) break;
-        if (*p == '#') { while (*p && *p != '\n') p++; continue; }
-        k = 0;
-        while (*p && k < 31 && ((*p >= 'a' && *p <= 'z') || (*p >= 'A' && *p <= 'Z')))
-            key[k++] = (char)(*p++ | 0x20);
-        key[k] = 0;
-        while (*p == ' ' || *p == '\t' || *p == '=' || *p == ':') p++;
-        val = atoi(p);
-        if      (!strcmp(key, "lock"))   g_net_cfg_lock   = val ? 1 : 0;
-        else if (!strcmp(key, "sleep"))  g_net_cfg_sleep  = val;
-        else if (!strcmp(key, "window")) g_net_cfg_window = val;
-        else if (!strcmp(key, "delay"))  g_net_cfg_delay  = val;
-        else if (!strcmp(key, "probe"))  g_net_cfg_probe  = val ? 1 : 0;
-        else if (!strcmp(key, "capture")) g_net_cfg_capture = val ? 1 : 0;
-        else if (!strcmp(key, "demodt"))  g_net_cfg_demodt  = val ? 1 : 0;
-        else if (!strcmp(key, "demolag")) g_net_cfg_demolag = val;
-        while (*p && *p != '\n') p++;
-    }
-    if (g_net_cfg_sleep  < 1)  g_net_cfg_sleep  = 1;
-    if (g_net_cfg_sleep  > 8)  g_net_cfg_sleep  = 8;
-    if (g_net_cfg_window < 3)  g_net_cfg_window = 3;
-    if (g_net_cfg_window > 10) g_net_cfg_window = 10;
-    if (g_net_cfg_delay  > 0)  g_net_cfg_delay  = 0;      /* reductions only -- see `delay` */
-    if (g_net_cfg_delay  < -6) g_net_cfg_delay  = -6;
-    if (g_net_cfg_demolag < 0) g_net_cfg_demolag = 0;
-    if (g_net_cfg_demolag > 5) g_net_cfg_demolag = 5;     /* the game's check: 10 s, then up to 5 s more */
+    /* NETUP part 2: S2a's parser (v2keys.c) -- this function's loop, atoi and clamps for every key it read before,
+       v2's keys beside them (proven equal on 50,029 files: work\part2\s7\README_s7.txt, step 2) */
+    v2_keys_parse(buf, &g_net_v2k);
+    g_net_cfg_lock    = g_net_v2k.lock;    g_net_cfg_sleep   = g_net_v2k.sleep;   g_net_cfg_window = g_net_v2k.window;
+    g_net_cfg_delay   = g_net_v2k.delay;   g_net_cfg_probe   = g_net_v2k.probe;   g_net_cfg_capture = g_net_v2k.capture;
+    g_net_cfg_demodt  = g_net_v2k.demodt;  g_net_cfg_demolag = g_net_v2k.demolag; g_net_cfg_tempo  = g_net_v2k.tempo;
+    g_net_cfg_first   = g_net_v2k.first;   g_net_cfg_again   = g_net_v2k.again;
 }
 
 /* Every RVA this part reads or writes lies inside the game's image, and none
    of them may be read in a host that is not the game: a process whose image
    is smaller would fault on the first memcmp, inside DllMain. 24 MB is the C
-   track's EXE_MIN_IMAGE for the same check; the game's image is ~28 MB. The one
-   read above it, demodt's step cell (exe+0x18D7630), is made only after its
-   installer has checked the image size itself. */
+   track's EXE_MIN_IMAGE for the same check; the game's image is ~28 MB. Above
+   24 MB: demodt's step cell (exe+0x18D7630) is read only after its installer
+   has checked the image size itself; the framework's pointer of the tempo
+   word (exe+0x1CFCB40) only through ReadProcessMemory (net_read_tempo); and
+   protocol v2 (NETUP part 2) reads three cells at run time -- exe+0x1CFBD70
+   and exe+0x1CE3F40 (H2) and exe+0x1CFCB40 (S6) -- each only after its
+   installer has found, below 24 MB, the stock instructions that name that
+   address (VX_P2 F8). */
 static int net_host_is_the_game(void)
 {
     IMAGE_DOS_HEADER* dos = (IMAGE_DOS_HEADER*)g_net_mod;
@@ -19056,6 +23198,18 @@ static int net_early_install(void)
     if (g_net_cfg_demodt) g_net_why_demodt = net_demodt_install();
     else g_net_why_demodt = "off (the game's own clock)";
 
+    /* 2026-11-06, NETUP part 1: `tempo` and `resend`. Not in the file: with the New netcode, like capture. */
+    if (g_net_cfg_tempo < 0) g_net_cfg_tempo = g_net_cfg_lock ? 1 : 0;
+    if (g_net_cfg_tempo) g_net_why_tempo = net_tempo_install();
+    else g_net_why_tempo = "off (the game's own threshold)";
+    if (g_net_cfg_first < 0) g_net_cfg_first = g_net_cfg_lock ? 34 : 0;
+    if (g_net_cfg_again < 0) g_net_cfg_again = g_net_cfg_lock ? 50 : 0;
+    if (g_net_cfg_first > 0 || g_net_cfg_again > 0)
+        g_net_why_resend = net_resend_install(g_net_cfg_first, g_net_cfg_again);
+    else g_net_why_resend = "off (the game's own timers: RTT', then every 300 ms)";
+
+    net_v2_install();   /* NETUP part 2: protocol v2 (`scheme 2`), after Part 1's installs (the settings id reads them) */
+
     snprintf(g_net_early, sizeof(g_net_early),
              "NET: bros_net.txt %s -> lock %d, sleep %d ms, window %d, delay %d | lock %s | "
              "sleep %s | window %s (%d, stock 3) | delay %s | period probe %s | battle probe %s | "
@@ -19070,6 +23224,8 @@ static int net_early_install(void)
                                                     : "NOT applied: the battle probe is off"),
              g_net_on_update ? "on" : "FAILED", g_net_on_setup ? "on" : "FAILED",
              g_net_why_probe, g_net_why_capture, g_net_why_demodt);
+    snprintf(g_net_early_p1, sizeof(g_net_early_p1), "NET: NETUP part 1 -> tempo %s | resend %s",
+             g_net_why_tempo, g_net_why_resend);
     return 1;
 }
 
@@ -19680,7 +23836,8 @@ static void diag_header(void)
         at = snprintf(line, sizeof(line),
             "{\"t\":\"h\",\"v\":\"%s\",\"build\":\"%s\",\"tour\":\"%s\",\"commit\":\"%s\",\"utc\":%llu,"
             "\"from\":%lld,\"until\":%lld,\"qpf\":%lld,"
-            "\"net\":{\"file\":%d,\"lock\":%d,\"sleep\":%d,\"window\":%d,\"delay\":%d,\"probe\":%d,\"capture\":%d},"
+            "\"net\":{\"file\":%d,\"lock\":%d,\"sleep\":%d,\"window\":%d,\"delay\":%d,\"probe\":%d,\"capture\":%d,"
+            "\"demodt\":%d,\"tempo\":%d,\"first\":%d,\"again\":%d,\"scheme\":%d,\"v2\":%d,\"vtempo\":%d},"
             "\"plugins\":%s,\"pacing_off\":%d,\"pacing_txt\":%d,"
             "\"os\":\"%lu.%lu.%lu\",\"cpu\":\"%s\",\"threads\":%d,\"cores\":%d,\"ram_mb\":%llu,\"gpu\":\"%s\","
             "\"hz\":%lu,\"ac\":%d,\"batt\":%d,\"tres\":[%lu,%lu,%lu],"
@@ -19690,6 +23847,8 @@ static void diag_header(void)
             (long long)g_net_qpf.QuadPart,
             g_net_cfg_file, g_net_on_lock, g_net_on_sleep ? g_net_on_sleep : 8, g_net_window_live,
             g_net_cfg_delay, g_net_on_probe, g_net_on_capture,
+            g_net_on_demodt, g_net_on_tempo, g_net_on_first, g_net_on_again,
+            g_net_v2k.scheme, g_net_on_v2, g_net_v2k.vtempo,
             pj, pacing_off, pacing_txt,
             osmaj, osmin, osbuild, cpuj, threads, cores, ram_mb, gpuj,
             hz, ac, batt, tmin, tmax, tcur,
@@ -20215,6 +24374,9 @@ static void net_match_line(const char* why, LONG64 now)
                  "refused by Send when sent | %lld made for another transport, dropped", who,
                  (long long)(g_net_dq_deferred - g_nm.dq_d0), (long long)(g_net_dq_dropped - g_nm.dq_p0),
                  (long long)(g_net_dq_failed - g_nm.dq_x0), (long long)(g_net_dq_stale - g_nm.dq_s0));
+    if (g_net_send_neg - g_net_send_neg0)                                                    /* NETUP */
+        log_line("NET/sendfail %s: Send refused %lld record(s) in this battle (a negative return: -2 is an unreliable "
+                 "record over 1,198 B, which the game drops)", who, (long long)(g_net_send_neg - g_net_send_neg0));
     if (g_net_on_demodt && g_net_dd_pass - g_nm.dd_p0) {
         LONG64 late = (g_net_dd_late_milli - g_nm.dd_l0) / 60, skip = g_net_dd_skip_milli - g_nm.dd_s0;
         LONG64 mx = g_net_dd_epoch_seen == g_nm.dd_epoch ? g_net_dd_bmax_milli / 60 : 0;   /* ms */
@@ -20329,6 +24491,7 @@ static void net_match_end(const char* why, LONG64 now)
     net_stalls_line();
     net_ahead_line();
     net_snap_line();
+    net_v2_lines(g_nm.setup_seq, g_nm.seq, net_side(g_nm.mode));   /* NETUP part 2: the v2 battle's lines */
     if (g_diag_on) diag_battle_end(why, now);   /* PART 43 */
     g_nm.active = 0;
 }
@@ -20343,6 +24506,8 @@ static DWORD WINAPI net_watch(LPVOID unused)
     (void)unused;
 
     log_line("%s", g_net_early);
+    if (g_net_early_p1[0]) log_line("%s", g_net_early_p1);   /* NETUP part 1 */
+    if (g_net_early_v2[0]) log_line("%s", g_net_early_v2);   /* NETUP part 2 */
     if (g_net_on_sleep) {
         HMODULE wm = GetModuleHandleA("winmm.dll");
         tbp_t tbp;
@@ -20390,6 +24555,7 @@ static DWORD WINAPI net_watch(LPVOID unused)
             g_nm.lk_g0 = g_net_lock_gaveup;
             g_nm.dq_d0 = g_net_dq_deferred; g_nm.dq_p0 = g_net_dq_dropped;   /* review F1 */
             g_nm.dq_x0 = g_net_dq_failed; g_nm.dq_s0 = g_net_dq_stale;
+            g_net_send_neg0 = g_net_send_neg;                                                /* NETUP */
             g_nm.dd_p0 = g_net_dd_pass; g_nm.dd_c0 = g_net_dd_cuts; g_nm.dd_h0 = g_net_dd_hitch;   /* demodt */
             g_nm.dd_l0 = g_net_dd_late_milli; g_nm.dd_o0 = g_net_dd_over; g_nm.dd_s0 = g_net_dd_skip_milli;
             g_net_dd_F = -1;

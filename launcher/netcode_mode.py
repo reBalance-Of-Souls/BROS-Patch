@@ -4,7 +4,9 @@ IN THE LAUNCHER. The Game Modes page has a "New netcode" switch, independent of 
 kept in Json/netcode.json and applied to <game>\\bros_net.txt when it is switched and at every launch that installs the
 master dinput8.dll (the launcher and its right-click Quick Launch):
 
-  ON (the default)   NEW: lock 1, sleep 8, window 8, delay 0, probe 1 (build 3). A player who switched ON themselves
+  ON (the default)   NEW: lock 1, sleep 1, window 8, delay 0, probe 1 (build 3) and scheme 2 (protocol v2, NETUP part
+                     2, 2026-11-07: the master agrees one delay with the other player at every battle's start and
+                     falls back to this NEW against a player without it). A player who switched ON themselves
                      gets the launched version's own bros_net.txt instead, if its Overlay ships one (V1.2's, which
                      carries the current delay test block); the default never hands out a version's test block.
   OFF                CLASSIC is written: lock 0, sleep 8, window 3, delay 0, probe 0 -- the shipped game's values.
@@ -25,15 +27,23 @@ are NEW at delay 0; that is why OFF is written out explicitly. A switch takes ef
            no lock around the send queues, the network thread sleeps 8 ms between passes, 3 inputs per packet, the input
            delay the game computes, no determinism check. The master still MEASURES (its NET lines in patch_ranked.log:
            stalls, the network thread's period), so the two netcodes can be compared like for like.
-  NEW      lock 1, sleep 8, window 8, delay 0, probe 1 -- build 3 (NETCODE 04): one lock around the send queues, the
-           network thread at the game's own 8 ms, 8 inputs per packet, the input delay the game computes, the
-           guest's determinism check. Until 2026-10-15 NEW ran the network thread every 1 ms (sleep 1), and from
-           2026-09-29 to 2026-10-14 one frame off the input delay (delay -1); files with those values (EARLIER)
-           are still the launcher's own, never a hand edit.
+  NEW      lock 1, sleep 1, window 8, delay 0, probe 1 -- build 3 (NETCODE 04) with NETUP part 1 (2026-11-06): one
+           lock around the send queues, the network thread every 1 ms (with the timer at 1 ms), 8 inputs per packet,
+           the input delay the game computes, the guest's determinism check; with the lock on, the master also raises
+           the speed-up threshold by one record and sends resend requests after 34 ms and every 50 ms (never at
+           frame 0) -- its `tempo` and `resend` keys, which this file leaves at their defaults. scheme 2 (NETUP part
+           2, 2026-11-07): protocol v2, the symmetric delay -- at every battle's setup both players agree on one
+           delay from both lobbies' measured round trips, the host plays one frame less than it and the guest two, so
+           both have the same margin; a master without v2 ignores the key, and against a player without v2 the battle
+           plays this NEW. Its other keys (vmargin, pctl, dmin, dmax, optb, hash, vtempo, fallback, nsched, late) are
+           left at the master's defaults. The public patch wrote
+           sleep 8 from 2026-10-15 to 2026-11-06, and NEW was written with delay -1 from 2026-09-29 to 2026-10-14; a
+           file with those values (EARLIER) is still the launcher's own, never a hand edit.
 
 Both seats of a match may use different netcodes: every packet stays readable by the other side (window: the receivers
 skip entries they already have; lock and sleep are local; each seat computes and uses its own input delay -- NETCODE 04
-section 5). To compare the two, both players use the same. Only the master has PART 41: a game mode that ships its own
+section 5; protocol v2's records start with a count of 0, which a master without v2 reads as an empty record, and its
+seat then plays NEW). To compare the two, both players use the same. Only the master has PART 41: a game mode that ships its own
 dinput8.dll runs the game's own netcode whatever the switch says (the launchers print a note when that happens).
 
 Nothing of yours is lost: a bros_net.txt whose values are neither mode's nor those of a file some version ships (edited
@@ -82,12 +92,14 @@ CLASSIC = (0, 8, 3, 0, 0)                    # the shipped game ("`lock 0`, `sle
 # delay -1: one frame off the input delay (2026-09-29). delay -2 was tried in real matches the same day (5a3249a) and
 # dropped. As guest at RTT' 68 it ran D 2 with ~5,500 micro-stalls per battle (about one frame in three waiting a few
 # ms) and 2 % frozen time, and the user found some dashes hard to get out. delay -1 in real play: 77-170 stalls, 0.06 %.
-# sleep 8 since 2026-10-15. With sleep 1 the other side's next input is nearly always in hand a frame early, and at
-# low ping (D 1) that alone trips the game's speed-up rule (NETCODE 02 §5.1: faster than 60 Hz as soon as more than
-# D/2 inputs wait), so the game ran at 72 Hz on 66-74% of frames: 30-38 fps instead of 54-59 on the rig (two
-# clients on one PC, 2 to 4 cores each, fights only). sleep 8: 72 Hz on 0-12% of frames. The game sleeps 8 ms too.
-NEW = (1, 8, 8, 0, 1)                        # build 3, network thread at 8 ms (sleep 1 until 2026-10-15)
-EARLIER = {(1, 1, 8, 0, 1), (1, 1, 8, -1, 1), (1, 1, 8, -2, 1)}  # NEW as the launcher wrote it before: its own file
+# sleep 1 again since 2026-11-06 (NETUP part 1, D:\\Development Log\\NETUP_2026-11-06). The public patch had moved to
+# sleep 8 on 2026-10-15: with sleep 1 the other side's next input is nearly always in hand a frame early, and at low
+# ping (D 1) that alone tripped the game's speed-up rule (NETCODE 02 §5.1), so the rig ran at 72 Hz on 66-74% of
+# frames. The master now raises that threshold by one record (`tempo`), and the diagnostics relay's 2,082 battles show
+# sleep 8 as the costlier choice: at times its thread ran every 15.5 ms (the system tick) on 16 of 34 machines, and on
+# the same machines sleep 1 had fewer felt stalls (5.8 -> 3.6 a minute) at about 1.3 frames less input delay.
+NEW = (1, 1, 8, 0, 1)                        # build 3 + NETUP part 1 (sleep 8 in the public patch 2026-10-15..11-06)
+EARLIER = {(1, 8, 8, 0, 1), (1, 1, 8, -1, 1), (1, 1, 8, -2, 1)}  # NEW as the launcher wrote it before: its own file
 
 TEXT = {
     "classic": (
@@ -99,13 +111,52 @@ TEXT = {
         "# bros_net.txt -- NEW: the Rebalance netcode, build 3 (NETCODE 04). Written by the netcode toggle (the launcher or\n"
         "# netcode_mode.py).\n"
         "# The master (dinput8.dll, PART 41) reads this once, at game start.\n"
-        "# lock 1: one lock around the send queues (the shipped game has none); sleep 8: the network thread every 8 ms,\n"
-        "# as in the game; window 8: 8 inputs per packet instead of 3; delay 0: the input delay the game computes;\n"
+        "# lock 1: one lock around the send queues (the shipped game has none); sleep 1: the network thread every 1 ms\n"
+        "# instead of 8; window 8: 8 inputs per packet instead of 3; delay 0: the input delay the game computes;\n"
         "# probe 1: the guest checks each host snapshot against its own simulation before adopting it\n"
         "# (measurement only).\n"
-        "lock 1\nsleep 8\nwindow 8\ndelay 0\nprobe 1\n"),
+        "# scheme 2: protocol v2 (NETUP part 2) -- both players agree on one input delay at every battle's start; against a\n"
+        "# player without it, the battle plays the netcode above.\n"
+        "lock 1\nsleep 1\nwindow 8\ndelay 0\nprobe 1\nscheme 2\n"),
 }
 WANT = {"classic": CLASSIC, "new": NEW}
+# The master's keys the switch does not set -- capture, demodt, demolag, and NETUP part 1's tempo and resend: when the
+# switch writes NEW it keeps a player's own lines for them (so `tempo 0` or `demodt 0` survives a launcher start; the
+# launcher dropped them before 2026-11-06). CLASSIC never carries them: it is the game's own netcode.
+# NETUP part 2 (2026-11-07): protocol v2's keys too -- `scheme` (a player's own `scheme 0` after the NEW file's
+# `scheme 2` turns v2 off: the master takes a key's last line), vmargin, pctl, dmin, dmax, optb, hash, vtempo,
+# fallback, nsched and late. The NEW file's own lines (its `scheme 2`) are not a player's: extra_lines leaves them out.
+EXTRA_KEYS = (b"capture", b"demodt", b"demolag", b"tempo", b"resend",
+              b"scheme", b"vmargin", b"pctl", b"dmin", b"dmax", b"optb", b"hash", b"vtempo", b"fallback", b"nsched",
+              b"late")
+
+
+def extra_lines(raw):
+    """The lines of `raw` (bytes, or None) that set one of EXTRA_KEYS, as written, in file order. A key is the run of
+    letters a line starts with, as the master reads it; comment lines start with '#'. The NEW file's own lines of those
+    keys (its `scheme 2`) are left out, once each, so that NEW + a player's lines reads back as the same lines."""
+    out = []
+    if not isinstance(raw, bytes):
+        return out
+    if raw.startswith(b"\xef\xbb\xbf"):
+        raw = raw[3:]
+    own = [x.strip(b" \t") for x in TEXT["new"].encode().split(b"\n") if _key(x) in EXTRA_KEYS]
+    for line in raw.replace(b"\r\n", b"\n").replace(b"\r", b"\n").split(b"\n"):
+        if _key(line) in EXTRA_KEYS:
+            if line.strip(b" \t") in own:
+                own.remove(line.strip(b" \t"))
+                continue
+            out.append(line.strip(b" \t"))
+    return out
+
+
+def _key(line):
+    """the key the master reads from a line: the run of letters it starts with (after blanks), lower case"""
+    s = line.lstrip(b" \t")
+    n = 0
+    while n < len(s) and (65 <= s[n] <= 90 or 97 <= s[n] <= 122):
+        n += 1
+    return s[:n].lower() if n else b""
 
 
 class NetcodeError(Exception):
@@ -173,6 +224,40 @@ def parse(data):
     window = min(max(window, 3), 10)
     delay = min(max(delay, -6), 0)
     return (lock, sleep, window, delay, probe)
+
+
+def scheme_of(data):
+    """The protocol the master plays from these bytes: 2 (v2) or 0 -- S2a's parser (v2keys.c, the master since NETUP
+    part 2): `scheme` is its last line's value, and 2 only with lock 1 (the master's own lock rule); anything else 0.
+    The same loop as parse(), for this one key."""
+    lock, scheme = DEFAULTS[0], 0
+    b = bytes(data[:2047]).split(b"\0", 1)[0]
+    p, n = 0, len(b)
+    if b[:3] == b"\xEF\xBB\xBF":
+        p = 3
+    while p < n:
+        while p < n and b[p] in b" \t\r\n":
+            p += 1
+        if p >= n:
+            break
+        if b[p] == ord("#"):
+            while p < n and b[p] != ord("\n"):
+                p += 1
+            continue
+        key = bytearray()
+        while p < n and len(key) < 31 and (65 <= b[p] <= 90 or 97 <= b[p] <= 122):
+            key.append(b[p] | 0x20)
+            p += 1
+        while p < n and b[p] in b" \t=:":
+            p += 1
+        val = c_atoi(b, p)
+        if bytes(key) == b"lock":
+            lock = 1 if val else 0
+        elif bytes(key) == b"scheme":
+            scheme = val
+        while p < n and b[p] != ord("\n"):
+            p += 1
+    return 2 if scheme == 2 and lock == 1 else 0
 
 
 def describe(v):
@@ -341,6 +426,11 @@ def apply(game, on, shipped=None, base_dir=None):
     if not os.path.isfile(os.path.join(game, EXE)):
         raise NetcodeError("%s is not the game folder (no %s)" % (game, EXE))
     path = os.path.join(game, NAME)
+    state, _v, raw = current(game)
+    if state == "unreadable":
+        raise NetcodeError("%s cannot be read (%s) -- close whatever holds it, or fix or remove it by hand"
+                           % (path, raw))
+    extras = []
     if on and shipped:
         try:
             with open(shipped, "rb") as f:
@@ -349,15 +439,12 @@ def apply(game, on, shipped=None, base_dir=None):
             raise NetcodeError("cannot read the version's %s (%s)" % (shipped, e))
         what = "ON -- the version's own %s" % NAME
     elif on:
-        want = TEXT["new"].encode()
+        extras = extra_lines(raw)
+        want = TEXT["new"].encode() + b"".join(x + b"\n" for x in extras)
         what = "ON -- NEW, build 3"
     else:
         want = TEXT["classic"].encode()
         what = "OFF -- CLASSIC, the game's own netcode"
-    state, _v, raw = current(game)
-    if state == "unreadable":
-        raise NetcodeError("%s cannot be read (%s) -- close whatever holds it, or fix or remove it by hand"
-                           % (path, raw))
     kept = None
     if raw is not None and raw != want:
         # a hand edit is a file whose VALUES are none the launcher writes: comments do not count (an older revision of
@@ -376,9 +463,12 @@ def apply(game, on, shipped=None, base_dir=None):
     got = parse(want)
     if (not on and got != CLASSIC) or (on and not shipped and got != NEW):
         raise NetcodeError("%s reads back as %s -- check it" % (NAME, describe(got)))
-    line = "%s (%s)%s" % (what, values(got), "" if raw != want else ", already in place")
+    line = "%s (%s%s)%s" % (what, values(got), ", protocol v2" if scheme_of(want) == 2 else "",
+                             "" if raw != want else ", already in place")
     if kept:
         line += "; your hand-edited %s was kept as %s" % (NAME, os.path.basename(kept))
+    if extras:
+        line += "; your own line(s) kept: %s" % ", ".join(x.decode("latin-1") for x in extras)
     return line
 
 
@@ -434,6 +524,8 @@ def status(game):
         print("  %s: %d bytes%s" % (NAME, len(raw), "" if raw in (TEXT["classic"].encode(), TEXT["new"].encode())
                                      else " (not written by the netcode toggle)"))
     print("  => the next game start uses: %s" % describe(v))
+    print("  protocol v2 (NETUP part 2): %s" % ("on (scheme 2)" if scheme_of(raw if isinstance(raw, bytes) else b"") == 2
+                                                 else "off"))
     if _repo_json():
         print("  the launcher's New netcode switch: %s%s" % ("ON" if load_choice(REPO) else "OFF",
               "" if os.path.exists(choice_path(REPO)) else " (never switched: the default)"))
