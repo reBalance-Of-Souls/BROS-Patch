@@ -566,13 +566,25 @@ def _sync(base_dir, progress, game):
     progress.set(phase="Checking for the latest beta build", done=0, total=0)
     idx = fetch_index()
     m = _open_build(base_dir, idx)
-    need = {}
+    # Only the downloads this launch will use are read whole (2026-11-09, Berg: "everytime I try to launch the beta
+    # build it starts installing it again"): a file already in the game folder exactly as this build lists it (the
+    # install record's sha256, size and time, install's own skip rule) needs its download only to be there at its
+    # size -- hashing all of them, several GB, at every launch is what made a launch with nothing to do look like an
+    # install. A download that is about to be decrypted is still checked against its sha256 here.
+    seen = _install_record(base_dir, game) if game else {}
+    need, verified = {}, set()
     for f in m["files"]:
-        if f["blob"] in need:
+        b = f["blob"]
+        if b in need or b in verified:
             continue
         progress.check()
-        if not _blob_ok(_cache(base_dir, "blobs", f["blob"]), f["blob"], f["len"]):
-            need[f["blob"]] = f
+        path = _cache(base_dir, "blobs", b)
+        if seen and _in_place(game, f, seen) and os.path.isfile(path) and os.path.getsize(path) == f["len"]:
+            continue
+        if _blob_ok(path, b, f["len"]):
+            verified.add(b)
+        else:
+            need[b] = f
     total = sum(f["len"] for f in need.values())
     os.makedirs(_cache(base_dir, "blobs"), exist_ok=True)
     free = shutil.disk_usage(state_dir(base_dir)).free
@@ -750,6 +762,31 @@ def _game_path(game, rel):
     return os.path.join(game, *rel.split("/"))
 
 
+def _install_record(base_dir, game):
+    """installed.json's files ({path: [sha256, size, mtime_ns]}) when the record is this game folder's, else {}."""
+    try:
+        with open(os.path.join(state_dir(base_dir), "installed.json"), "rb") as fh:
+            rec = json.loads(fh.read())
+        if rec.get("game") == os.path.abspath(game) and isinstance(rec.get("files"), dict):
+            return rec["files"]
+    except Exception:
+        pass
+    return {}
+
+
+def _in_place(game, f, seen):
+    """The file is in the game folder as the last checked write left it: the record's sha256 is this build's, and
+    the size and modification time are the record's (install's skip rule)."""
+    r = seen.get(f["path"])
+    if not r or len(r) < 3 or r[0] != f["sha256"]:
+        return False
+    try:
+        st = os.stat(_game_path(game, f["path"]))
+    except OSError:
+        return False
+    return r[1] == st.st_size and r[2] == st.st_mtime_ns
+
+
 def _decrypt_to(base_dir, game, f, dst):
     os.makedirs(os.path.dirname(dst), exist_ok=True)
     staging = os.path.join(game, STAGING)
@@ -847,22 +884,23 @@ def _install(base_dir, game, m, log, progress):
     files = m["files"]
     if _leftovers is not None:
         _leftovers.mark_start()                # what this install writes from here on is its own (step 5b)
-    total = sum(f["size"] for f in files)
-    progress.set(phase="Installing the beta", done=0, total=total)
     staging = os.path.join(game, STAGING)
     if os.path.isdir(staging):                 # what a launch that was cut off left in our own staging folder
         for n in os.listdir(staging):
             os.remove(os.path.join(staging, n))
     _check_game_space(game, m)
     rec_path = os.path.join(state_dir(base_dir), "installed.json")
-    try:
-        rec = json.load(open(rec_path))
-        if rec.get("game") != os.path.abspath(game):
-            rec = {}
-    except Exception:
-        rec = {}
-    seen = rec.get("files", {})
+    seen = _install_record(base_dir, game)
     now = {}
+    # What this launch writes: the files not in place (another version's launch, the first install, a new build).
+    # The window counts those only, and says so when there are none (2026-11-09: a launch with nothing to write
+    # showed "Installing the beta" counting through every MB of the build).
+    todo = [f for f in files if not _in_place(game, f, seen)]
+    if todo:
+        progress.set(phase="Installing the beta: %d of %d file(s) to put back" % (len(todo), len(files)), done=0,
+                     total=sum(f["size"] for f in todo))
+    else:
+        progress.set(phase="The beta is already installed: checking it", done=0, total=0)
 
     def place(f):
         progress.check()
@@ -871,7 +909,6 @@ def _install(base_dir, game, m, log, progress):
         r = seen.get(f["path"])
         if st and r and r[0] == f["sha256"] and r[1] == st.st_size and r[2] == st.st_mtime_ns:
             now[f["path"]] = r
-            progress.add(f["size"])
             return False
         _decrypt_to(base_dir, game, f, dst)
         st = os.stat(dst)
