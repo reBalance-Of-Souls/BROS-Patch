@@ -49,6 +49,15 @@ try:
     from launcher import content_pool as cpool
 except ImportError:                                   # run from the folder itself (tests)
     import content_pool as cpool
+# Leftovers of other builds (launcher/leftovers.py, pass rt 2026-11-09; the Dev launcher's file): optional -- without it
+# the install is what it was before.
+try:
+    from launcher import leftovers as _leftovers
+except ImportError:
+    try:
+        import leftovers as _leftovers
+    except ImportError:
+        _leftovers = None
 
 BETA_NAME = "ReBalance of Souls V1.5 (beta)"
 RELEASE_BASE = "https://github.com/reBalance-Of-Souls/BROS-Patch/releases/download/lb-data/"
@@ -836,6 +845,8 @@ def install(base_dir, game, m, log=print, progress=None):
 
 def _install(base_dir, game, m, log, progress):
     files = m["files"]
+    if _leftovers is not None:
+        _leftovers.mark_start()                # what this install writes from here on is its own (step 5b)
     total = sum(f["size"] for f in files)
     progress.set(phase="Installing the beta", done=0, total=total)
     staging = os.path.join(game, STAGING)
@@ -973,6 +984,20 @@ def _install(base_dir, game, m, log, progress):
     if bad:
         raise BetaError("%d beta file(s) did not install, first: %s. An antivirus scanning the game folder is the "
                         "usual cause; allow it and launch again." % (len(bad), bad[0]))
+
+    # 5b. leftovers of other builds (launcher/leftovers.py, pass rt 2026-11-09; Berg: "make it so that it launches
+    #     the same exact version that I have right now for other people"): a plugin rule file the build does not list,
+    #     and another version's marker beside the exe, go to _launcher_quarantine/leftovers/ -- each one gave a tester
+    #     an online pool of his own. Never stops the launch.
+    if _leftovers is not None:
+        try:
+            paths = [f["path"].replace("\\", "/") for f in files]
+            keep_txt = {p.split("/", 1)[1] for p in paths
+                        if p.count("/") == 1 and p.lower().startswith(PLUGINS_DIR.lower() + "/")}
+            keep_root = {p for p in paths if "/" not in p}
+            _leftovers.clean(game, keep_txt, keep_root, (), log)
+        except Exception as e:
+            log("[beta] leftovers of other builds not checked: %s" % e)
 
     # 6. the match code: the content pool, made from what is installed now (launcher/content_pool.py, the Dev
     #    launcher's rule for its Community Patch). If it cannot be made, the launch stops here.

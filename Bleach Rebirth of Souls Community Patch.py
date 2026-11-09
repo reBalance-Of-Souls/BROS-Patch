@@ -175,6 +175,14 @@ try:
         _match_pool = None
         _match_pool_error = str(_e)
 
+    # The Room Match check (launcher/room_check.py, pass rt 2026-11-09; the same file as the Dev launcher's):
+    # online.dll's live list of every ReBalance player online -- who can meet this player in Room Match, and for
+    # everyone else why not and who has to do what. Optional the same way: without the module no button is shown.
+    try:
+        from launcher import room_check as _room_check
+    except Exception:
+        _room_check = None
+
 
     # The invite-only beta (launcher/beta.py, 2026-10-14): a hidden page reached by a key sequence, a code handshake
     # with the beta's keygen, and an encrypted Dev build published as release assets, outside this repository's git
@@ -1669,6 +1677,20 @@ try:
                              tooltip="Launch the game using the version selected in the dropdown above.")
     brosVersionList.pack(pady=(0,paddingYvalue+3), fill=X)
     launchButton.pack(fill=X)
+    # The Room Match check (pass rt, 2026-11-09; Berg: "an actual tool that can tell why we're not finding one another
+    # with a single look"): a window over this one, filled by online.dll while the game runs.
+    if _room_check is not None:
+        def openRoomCheck():
+            try:
+                _room_check.open_window(window, game_path, {
+                    "bg": bgcolor, "panel": PANEL, "fg": labelcolor, "muted": TEXT_MUTED, "gold": GOLD,
+                    "font": FONT_BODY, "small": FONT_SMALL, "title": ("Segoe UI", 13, "bold"), "mono": FONT_MONO})
+            except Exception as e:
+                messagebox.showerror("Room Match check", "The Room Match check could not open:\n\n%s" % e)
+        roomCheckButton = mkbutton(playInner, "Room Match check", openRoomCheck, icon="🔍",
+                                   tooltip="Who can find your rooms in Room Match right now, and why the others "
+                                           "can't. Keep it open while the game runs.")
+        roomCheckButton.pack(fill=X, pady=(paddingYvalue+2, 0))
     playOuter.pack(fill=X, pady=(0,7))
 
     # Online Match Diagnostics (launcher/diagnostics.py): a status line -- sessions waiting to be sent, or whether
