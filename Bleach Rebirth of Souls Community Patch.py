@@ -183,6 +183,15 @@ try:
     except Exception:
         _room_check = None
 
+    # Windows Smart App Control (launcher/sac_check.py, pass sa 2026-11-16; the same file as the Dev launcher's): when
+    # it is on, Windows refuses the patch's unsigned DLLs and the game stops as it starts ("Bad Image ... DINPUT8.dll
+    # ... 0xc0e90002"). launch_patched says so first and opens the setting's page on request; the setting itself is
+    # only read. Optional the same way: without the module the launch is what it was before.
+    try:
+        from launcher import sac_check as _sac_check
+    except Exception:
+        _sac_check = None
+
 
     # The invite-only beta (launcher/beta.py, 2026-10-14): a hidden page reached by a key sequence, a code handshake
     # with the beta's keygen, and an encrypted Dev build published as release assets, outside this repository's git
@@ -930,7 +939,10 @@ try:
         so EasyAntiCheat doesn't block the injected dinput8.dll -- crash otherwise).
         On Linux/macOS a Windows .exe can't be exec'd directly ([Errno 8] Exec
         format error) -- it only runs through Steam/Proton -- so launch it via
-        Steam's app URL instead. Steam must be running for online play."""
+        Steam's app URL instead. Steam must be running for online play.
+
+        Returns False only when the game was not started on the player's word (Smart App Control is on,
+        launcher/sac_check.py): the callers then keep this window open, so Play can be pressed again."""
         exe = os.path.join(target_path, "BLEACH_Rebirth_of_Souls.exe")
         # The Quick Launch shortcut rides in BROS_BOOT_MODE, set on THIS process's
         # environment rather than only on the Popen call: the elevated fallback
@@ -950,6 +962,9 @@ try:
             except Exception as e:
                 print(f"Error launching patched game: {e}")
             return
+        # Smart App Control on blocks the loader and every plugin (launcher/sac_check.py): say so before starting.
+        if _sac_check is not None and not _sac_check.ok_to_start(messagebox):
+            return False
         try:
             _proc = subprocess.Popen([exe], cwd=target_path)
             if _QUICK is not None:
@@ -1150,7 +1165,8 @@ try:
                 # The online match recorder's switches (launcher/diagnostics.py): never stops a launch.
                 if _diagnostics:
                     print("[diagnostics] " + _diagnostics.sync_switch_safe(BASE_DIR, game_path))
-                launch_patched(game_path)
+                if launch_patched(game_path) is False:
+                    return              # not started (Smart App Control): the window stays open
             else:
                 remove_matchmaking(game_path)
                 try:
@@ -1280,7 +1296,8 @@ try:
         # The online match recorder's switches, as for every patched launch: never stops a launch.
         if _diagnostics:
             print("[diagnostics] " + _diagnostics.sync_switch_safe(BASE_DIR, game_path))
-        launch_patched(game_path)
+        if launch_patched(game_path) is False:
+            return                      # not started (Smart App Control): the window stays open
         window.destroy()
 
 
