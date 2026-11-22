@@ -104,6 +104,10 @@ _SKIP_RX = (
     re.compile(r"~$"),
 )
 _PLUGIN_SKIP = ("studio.dll",)
+# A player's own progress, written by the plugins while the game runs -- never a rule, so never part of the pool
+# (2026-11-15: counting them let launcher/leftovers.py quarantine them at every launch, so a player who beat
+# Adventure LEVEL 1 found LEVEL 2 locked again, and event clears and records vanished).
+PLUGIN_STATE = ("dcbossrush_records.txt", "dcbossrush_events.txt", "dcbossrush_autotest.txt")
 
 
 class PoolError(Exception):
@@ -130,6 +134,8 @@ def counts(rel):
             return False                     # fsv2csv dumps; the game's own .csv are under Script/ObjectConfig/
         return True
     if parts[0] == PLUGINS and len(parts) == 2:
+        if name in PLUGIN_STATE:
+            return False                     # a player's progress, not a rule file
         return (name.endswith(".dll") and name not in _PLUGIN_SKIP) or name.endswith(".txt")
     return False
 
