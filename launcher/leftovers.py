@@ -19,6 +19,11 @@ WHAT MOVES -- to <game>/_launcher_quarantine/leftovers/<time>/<the same path>; n
     bros_pl015_rework.txt, and any other counted .txt a version's Overlay puts at the game root.
   Only files the pool code counts are ever moved (content_pool.counts), so a move can only make the code the build's.
 
+PLAYER PROGRESS (content_pool.PLUGIN_STATE: dcbossrush_records.txt, dcbossrush_events.txt ...)
+  Not counted, so never moved. Launchers before 2026-11-15 counted and moved them at every launch (Adventure LEVEL 2
+  locked again after LEVEL 1, event clears gone): clean() first puts the newest quarantined copy back for any of them
+  the game folder no longer has (copied; the quarantine keeps its own).
+
 NEVER MOVED
   The player's own switches beside the exe (bros_zangetsu.txt, bros_tools.txt, bros_fulldiag.txt, bros_net.txt,
   bros_diag.txt, ...): their launcher modules write and remove them from the player's choices. A developer's own
@@ -128,8 +133,41 @@ def plan(game, keep_plugin_txt, keep_root, other_root_markers=()):
     return out
 
 
+def restore_progress(game, log=print):
+    """Put back the newest quarantined copy of each player-progress file the game folder lacks. Returns the names."""
+    back = []
+    qroot = os.path.join(game, *QUARANTINE)
+    for name in getattr(_cp(), "PLUGIN_STATE", ()):
+        dst = os.path.join(game, PLUGINS, name)
+        if os.path.exists(dst) or not os.path.isdir(qroot):
+            continue
+        best = None
+        try:
+            stamps = os.listdir(qroot)
+        except OSError:
+            stamps = []
+        for st in stamps:
+            src = os.path.join(qroot, st, PLUGINS, name)
+            try:
+                m = os.path.getmtime(src)
+            except OSError:
+                continue
+            if best is None or m > best[0]:
+                best = (m, src)
+        if best is None:
+            continue
+        try:
+            shutil.copy2(best[1], dst)
+            back.append(name)
+            log("leftovers: put back %s/%s (the player's progress; an older launcher had moved it)" % (PLUGINS, name))
+        except OSError as e:
+            log("leftovers: could not put back %s/%s: %s" % (PLUGINS, name, e))
+    return back
+
+
 def clean(game, keep_plugin_txt, keep_root, other_root_markers=(), log=print):
     """Move plan()'s files to the quarantine. Returns the game-relative paths moved."""
+    restore_progress(game, log)
     moved = []
     todo = plan(game, keep_plugin_txt, keep_root, other_root_markers)
     if not todo:
