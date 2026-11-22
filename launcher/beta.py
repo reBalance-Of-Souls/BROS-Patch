@@ -59,7 +59,7 @@ except ImportError:
     except ImportError:
         _leftovers = None
 
-BETA_NAME = "ReBalance of Souls V1.5 (beta)"
+BETA_NAME = "ReBalance of Souls V2.0 (beta)"   # V1.5 until 2026-11-22: Dev's root version is V2.0 since 11-18
 RELEASE_BASE = "https://github.com/reBalance-Of-Souls/BROS-Patch/releases/download/lb-data/"
 SOURCE_ENV = "BROS_BETA_SOURCE"                         # tests: a local folder or another URL instead of the release
 # The beta's online pool (Berg, 2026-10-24: "make sure that there would be no chance of desync between public beta and
@@ -1045,7 +1045,7 @@ def _install(base_dir, game, m, log, progress):
     except cpool.PoolError as e:
         raise BetaError("The online pool could not be made from the installed game (%s). The game was not started."
                         % e)
-    log("[beta] content pool %d (%d files, %s); Dev ReBalance of Souls V1.5 meets it on the same build"
+    log("[beta] content pool %d (%d files, %s); Dev ReBalance of Souls V2.0 meets it on the same build"
         % (code, n_counted, digest[:12]))
 
     _atomic_write(rec_path, json.dumps({"game": os.path.abspath(game), "build": m["build"]["id"],
