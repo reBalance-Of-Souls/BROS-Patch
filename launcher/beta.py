@@ -1033,6 +1033,12 @@ def _install(base_dir, game, m, log, progress):
                         if p.count("/") == 1 and p.lower().startswith(PLUGINS_DIR.lower() + "/")}
             keep_root = {p for p in paths if "/" not in p}
             _leftovers.clean(game, keep_txt, keep_root, (), log)
+            # another version's cutscenes the registry still lists (2026-11-23: a V2.0 beta player kept V1.7's
+            # Demo/pl015_evo_ct_sp_break01_2.tdemopkg and with it a pool of his own): the beta has no other version's
+            # Overlay, so leftovers.py's built-in table -- V1.7's Yumichika cutscenes, which Steam does not ship, go
+            # to the quarantine; one over the game's own is only named in the log (Steam's verify puts it back)
+            if hasattr(_leftovers, "known_other_demos"):
+                _leftovers.fix_demo(game, _leftovers.known_other_demos(), None, None, log)
         except Exception as e:
             log("[beta] leftovers of other builds not checked: %s" % e)
 
