@@ -305,6 +305,15 @@ try:
             return "unknown"
 
     def pulling_from_git():
+        # The update in a window: its size is asked about first, then a progress bar (launcher/update_window.py,
+        # whose pull() runs these same steps; the code below is its fallback).
+        try:
+            from launcher import update_window as _update_window
+        except Exception:
+            _update_window = None
+        if _update_window:
+            return _update_window.pull(BASE_DIR, parent=globals().get("window"),
+                                       title="Bleach Community Patch: update")
         # Ensure git can write the deep Effect/spfx/... paths that blow past the
         # legacy 260-char Windows limit. core.longpaths makes git use \\?\
         # extended paths internally -- no admin, no registry change, no reboot.
