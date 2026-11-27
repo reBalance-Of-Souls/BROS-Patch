@@ -48,9 +48,18 @@ CUTSCENES (fix_demo; the Dev launcher, which has every version's Overlay)
   Yumichika cutscenes, paths Steam does not ship) and returns KNOWN_OVER_STEAM's (another version's cutscene where the
   game's own should be: Steam's verify puts those back).
 
+UNKNOWN CUTSCENES (fix_unknown_demos; 2026-11-27, after fix_demo)
+  The tables above only know V1.6's and V1.7's cutscenes. Any other build's (an older dev or beta build, a version the
+  repo no longer has) still stays, and the htable the version installs still lists many old names. So a counted
+  Demo/ file whose path neither Steam's list nor ANY version under the repo's GameVersions ships (by path, any folder
+  named Demo in it) and that this launch did not write is moved to the quarantine, as above. By path only: a file at a
+  path Steam or a version ships is never touched here. Nothing moves without a real Steam list (more than 1,000 paths,
+  the game's exe among them): with no list every stock cutscene would look unknown.
+
 USE
   mark_start() when a launch begins (before anything is installed); clean(game, keep_plugin_txt, keep_root,
-  other_root_markers, log) and fix_demo(game, others, steam, sources, log) after everything is installed and before
+  other_root_markers, log), fix_demo(game, others, steam, sources, log) and fix_unknown_demos(game, versions_dir, steam,
+  log) after everything is installed and before
   content_pool.write_code(). Never raise: a file that cannot be moved is reported and the launch goes on (its pool is
   then what it would have been before).
 
@@ -380,6 +389,66 @@ def fix_demo(game, others, steam=None, sources=None, log=print):
     return left
 
 
+def unknown_demos(game, versions_dir, steam_files):
+    """-> the game-relative 'Demo/...' paths that count in the pool (the installed htable lists them), that this launch
+    did not write, and whose path neither Steam (steam_files: {lower path: ...}) nor any version under versions_dir
+    ships (module docstring, UNKNOWN CUTSCENES). [] when steam_files is not a real list. Never raises."""
+    if not steam_files or len(steam_files) < 1000 or "bleach_rebirth_of_souls.exe" not in steam_files:
+        return []
+    try:
+        cp = _cp()
+        reg = cp.read_registry(game)
+    except Exception:
+        return []
+    known, dl = set(), DEMO.lower()
+    for dp, _ds, fs in os.walk(versions_dir):
+        parts = os.path.relpath(dp, versions_dir).replace(os.sep, "/").lower().split("/")
+        if dl in parts:
+            i = parts.index(dl)
+            known.update("/".join([dl] + parts[i + 1:] + [f.lower()]) for f in fs)
+    out = []
+    root = os.path.join(game, DEMO)
+    for dp, _ds, fs in os.walk(root):
+        for f in fs:
+            p = os.path.join(dp, f)
+            rel = DEMO + "/" + os.path.relpath(p, root).replace(os.sep, "/")
+            low = rel.lower()
+            if low in known or low in steam_files or not _counts(rel) or _fresh(p):
+                continue
+            try:
+                if cp.demo_registered(rel, reg):
+                    out.append(rel)
+            except Exception:
+                continue
+    return sorted(out)
+
+
+def fix_unknown_demos(game, versions_dir, steam, log=print):
+    """unknown_demos() to the quarantine. steam: a callable returning vanilla_revert.steam_list()'s object, or None
+    (then nothing moves). Returns the paths moved. Never raises."""
+    moved = []
+    try:
+        lst = steam() if steam is not None else None
+        todo = unknown_demos(game, versions_dir, lst.files if lst is not None else None)
+        stamp = time.strftime("%Y%m%d-%H%M%S")
+        for rel in todo:
+            src = os.path.join(game, *rel.split("/"))
+            q = os.path.join(game, *QUARANTINE, stamp, *rel.split("/"))
+            try:
+                os.makedirs(os.path.dirname(q), exist_ok=True)
+                shutil.move(src, q)
+                moved.append(rel)
+            except OSError as e:
+                log("[leftovers] could not move %s (a cutscene no version ships): %s" % (rel, e))
+        if moved:
+            log("[leftovers] moved %d cutscene(s) that neither the game nor any ReBalance version ships (an older "
+                "build's, they gave this PC an online pool of its own): %s -- kept in %s"
+                % (len(moved), ", ".join(moved[:3]), "/".join(QUARANTINE + (stamp,))))
+    except Exception as e:
+        log("[leftovers] unknown cutscenes not checked: %s" % e)
+    return moved
+
+
 def main(argv):
     if len(argv) < 1 or argv[0] in ("-h", "--help"):
         print(__doc__)
@@ -399,6 +468,16 @@ def main(argv):
     for rel in cut:
         print("another version's cutscene: %s (put back from a proven copy, else Steam's verify)" % rel)
     print("%d cutscene(s) of another version (of %d paths other versions ship)" % (len(cut), len(others)))
+    try:
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        import vanilla_revert
+        unk = unknown_demos(game, gv, vanilla_revert.steam_list(here, game).files)
+    except Exception as e:
+        unk = []
+        print("unknown cutscenes not checked: %s" % e)
+    for rel in unk:
+        print("a cutscene no version ships: %s (moved to the quarantine)" % rel)
+    print("%d cutscene(s) that neither the game nor any version ships" % len(unk))
     return 0
 
 

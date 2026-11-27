@@ -2109,6 +2109,12 @@ try:
                             (lambda: _vanilla_revert.steam_list(BASE_DIR, game_path)) if _vanilla_revert else None,
                             (lambda _r: _vanilla_revert._stock_sources(BASE_DIR, game_path, _r))
                             if _vanilla_revert else None, print)
+                        # A cutscene that neither Steam nor any version ships (an older build's): to the quarantine
+                        # too (leftovers.py, UNKNOWN CUTSCENES; 2026-11-27).
+                        _leftovers.fix_unknown_demos(
+                            game_path, _gv,
+                            (lambda: _vanilla_revert.steam_list(BASE_DIR, game_path)) if _vanilla_revert else None,
+                            print)
                     except Exception as e:
                         print(f"[leftovers] not checked: {e}")
                 if _left and messagebox.askyesno(
