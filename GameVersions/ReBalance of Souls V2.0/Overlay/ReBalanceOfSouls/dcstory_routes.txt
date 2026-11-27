@@ -1,0 +1,2 @@
+# Written by DataChakka's Story Mode editor -- cursor routes for added pins.
+# Read by ReBalanceOfSouls\dcstory.dll. Do not edit by hand.

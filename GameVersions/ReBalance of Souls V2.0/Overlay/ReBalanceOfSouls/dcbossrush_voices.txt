@@ -1,0 +1,163 @@
+# ADVENTURE dialogue blips (dcbossrush 0.17.121), read beside dcbossrush.dll.
+#
+# While a line types out, a short "blip" plays every few letters, pitched to the speaker -- the
+# old JRPG way of giving unvoiced dialogue a voice. One line per speaker:
+#
+#   <key> <voice>
+#
+# key   the speaker's sprite name (the `art` / `say` key: kisuke_urahara), a fighter as plNNN
+#       (pl010), or the name a line shows, lower case with _ for spaces (rowdy_senior)
+# voice deep | male | young | female | girl | neutral | none -- or a pitch in Hz (60..2000)
+#         deep 220 Hz, male 300, young 360 (teenage boys), female 500, girl 620 (children),
+#         neutral 400 (an unnamed speaker not listed here), none = silent
+#
+# A named speaker not listed blips neutral; narration (no name) is silent.
+# Loudness: blip_volume 0..100 in dcbossrush.txt (0 = off).
+
+# --- fighters ---
+pl000 young     # Ichigo Kurosaki
+pl001 young     # Ichigo (Bankai)
+pl002 young     # Ichigo (Final Getsugatensho)
+pl003 young     # Uryu Ishida
+pl004 deep      # Yasutora Sado
+pl005 deep      # Zangetsu
+pl006 male      # Kisuke Urahara
+pl007 female    # Yoruichi Shihoin
+pl008 male      # Renji Abarai
+pl009 girl      # Hiyori Sarugaki
+pl010 female    # Rukia Kuchiki
+pl011 male      # Shuhei Hisagi
+pl012 female    # Rangiku Matsumoto
+pl013 male      # Izuru Kira
+pl014 male      # Ikkaku Madarame
+pl015 male      # Yumichika Ayasegawa
+pl016 deep      # Genryusai Yamamoto
+pl017 female    # Soi Fon
+pl018 male      # Gin Ichimaru
+pl019 female    # Retsu Unohana
+pl020 male      # Sosuke Aizen
+pl021 male      # Sosuke Aizen (Monster)
+pl022 male      # Byakuya Kuchiki
+pl023 deep      # Sajin Komamura
+pl024 male      # Shunsui Kyoraku
+pl025 male      # Kaname Tosen
+pl026 280       # Toshiro Hitsugaya (pitched down, 2026-11-12)
+pl027 deep      # Kenpachi Zaraki
+pl028 female    # Bambietta Basterbine
+pl029 male      # Mayuri Kurotsuchi
+pl030 deep      # Barragan Luisenbarn
+pl031 male      # Kaien Shiba
+pl032 male      # Shinji Hirako
+pl033 male      # Coyote Starrk
+pl034 female    # Orihime Inoue
+pl035 female    # Tier Halibel
+pl036 male      # Ulquiorra Cifer
+pl037 male      # Nnoitora Gilga
+pl038 male      # Grimmjow Jaegerjaquez
+pl039 male      # Szayelaporro Granz
+pl040 female    # Isane Kotetsu
+pl041 male      # Aaroniero Arruruerie
+pl042 female    # Nelliel Tu Odelschwanck
+pl043 male      # Coyote Starrk
+pl044 male      # Sosuke Aizen
+pl050 deep      # Ichibe Hyosube
+pl051 young     # Ichigo (Thousand-Year Blood War)
+pl052 deep      # Yhwach
+pl053 male      # Ryuken Ishida
+
+# --- the Adventure's NPCs (their sprite names) ---
+aaroniero_aaruruerie male
+aisslinger male
+akon male
+ashido_kano male
+bonnie deep
+charlotte_chuhlhourne male
+chizuru_honsho female
+chojiro_sasakibe male
+don_kanonji male
+dondochakka deep
+emilou_apache female
+findorr_calius male
+ganju_shiba male
+gantenbaine_mosqueda male
+ggio_vega young
+ginrei_kuchiki deep
+goro male
+hachigen_ushoda deep
+hanataro_yamada young
+hiyori_sarugaki girl
+ikumi_unagiya female
+isane_kotetsu female
+isshin_kurosaki male
+isshin_kurosaki_gigai male
+jidanbo_ikkanzaka deep
+jinta_hanakari young
+jirobo_ikkanzaka deep
+jushiro_ukitake male
+karakuraraizer male
+karin_kurosaki girl
+keigo_asano young
+kensei_muguruma male
+kisuke_urahara male
+kiyone_kotetsu female
+kon young
+kukaku_shiba female
+lilynette_gingerbuck girl
+lisa_yadomaru female
+loly_aiverrne female
+love_aikawa male
+marechiyo_omaeda deep
+marenoshin_omaeda male
+mareyo_omaeda girl
+mashiro_kuna female
+mayuri_kurotsuchi male
+menoly_mallia female
+mila_rose female
+mizuho_asano female
+mizuiro_kojima young
+momo_hinamori female
+nanao_ise female
+nel girl
+nemu_kurotsuchi female
+orihime_inoue female
+pesche_gatiche male
+picaro_a girl
+renji_abarai male
+retsu_unohana female
+rin_tsubokura young
+rojuro_ootoribashi male
+roka_paramia female
+ryuken_ishida male
+seinosuke_yamada male
+sentaro_kotsubaki male
+shinji_hirako male
+shunsui_kyoraku male
+sun-sun female
+szayelaporro_granz male
+tatsuki_arisawa female
+tesra_lindocruz male
+tessai_tsukabishi deep
+tetsuzaemon_iba male
+ururu_tsumugiya girl
+uryu_ishida young
+wonderweiss_margela young
+yachiru_kusajishi girl
+yasutora_sado deep
+yoruichi_shihoin_cat_form deep      # the cat's voice
+yoruichi_shihoin female
+yumichika_ayasegawa male
+yuzu_kurosaki girl
+yylfordt_granz male
+zennosuke_kurumadani male
+
+# --- unnamed speaking roles in the events (by the name the line shows) ---
+rowdy_senior male
+yhwach deep
+ichibei_hyosubei deep
+shigekuni_genryusai_yamamoto deep
+jugram_hashwalth male
+kanae_katagiri female
+masaki_kurosaki female
+a_high_voice female
+a_low_voice deep
+isshin_shiba male

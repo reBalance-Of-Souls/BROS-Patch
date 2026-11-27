@@ -1,0 +1,6 @@
+# Eclipse Skins -- hidden on the costume picker until UP UP DOWN DOWN UP DOWN UP.
+# Written by DataChakka (Characters > Costumes). Read by dcreborn.dll 0.30.0+.
+# eclipse <character> <position on the picker, 1 = first>
+eclipse pl018 6
+eclipse pl050 3
+eclipse pl016 7

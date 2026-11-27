@@ -1,0 +1,129 @@
+# An ADVENTURE event's story nodes -- written by DataChakka's Events Builder.
+# The format is dcbossrush_npc.txt's (npc / spot, art, image, line, exit, desc, a | ..., b | ...).
+
+npc 53 living Two Quincy Under One Roof
+bg ishida_estate
+desc Over twenty years ago. The Ishida residence, Karakura Town, late at night.
+say - |  | Over twenty years ago. The Ishida residence in Karakura Town.
+say - |  | Masaki Kurosaki is a pure-blooded Quincy who lives under the Ishida family's roof. The elders have already decided she'll marry the family's heir, Ryuken. Neither of them was asked.
+say - | Kanae Katagiri | Ryuken-sama. Masaki-sama has gone out again.
+say pl053 | Ryuken Ishida | At this hour? She's out chasing Hollows.
+say - | Kanae Katagiri | She said she felt something strange near the river. She asked me not to tell you.
+say pl053 | Ryuken Ishida | And yet here you are, telling me.
+say - | Kanae Katagiri | ...I was worried about her.
+say pl053 | Ryuken Ishida | So am I. Don't wake the house.
+scene karakura_town_street_night
+say - |  | Ryuken pulls on his coat and goes out into the cold. Halfway to the river, he feels it. Hollows, more than one, gathering around a Reiatsu he doesn't recognise.
+exit A Hollow drops onto the road ahead of him.
+
+npc 53 living Too Late to Help
+bg karakura_town_river_night
+desc The riverbank. Somebody else got there first.
+say - |  | By the time Ryuken reaches the riverbank, the fight is already over.
+say - |  | Masaki stands over a fading Hollow, out of breath and smiling. Behind her, a Soul Reaper in a Captain's haori sits in the mud, holding his side.
+say - | Masaki Kurosaki | Ryuken! You came! Don't make that face, everyone's fine.
+say pl053 | Ryuken Ishida | You fought a Hollow by yourself to protect a Soul Reaper. Do you have any idea what the elders will say?
+say - | Masaki Kurosaki | That I did the right thing?
+say pl053 | Ryuken Ishida | No.
+say isshin_kurosaki_gigai | Isshin Shiba | Hey, uh... Thanks for the save, miss. You too, glasses. Thanks for... showing up.
+say pl053 | Ryuken Ishida | I didn't come here for you, Soul Reaper.
+say - |  | Masaki laughs and waves the Captain goodbye. There's a small cut on her arm. Nobody looks at it.
+
+npc 6 living No Cure
+bg ishida_estate
+desc Three days later. Masaki won't wake up, and her Reiatsu is changing.
+say - |  | Three days later. Masaki has not woken up.
+say - |  | Her Reiatsu is changing into something Ryuken knows well. He has shot it a hundred times.
+say pl053 | Ryuken Ishida | Hollowfication. In a Quincy. That shouldn't be possible.
+say pl053 | Ryuken Ishida | We have no technique for this. None. The elders will say she's already gone.
+say pl006 | Kisuke Urahara | They might be right, if you only look at Quincy techniques.
+say pl053 | Ryuken Ishida | Who are you?
+say pl006 | Kisuke Urahara | Just a humble shopkeeper! And this is the gentleman she saved by the river.
+say isshin_kurosaki_gigai | Isshin Shiba | The Hollow that got into her is the same one I was fighting. Urahara says if I bind it with my own soul, it'll hold.
+say pl053 | Ryuken Ishida | You'll lose your powers. You'd have to stay at her side for the rest of her life.
+say isshin_kurosaki_gigai | Isshin Shiba | Yeah. That's about the size of it.
+say pl053 | Ryuken Ishida | You'd do that for a girl you met once.
+say isshin_kurosaki_gigai | Isshin Shiba | She did it for a guy she met once.
+say pl053 | Ryuken Ishida | ...
+say pl053 | Ryuken Ishida | Do it. If she dies because you hesitated, I'll shoot you myself.
+say pl006 | Kisuke Urahara | Well! That settles it.
+
+npc 53 living Silver
+bg karakura_offices
+desc Years later. Karakura General Hospital, the director's office, after hours.
+say - |  | Years later. Masaki married the man she saved. One rainy day, she walked her young son home along the river, and never made it back.
+say - |  | Three months after that, Ryuken's wife Kanae died too. No doctor in Karakura could tell him why.
+say - |  | So Ryuken, director of Karakura General Hospital, did the autopsy himself.
+say isshin_kurosaki_gigai | Isshin Kurosaki | You didn't have to do that alone, you know.
+say pl053 | Ryuken Ishida | I'm a doctor, Kurosaki. Who else would I trust with it?
+say pl053 | Ryuken Ishida | There was silver in her heart. Clotted, like blood that had forgotten what it was supposed to be.
+say isshin_kurosaki_gigai | Isshin Kurosaki | ...Same day as Masaki. That's no coincidence.
+say pl053 | Ryuken Ishida | No. Something reached out and took them both. Something Quincy.
+say pl053 | Ryuken Ishida | I kept the silver.
+say isshin_kurosaki_gigai | Isshin Kurosaki | And Uryu?
+say pl053 | Ryuken Ishida | Uryu will study medicine. Being a Quincy has done nothing for this family except bury it.
+say pl053 | Ryuken Ishida | He won't hear about this from me.
+
+npc 3 living Menos in Karakura
+bg karakura_town_garganta_night
+desc The present. Uryu Ishida has no powers left, and something enormous is coming through the sky.
+say - |  | The present. Karakura Town, after dark.
+say - |  | Uryu Ishida gave up his Quincy powers in Soul Society to defeat Mayuri Kurotsuchi. Since then, he hasn't been able to form so much as a single arrow.
+say - |  | The sky splits open over the street. A Menos Grande pushes its way through.
+say pl003 | Uryu Ishida | (A Menos? Here? And I can't even draw a bow...)
+say pl053 | Ryuken Ishida | Step back, Uryu.
+say pl003 | Uryu Ishida | Ryuken?! What are you doing here?
+say pl053 | Ryuken Ishida | Taking a walk. Move.
+exit A bow of blue light forms in Ryuken's hand. He doesn't take off his coat.
+
+npc 53 living The Condition
+bg karakura_town_street_night
+desc The street is quiet again. Ryuken lights a cigarette.
+say - |  | The Menos comes apart after a single shot. Ryuken lowers his hand and lights a cigarette.
+say pl003 | Uryu Ishida | You could do that this whole time.
+say pl053 | Ryuken Ishida | I'm a Quincy. I simply chose not to make a living out of it. There's no money in it.
+say pl053 | Ryuken Ishida | You lost your powers using Letzt Stil. I can give them back.
+say pl003 | Uryu Ishida | ...What's the catch?
+say pl053 | Ryuken Ishida | One condition. You never associate with Soul Reapers again.
+say pl003 | Uryu Ishida | ...
+say pl003 | Uryu Ishida | Fine. I accept.
+say pl053 | Ryuken Ishida | Then come to the hospital tomorrow night. Use the back entrance, and don't be late.
+
+npc 53 living Beneath the Hospital
+bg underground_training_hall
+desc The next night. Under Karakura General Hospital, there's a room nobody on staff knows about.
+say - |  | The next night. Far below Karakura General Hospital lies a training ground the size of a stadium.
+say pl003 | Uryu Ishida | A secret training ground under a hospital. Of course you have one.
+say pl053 | Ryuken Ishida | Stand still.
+say - |  | Ryuken fires. The arrow goes clean through Uryu's chest, just beside the heart.
+say pl003 | Uryu Ishida | ...! Wh... why..?
+say pl053 | Ryuken Ishida | There's a point in a Quincy's body where the power gathers. I've opened it. If you survive what comes next, your powers will come back.
+say pl053 | Ryuken Ishida | Now get up. I'll keep shooting until you can shoot back.
+exit Uryu gets to his feet. For the first time in weeks, a bow flickers on his wrist.
+
+npc 3 living The Last Night
+bg underground_training_hall
+desc The final night of training. Uryu can dodge now. Ryuken wants more than that.
+say - |  | The last night of training. Uryu has stopped getting hit.
+say pl053 | Ryuken Ishida | Good. You can dodge. A child can dodge.
+say pl003 | Uryu Ishida | Then what do you want from me?
+say pl053 | Ryuken Ishida | Stop running and shoot me. Like you mean it this time.
+say pl003 | Uryu Ishida | You're my father.
+say pl053 | Ryuken Ishida | I'm the man who just put an arrow through your chest. Don't get sentimental now, Uryu.
+say pl003 | Uryu Ishida | ...Fine.
+exit Uryu pushes up his glasses and raises his bow.
+
+npc 53 living Broken Promises
+bg karakura_night_sky
+desc Weeks later. The roof of Karakura General Hospital.
+say - |  | Weeks later. The roof of Karakura General Hospital, just after midnight.
+say isshin_kurosaki_gigai | Isshin Kurosaki | So. Your kid went to Hueco Mundo with mine.
+say pl053 | Ryuken Ishida | I'm aware.
+say isshin_kurosaki_gigai | Isshin Kurosaki | Didn't you make him promise to stay away from Soul Reapers? He's on a rescue mission with three of them.
+say pl053 | Ryuken Ishida | He was always going to break it. He was my father's student before he was ever mine.
+say isshin_kurosaki_gigai | Isshin Kurosaki | Ha! You sound almost proud.
+say pl053 | Ryuken Ishida | My son is an idiot, Kurosaki.
+say pl053 | Ryuken Ishida | ...He gets it from his mother. Most of it.
+say - |  | Ryuken stubs out his cigarette. In a locked drawer in his office, a lump of silver sits wrapped in cloth, waiting for a war nobody else knows is coming.
+say pl053 | Ryuken Ishida | Go home and look after your clinic. Some of us have patients.
+say isshin_kurosaki_gigai | Isshin Kurosaki | Yeah, yeah. Night, Ryuken.

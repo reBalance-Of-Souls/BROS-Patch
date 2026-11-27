@@ -1,0 +1,2810 @@
+# ADVENTURE official encounters (dcbossrush 0.18.0), from the design doc "Bleach EX Mission".
+# One `enc` block per pin; format: guides/ENCOUNTERS.md. Replaces the placeholder characters of
+# dcbossrush_npc.txt (spots, portals and the events' pins stay there).
+
+# ================================================================ SOUL SOCIETY
+# SOUL SOCIETY realm -- encounters converted from the design doc (lines 1-468)
+
+# ---------------- Yamamoto ----------------
+
+enc 16 soul Shigekuni Genryusai Yamamoto
+bg captains_meeting_hall
+desc The Head Captain needs papers delivered.
+line I need you to deliver these papers to Captain Ukitake as soon as you can.
+opt I will be on my way!
+reply Make haste, these documents are of utmost importance.
+do tali 1
+opt I'm not really feeling it right now.
+say - | | You are suddenly feeling the weight of the Head Captain's spiritual pressure, making you collapse right in front of him.
+reply I will remember this.
+do kon -2 hurt 30
+
+enc 16 soul Shigekuni Genryusai Yamamoto
+bg captains_meeting_hall
+desc The Head Captain asks what brings you here.
+line What are you here for?
+opt I want to train under you!
+reply Is that so? In that case let me tell you, that I am very strict with my students.
+do fight 16 win kon +2
+opt I wanted to report someone for a crime!
+reply A crime? What are we talking about?
+opt2 I saw Captain Kyoraku slacking off.
+reply I wish this was a crime, but if you're looking for a punishment, you should report this one to Lieutenant Ise.
+do tali 1
+opt2 I saw Captain Soi Fon stalking someone.
+reply This isn't the first time I'm hearing about this. It might be time to take some serious action. You will come with me.
+do fight 17:base with 16 win kon +1 tali 1
+opt2 I saw Lieutenant Kusajishi stealing candy.
+reply I am afraid Lieutenant Kusajishi is free to take any candy and that no shop owner would back up your claim.
+reply This girl has some kind of diplomatic immunity.
+do crys 2
+
+enc 16 soul Shigekuni Genryusai Yamamoto
+bg seireitei_grounds
+desc The Head Captain offers a trial of fire.
+line Are you feeling up to a trial of fire?
+opt Give me everything you got!
+reply I shall. I hope you are ready for this.
+do fight 16:sd win kon +3
+opt I don't think I'm ready for this...
+reply Knowing when you're outmatched is just as much a skill, as any combat ability you could ever learn. A wise decision.
+do tali 1
+
+# ---------------- Soi Fon ----------------
+
+enc 17 soul Soi Fon
+bg seireitei_walkway
+desc The Captain of the 2nd Squad does not like being approached.
+line Who do you think you are just approaching me like this?
+opt I'm sorry, Captain Soi Fon...
+reply You better be. Now get out of my sight!
+do end
+opt Don't act like you're better than me.
+reply What?! You're talking to the Captain of the 2nd Squad! Commander of the Stealth Force!
+reply I will make you eat your words right here and right now!
+# stand-in: the two Stealth Force members -> 127 / 128 (ad021 / ad022 Soul Reaper)
+do fight 17 127 128
+
+enc 17 soul Soi Fon
+bg rukongai_village
+desc Soi Fon has hollows in the Rukongai to clear.
+line You there. I got some work for you. I got a report of a bunch of hollows showing up in the Rukongai district.
+line We need to get rid of them fast.
+opt I will take care of this
+reply That's what I want to hear.
+do fight 55 56 57 win tali 1
+opt You're not my Captain.
+reply How dare you disrespect me like this! I will show you the true power of the Stealth Force!
+do fight 17:subl
+
+enc 17 soul Soi Fon
+bg seireitei_alleyway
+desc Soi Fon is out buying a cat toy for Lady Yoruichi.
+line What do you want? I'm on the way to buy a cat toy for Lady Yoruichi.
+opt Can I help you with that?
+reply Actually, yes. I'm sure she will appreciate these as well. Now get out of my sight.
+# note: doc "Lose two Talisman and Crystals" -- read as 2 talismans and 2 crystals
+do lose_tali 2 lose_crys 2
+opt She will never love you.
+reply WHAT?!
+# note: "Spirit Drive Soi Fon with 10 Konpaku" read as the foe's Konpaku = 10; "enhanced movement speed" = foe_swift
+do fight 17:sd:k10 fx foe_swift
+
+# ---------------- Momo ----------------
+
+enc 62 soul Momo Hinamori
+bg seireitei_gardens
+art momo_hinamori
+desc Momo wonders whether people can change.
+line Do you believe people can change for the better?
+opt Yes, I do.
+reply Me, too! I'm sure Captain Aizen is going to be a different man once he will be released!
+reply Let's visit the Head Captain and argue!
+say - | | Momo suddenly smiled brighter than the sun.
+do ally 62
+opt They can also change for the worse.
+reply How could you say something like this?!
+do fight 62 fx foe_unblockable
+
+enc 62 soul Momo Hinamori
+bg seireitei_walkway
+art momo_hinamori
+desc Momo asks you for the time.
+line Hello! Can you tell me what time it is?
+opt Tell her the time
+reply Oh no. That means it's still 20.000 years until Captain Aizen gets released from Muken.
+reply Time really feels slower when you're waiting for something. Thank you for your help. I really appreciate it!
+# note: Soulcoin dropped
+do end
+opt I don't know.
+reply Captain Aizen would've known. Maybe I can ask him, can you get me into the Muken?
+opt2 No???
+reply Snap! Tobiume!
+do fight 62:sd fx foe_unblockable
+opt2 Sure, I'll go look for the key.
+reply Thank you! I'll be waiting right here.
+do never
+
+enc 62 soul Momo Hinamori
+bg seireitei_water_pathway
+art momo_hinamori
+desc Momo says she has made her peace with Captain Aizen.
+line I think I made my peace with what happened in the past with Captain Aizen. Captain Aizen has betrayed everyone.
+line My captain has tried to kill me twice and I can't cling onto a great man that means harm to the home of Captain Aizen.
+line Captain Aizen is evil and I can't associate any longer with my captain. Captain Aizen is no longer part of my life!
+opt Maybe you should stop calling him captain then?
+reply Do you want me to lose everything?!
+do fight 62:sd fx foe_unblockable win tali 1
+opt Okay
+say - | | You slowly walk backwards.
+do end
+
+# ---------------- Unohana ----------------
+
+enc 19 soul Retsu Unohana
+bg seireitei_barracks
+art retsu_unohana
+desc Captain Unohana sees that you are injured.
+line Stay right there, I can see that you're injured. Let me take quick care of this.
+opt Thank you, Captain Unohana.
+reply Please be careful out there.
+do heal 100 kon +1
+opt Yes, Ma'am.
+reply Please be careful out there.
+do heal 100 kon +1
+
+enc 19 soul Retsu Unohana
+bg rukongai_forests
+desc Unohana warns of a horde of dangerous hollows.
+line Be careful. It seems like a horde of dangerous hollows is approaching.
+opt Don't worry, I got this!
+reply You seem to be determined. What a brave soul you are.
+# note: doc "Fight Hollows" gives no count -- 3 Hollows used
+do fight 55 56 57 win tali 1 heal 20
+opt I hope we'll be okay...
+reply I won't let these hollows hurt anyone on my watch.
+# note: doc "Fight Hollows" gives no count -- 3 Hollows used
+do fight 55 56 57 with 19 win heal 50
+
+enc 19 soul Retsu Unohana
+bg squads_chamber
+desc Unohana offers to help you get stronger.
+line You look very strong, but I can't determine whether you're strong enough to face everything that's ahead of you.
+line Let me help you.
+opt I just need some healing!
+reply I wish you best of luck on the battlefield.
+do heal 50
+opt I think I need some training.
+reply As you wish. I will try to teach you as much as possible.
+do fight 19:base win tali 1
+opt I think I need some serious training!
+reply Are you sure about that?
+opt2 Yes.
+reply I hope you are prepared, I won't hold back.
+do fight 19:sd win tali 3 kon +3
+opt2 Actually, I just need some healing...
+reply That sounds better. I wish you best of luck on the battlefield.
+do heal 50
+opt I'm already perfect.
+do end
+
+# ---------------- Isane ----------------
+
+enc 40 soul Isane Kotetsu
+bg seireitei_barracks
+art isane_kotetsu
+desc Isane offers to treat your injuries.
+line It looks like you're hurt. Wait, let me treat your injuries.
+opt Thank you, but I'm good.
+reply I understand. Please be careful out there.
+do tali_def
+opt Thank you.
+reply Please hold still for a moment.
+do heal 100
+
+enc 40 soul Isane Kotetsu
+bg seireitei_gardens
+art isane_kotetsu
+desc Isane asks you to hand flowers to Captain Unohana.
+line Excuse me, I have a favor to ask. I'm waiting for Captain Unohana to give her this flower bouquet of Higanbanas.
+line But I just remembered I have something important to do back in our squad barracks.
+line However...if I leave now, Captain Unohana might think that I forgot about our meeting. Could you take care of these flowers and wait for her?
+line She should be here any moment!
+opt Don't worry, I will take care of this.
+reply Thank you so much! I will make sure to pay you back!
+say - | | After almost half an hour, Captain Unohana arrived in preparation for the ikebana club. The captain gently smiles.
+say pl019 | Retsu Unohana | Ah. What beautiful flowers.
+do ally 40
+opt I'm sorry, I don't have time for this.
+reply I...I see. I guess I will just work overtime tonight.
+do end
+
+enc 40 soul Isane Kotetsu
+bg seireitei_water_pathway
+art isane_kotetsu
+desc Isane seems troubled by something.
+say - | | Isane seems deeply in thought and troubled by something.
+opt Hey, are you okay?
+reply Huh? Oh, I didn't see you. I'm alright, I...just had a terrible nightmare.
+say - | | She suddenly starts smiling again.
+reply But nightmares aren't real, right? So nothing I should worry about. But I appreciate your concern. Here, take this as a thank you.
+do tali 1
+opt Start whistling and walk off
+say - | | Isane sighs and goes her way as well.
+do end
+
+# ---------------- Rangiku ----------------
+
+enc 12 soul Rangiku Matsumoto
+bg seireitei_walkway
+desc Rangiku is on her way to the Shinigami Women's Association.
+line Oh, who do we have here? Are you on your way to today's meeting of the Shinigami Women's Association, too?
+opt Yeah I was.
+reply Nice to meet you then! Take these, we're having a jewelry competition today. The shiniest shinigami will win!
+do tali 2 heal 10
+opt No, I wasn't.
+reply That's too bad, the more we are, the funnier the meeting is. Guess I'll see you around then!
+do end
+opt I'm not even a woman.
+reply Scrap the formalities, we're just having fun most of the time anyway.
+reply Nanao is the only one who would complain and in the Women's Association, that means that we can ignore it!
+do tali 1 heal 30
+
+enc 12 soul Rangiku Matsumoto
+bg seireitei_evening
+desc Rangiku wants a drinking buddy.
+line Nothing better than getting drunk with your friends! Why don't you join me?
+opt Let's get drunk!
+reply That's the spirit! Let's see who passes out first!
+say - | | You win the competition.
+# note: doc "lose ... a Kikon" read as lose 1 Konpaku
+do hurt 20 kon -1 ally 12
+opt Did you get drunk with Captain Ichimaru as well?
+say - | | Rangiku's drunken facial expression suddenly turns melancholic.
+reply No. No, I didn't.
+say - | | The two of you only spend a few minutes together, before Rangiku leaves, after putting on a fake smile.
+do end
+opt Leave the scene immediately
+do end
+
+enc 12 soul Rangiku Matsumoto
+bg sakura_pathway
+desc Rangiku has taken the day off.
+line Fancy meeting you here!
+opt Aren't you supposed to work?
+reply Yes, but my hair is a mess today so I took a day off. I need a distraction from the struggle of the shinigami life.
+say pl026 | Toshiro Hitsugaya | Matsumoto!
+reply Oh no, it's the Captain! Guess I should've told him I'm not in the mood today.
+do fight 26 with 12
+opt Wanna hang out?
+reply Totally! Let's get us both a little drink!
+say - | | You spend the rest of the day with Rangiku, until she falls asleep with a sake bottle in her hand.
+do heal 20 tali 1
+
+# ---------------- Kenpachi ----------------
+
+enc 27 soul Kenpachi Zaraki
+bg seireitei_alleyway
+desc Kenpachi wants to know what you want.
+line Huh? What do you want?
+opt I want to prove my Strength!
+reply Is that so. Then show me what you got!
+do fight 27 win tali 1
+opt Run for your life
+do end
+
+enc 27 soul Kenpachi Zaraki
+bg seireitei_grounds
+desc Kenpachi is bored and looking for a fight.
+line What a boring day. Not a single person who's looking for a fight.
+opt I want to fight you!
+reply I guess you will do for now.
+do fight 27 win tali 1
+opt Show me everything you've got!
+reply You better not disappoint me now!
+do fight 27:sd win tali 1
+
+enc 27 soul Kenpachi Zaraki
+bg seireitei_walkway
+desc Kenpachi has finally found someone.
+line Finally. I found someone.
+opt What do you want...?
+reply I'm looking for the way to the 11th Squad barracks. I got kinda lost a few hours ago.
+say - | | You point Kenpachi towards a random direction.
+reply Huh, I knew it was that way. Thank you. You look pretty strong. You should visit our squad when you got some time.
+reply Maybe you can entertain me in the future!
+do heal 50
+opt You can't intimidate me!
+reply Huh?! I was looking for the way back to my squad, but I won't back off from a challenge!
+# note: doc "Get a fighting Talisman" read as an attack talisman (no fight written)
+do tali_atk
+
+# ---------------- Yumichika ----------------
+
+enc 15 soul Yumichika Ayasegawa
+bg seireitei_alleyway
+art yumichika_ayasegawa
+desc Yumichika finds something a bother.
+line Ugh, this is such a bother...
+opt What's wrong?
+reply It's Ikkaku. He wants to spar so bad and can't leave me alone, but I'm really not in the mood right now.
+reply Hmm...how about this. You take care of this and I will continue with my routine. Does that sound great? I think it does.
+do fight 14:base win tali 1
+opt You are a bother.
+reply Excuse me?! Why are we being so rude? You know what? I wasn't in the mood, but you definitely deserve this.
+do fight 15 14:base
+
+enc 15 soul Yumichika Ayasegawa
+bg seireitei_gardens
+art yumichika_ayasegawa
+desc Yumichika asks what is more beautiful.
+line Hey, you. Wait right there. Let me ask you a question. What's more beautiful to you? The use of Kido or raw swordsmanship?
+opt Kido is more beautiful.
+reply Just between you and me? I kind of agree. Obviously kido is not welcome in our squad, but objectively?
+reply I do see the beauty when someone else is using it.
+do tali 1
+opt Swordsmanship is true beauty!
+reply So you're in line with my squad on that one. Although they wouldn't call it beauty in particular, I'm sure we all mean the same thing.
+do crys 1
+
+enc 15 soul Yumichika Ayasegawa
+bg seireitei_grounds
+art yumichika_ayasegawa
+desc Yumichika feels he has fallen behind in training.
+line I really haven't kept up with my training at all. It feels like Ikkaku is so far ahead of me.
+opt Want to spar a little?
+reply If you're up for it, why not? But don't think I won't give it my all, just because I'm rusty right now.
+do fight 15 win kon +1
+opt You don't need to be the best.
+reply That's not what I'm doing this for. I really enjoy sparring with Ikkaku, that's why I don't want to fall behind.
+reply We gotta at least stay on a similar level. Or if anybody gets noticeably stronger, it should be me.
+do tali 1
+
+# ---------------- Ikkaku ----------------
+
+enc 14 soul Ikkaku Madarame
+bg seireitei_grounds
+desc Ikkaku charges in, ready or not.
+line Ready or not, here I come!
+opt Let's battle it out!
+reply HIYAAAAAAAAAAAAAA!!
+# note: doc "Base Ikkaku with Evo ready (so he instantly uses bankai)" -> form evo
+do fight 14:evo win kon +3
+opt What?!
+reply Oh come on, man. This is your reaction? What a boring opponent you are. No fire, no nothing.
+say - | | Ikkaku shakes his head and leaves disappointed.
+do end
+
+enc 14 soul Ikkaku Madarame
+bg seireitei_barracks
+desc Ikkaku does not know what to do.
+line What to do....what to do....?
+opt What's the problem?
+reply The captain wants a challenge. A real one I mean. And as much as I hate to admit it, if he wants to go all out, I'm not enough.
+reply Yumichika and I once tried taking him down together and we still couldn't do it. Maybe.... Maybe we need one more!
+reply Come with us, this is gonna be fun!
+# note: doc has BOTH Ikkaku and Yumichika as allies; `with` takes one chara -- Ikkaku kept, Yumichika (15) dropped
+do fight 27:subl with 14 win tali 3
+opt Don't pull your hair out.
+reply Hey, what do you want, punk?! You wanna start a fight or what?! Don't think I'll let you make fun of me!
+do fight 14:base
+
+enc 14 soul Ikkaku Madarame
+bg seireitei_walkway
+desc Ikkaku wants to flip a coin with you.
+line Hey, stop right there! Let's play a little game! I'll throw a coin right now. If I win, we'll have an all out battle!
+line If you win, I'll give you a reward. So what do you pick, heads or tails?
+# note: the doc's per-outcome replies ("Knew it! ... Get ready!" on a fight / "Damn it, can't believe I lost..." on 3 Talismans)
+# note: cannot be tied to the chance branches -- dropped
+opt Heads!
+do chance 50 fight 14 else tali 3
+opt Tails!
+do chance 50 fight 14 else tali 3
+
+# ---------------- Kira ----------------
+
+enc 13 soul Izuru Kira
+bg seireitei_barracks
+desc Kira offers to show you a little kaido.
+line Did you know I was part of squad 4 once? I actually know a little bit of kaido. Wanna see?
+opt Please show me.
+reply Okay, get ready.
+do heal 20
+opt I don't believe in you.
+reply Huh? Wh-where did that come from? It's not like I'm trying to showcase you anything difficult.
+reply But...I guess I don't seem good enough for that either way.
+do end
+
+enc 13 soul Izuru Kira
+bg seireitei_water_pathway
+desc Kira needs help finishing a haiku.
+line Hey, I need your help on this haiku.
+line Left with no one else, this burden on my shoulders,
+line I need another sentence with 5 syllables to finish this piece. Do you have any idea?
+opt I will remain strong.
+reply That's...perfect. Quite obvious to be honest, but sometimes those are the best endings you could ask for.
+reply Thank you, I will credit you when this gets published.
+do kon +2
+opt Please, change your career.
+reply I...just wanted some opinion. I guess I will just ask someone else...
+do end
+
+enc 13 soul Izuru Kira
+bg seireitei_evening
+desc Kira wants to get stronger.
+line Aizen might be defeated, but squad 3 is still without a captain.
+line I heard rumors that the Head Captain was talking to someone about this position, but right now I'm still on my own.
+line And I want to be stronger. I need to be stronger.
+opt Let's spar a little bit!
+reply Good idea, I thank you for this opportunity. Don't hold back on me now. I won't do either.
+do fight 13 win tali 1
+opt Should we just attack Captain Zaraki?
+reply What?! I mean...I'm sure he would be happy about a challenge. But...I'm not sure whether this is the right kind of training I need.
+reply Wait, no. I'm looking for excuses. Maybe you are right. Let's...let's just do it! How bad could it be?
+reply He will know we just want to spar, right? Right?
+do fight 27:sd with 13 win tali 2 kon +1
+
+# ---------------- Komamura ----------------
+
+enc 23 soul Sajin Komamura
+bg seireitei_walkway
+desc Komamura sees that something is bothering you.
+line Is everything alright? You seem like something is bothering you.
+opt I'm not feeling strong enough.
+reply It is only natural to be afraid of what's to come. However, you must never forget for what or for who you're fighting.
+reply As long as you have a reason, there is no opponent that could defeat you.
+do ally 23
+opt Don't worry, I'm fine!
+reply I see. Please do me a favor and take this. It might help you in the future.
+do tali 1
+
+enc 23 soul Sajin Komamura
+bg rukongai_forests
+desc Komamura is looking for his dog Goro.
+line Excuse me, but have you seen my dog Goro? Neither me, nor Iba, were able to find him since this morning.
+opt No, but maybe I can help looking for him.
+reply I would never forget this if you'd do. We need every help we can get to find him. He might be part of squad 7, but he's not a warrior.
+say - | | You two go search for the dog, until you hear him whimper in the outskirts.
+say - | | Goro is surrounded by hollows as Komamura lets out a scream and draws his sword.
+do fight 55 56 57 with 23 win tali 1
+opt Sorry, I haven't seen him.
+reply Thank you regardless. It seems like I won't get any sleep until I can find him.
+do end
+
+enc 23 soul Sajin Komamura
+bg seireitei_water_pathway
+desc Komamura still thinks about Tosen.
+line Ever since Tosen betrayed Soul Society, I kept thinking about how I could get him to come back.
+line But now that he's gone, I can only think about what I could've done different to begin with.
+opt It's not your fault.
+reply It does feel like my fault. I was his friend and supposed to help him. Maybe he was beyond saving before I even met him, but I don't want to believe that.
+reply I'm sorry, this is nothing you need to worry about. Thank you for listening, I really appreciate your concern.
+do ally 23
+opt Don't worry, he was a traitor.
+reply The man I got to know was not a traitor. He was misguided and I was not able to see it early enough.
+reply I will probably regret this for the rest of my life.
+do end
+
+# ---------------- Shuhei ----------------
+
+enc 11 soul Shuhei Hisagi
+bg seireitei_barracks
+desc Shuhei wants your opinion on his guitar playing.
+line Hey, wait up!
+say - | | Shuhei suddenly starts playing his guitar and performs like a rockstar.
+line How was that? Did you like it?
+opt Encore! Encore!
+reply That's what I expected to hear. Let's do this one more time!
+say - | | Shuhei repeats his performance with even more excitement.
+do ally 11
+opt That was terrible.
+reply W-wait, seriously? There is no way, I play almost every day. How could you have this reaction?!
+reply Did everybody lie to me until now? Or do you not like music in general? I need to find an answer!
+say - | | Shuhei will probably think about your response for the next couple of days.
+do end
+
+enc 11 soul Shuhei Hisagi
+bg seireitei_walkway
+desc Shuhei is looking for news for the Seireitei Bulletin.
+line Do you perhaps have any news for the next issue of the Seireitei Bulletin?
+opt There was a hollow invasion.
+reply You mean the one in the Rukongai district a few days ago? Right, it seems a lot of squad members don't know about that.
+reply Thank you, this is a great idea!
+do crys 2
+opt Talk about the photo of him drunk
+reply Wh-where have you heard this from?! Listen, we will absolutely not print that!
+reply It was all Rangiku's fault, I never planned to be naked and I swear she filled my cup back up, when I wasn't looking!
+reply I'm afraid this photo will always be brought up. Please, help me! We need to find Rangiku and destroy the evidence!
+do fight 12 with 11 win kon +1
+
+enc 11 soul Shuhei Hisagi
+bg seireitei_evening
+desc Shuhei remembers what he learned from Tosen.
+line I know that Kaname Tosen is considered a traitor by everyone nowadays.
+line But even if he betrayed us all, I did learn a lot from him and I will always cherish these memories.
+opt Can you share it?
+reply You mean what I got taught? Well, I can show you in a fight. Just remember, whenever you pick up your weapon.
+reply He who fears not the blade he wields, has no right to wield that blade.
+do fight 11 win kon +2
+opt Don't you hate him?
+reply I don't think I ever could. It is tragic to see for how long he had chosen this path, but I was able to talk to him during his final moments.
+reply That's how I know he was not an evil man.
+do tali 1
+
+# ---------------- Toshiro ----------------
+
+enc 26 soul Toshiro Hitsugaya
+bg soul_reapers_room
+desc Toshiro has not seen his lieutenant all day.
+line It's already noon and I haven't seen her once today...
+opt Who are you looking for?
+reply Who else than my lieutenant would be missing at a time like this? Ugh, she's driving me crazy.
+reply I'm sure she's at the sake shop outside of the gates. Let's hope I'm wrong, otherwise I gotta have a serious talk with her! You come with me!
+do fight 12 with 26 win tali 1 kon +1
+opt Do you miss her?
+reply What are you talking about? Matsumoto is either gone when I need her, or can't leave me alone when I got some free time.
+reply I couldn't even miss her if I wanted to! Ugh, why am I even getting angry at this point.
+reply This is more of a routine at this point, than the one I actually have.
+do crys 1
+
+enc 26 soul Toshiro Hitsugaya
+bg seireitei_grounds
+desc Toshiro talks about using your strongest attack early.
+line A lot of shinigami are trying to keep a trump card when fighting and don't start all out.
+line But sometimes you need to use your strongest attack early on, before it's too late.
+opt Yes, I always wanna go all out!
+reply That's not what I said, don't be reckless! I'm talking about getting caught off guard, when you're already exhausted.
+reply You need to know the right moment for those abilities of yours. Recklessness will only be the death of you.
+do tali 1
+opt You overdo it with the Bankai, tho.
+reply What?! Where is that suddenly coming from?! Listen, there is no way for me to not use my bankai as much as I do.
+reply It is simply an enhancement for everything that I do, it would be stupid to not do it! Let me show you!
+do fight 26 win tali 1
+
+enc 26 soul Toshiro Hitsugaya
+bg seireitei_walkway
+desc Toshiro is on the way to a very important meeting.
+line I'm sorry, I'm on the way to a very important meeting. Please seek out a different captain, for whatever matter you have.
+opt Help, my life depends on this!
+reply If it's that important, I guess the meeting will have to wait. What's the matter?
+opt2 Do you know where Lieutenant Matsumoto is?
+reply Are you saying your life depends on where Matsumoto is?! I know how this feels, my job depends on her, but it can't be that serious.
+reply Send her a hell butterfly or something, I don't have time for this!
+do ally 12
+opt2 Just kidding, I'm busy.
+reply Why would you purposely waste my time like this?! I almost missed my...my meeting for this!
+do end
+opt Is it a soccer game?
+say - | | The captain looks at you in shock.
+reply How....how do you know? Did you follow me before?! Or...was it just a joke and a lucky strike...?
+reply Either way, this is none of your business. My lieutenant barely works, so I am allowed to have a hobby from time to time as well.
+do kon +1
+
+# ---------------- Mayuri ----------------
+
+enc 29 soul Mayuri Kurotsuchi
+bg twelveth_division_laboratory
+art mayuri_kurotsuchi
+desc Mayuri wants your help with his research.
+line What a fascinating specimen you seem to be! Why don't you help me out with my research?
+opt Sure, why not.
+reply Wonderful! Follow my instructions and do not ask any questions.
+# note: doc "Get two Talismans; or Lose 3 Konpaku" gives no odds -- 50/50 used
+do chance 50 tali 2 else kon -3
+opt Run away
+reply I'm sorry, I was not asking for your permission. Get him, Nemu!
+do fight 29 97
+
+enc 29 soul Mayuri Kurotsuchi
+bg twelveth_division_laboratory
+art mayuri_kurotsuchi
+desc Mayuri demands your blood.
+line You there. Give me your blood.
+opt I don't see any potential downside to this.
+reply That was the right answer.
+# note: doc "Get three talismans; or lose 5 Konpaku" gives no odds -- 50/50 used
+do chance 50 tali 3 else kon -5
+opt Can I please go?
+reply What a stupid question that was. If you have to ask, you already know the answer.
+# note: doc "Fight Mayuri; or lose 3 Konpaku" gives no odds -- 50/50 used
+do chance 50 fight 29 else kon -3
+
+enc 29 soul Mayuri Kurotsuchi
+bg twelveth_division_laboratory
+art mayuri_kurotsuchi
+desc Mayuri offers you one of his pills.
+line Are you perhaps hungry and interested in one of these pills that I have developed?
+opt I take the red pill.
+reply A wonderful choice. At least for me, in any case.
+do kon -5 hurt 20
+opt I take the blue pill.
+reply A wonderful choice. At least for me, in any case.
+do tali 2 heal 30
+opt I take the green pill.
+reply A wonderful choice. At least for me, in any case.
+do kon -2 heal 10 tali 1
+opt I don't want any of those!
+reply Too bad I asked you a rhetorical question!
+do kon -6 heal 100 destroy_tali
+
+# ---------------- Nemu ----------------
+
+enc 97 soul Nemu Kurotsuchi
+bg seireitei_walkway
+art nemu_kurotsuchi
+desc Nemu says Master Mayuri is looking for you.
+line Master Mayuri is looking for you.
+opt What does he want?
+reply A specimen.
+do fight 97
+opt Can he look somewhere else?
+reply I would never disobey his orders. Such a request needs to be punished.
+# note: "triple Damage" -> foe_glass (closest token, per FORMAT.md)
+do fight 97 fx foe_glass
+
+enc 97 soul Nemu Kurotsuchi
+bg seireitei_walkway
+art nemu_kurotsuchi
+desc Nemu says the President is looking for you.
+line The President is looking for you.
+opt The President?!
+reply Yes, Yachiru Kusajishi. The lieutenant of the 11th squad and president of the Shinigami Women's Association.
+reply She is in need of sweet snacks and she needs them now. Give me all of your belongings.
+opt2 Absolutely not!
+reply It looks like I have to resort to violence.
+do fight 97
+opt2 I don't even have Snacks on me!
+reply I can't return empty handed. I will take whatever I can find.
+say - | | Nemu pushes you to the ground and takes all of your collected items.
+do lose_all
+opt Are you making fun of me?
+reply I do not intend to waste time like this. I will now take all your sweets.
+do fight 97
+
+enc 97 soul Nemu Kurotsuchi
+bg seireitei_alleyway
+art nemu_kurotsuchi
+desc Nemu invites you to spend the night.
+line Would you like to spend the night with me?
+opt Of course I do!
+reply I am pleased to hear that. I will make sure to assist Master Mayuri as good as I can, while he experiments on your body until tomorrow.
+reply Follow me.
+say - | | Nemu grabs your wrist and drags you with her.
+do kon_to 1 tali 2
+opt No, thank you.
+reply That is unfortunate.
+say - | | Nemu leaves without saying another word.
+do end
+
+# ---------------- Byakuya ----------------
+
+enc 22 soul Byakuya Kuchiki
+bg seireitei_walkway
+desc Byakuya invites you to a flash step demonstration.
+line Good morning, I'm headed to Squad 6's barracks to give a demonstration on the flash step technique for my subordinates.
+line Would you like to attend?
+opt Sure, that sounds great!
+say - | | Byakuya closes his eyes.
+reply Very good. Discipline is important for us all to effectively perform our duties.
+say - | | You attend the training session.
+do hurt 30 tali 1
+opt No thanks, I have other duties to attend to
+say - | | Byakuya turns away.
+reply Very well, another time.
+say - | | He flash-steps away.
+do end
+
+enc 22 soul Byakuya Kuchiki
+bg senkaimon
+desc Byakuya is forming a hollow hunting party for Hueco Mundo.
+line The Head Captain has asked me to travel to Hueco Mundo.
+line Now that the Espada are defeated, it is an opportune moment to exorcise the hollows there, and thin the numbers at their source.
+line He's given me permission to take a small hunting party with me. Would you like to come?
+opt Yes, I'm always down to kill hollows!
+reply Then with you, our party is complete. Follow me to the Senkaimon.
+say - | | You go to Hueco Mundo and spend the day killing hollows.
+do kon -1 hurt 50 tali 1 crys 1
+opt Uh, no thanks.
+# note: doc reply is an empty quote -- kept the stage direction only
+say - | | Byakuya closes his eyes and furrows his brow.
+do end
+
+enc 22 soul Byakuya Kuchiki
+bg seireitei_barracks
+desc Swords are clashing at Squad 6's barracks.
+say - | | Passing by Squad 6's barracks you hear the sounds of swords clashing. Do you investigate?
+opt Yes
+say - | | You see Byakuya sparring with Renji. In between the clashes of swords Byakuya spots you and says:
+reply Squad member. Come and assist my lieutenant, he's getting weary.
+# note: doc says only "Fight Byakuya"; "assist my lieutenant" read as Renji (8) fighting at your side
+do fight 22 with 8
+opt No
+say - | | You ignore the sounds and continue on your way.
+do heal 25
+
+# ---------------- Rukia ----------------
+
+enc 10 soul Rukia Kuchiki
+bg rukongai_village
+desc Hollows are attacking Rukia's Rukongai district.
+line This is bad. A horde of hollows is attacking the Rukongai district I'm from. I don't even want to think about all the kids that live on the street.
+opt Just don't think about it.
+reply What?! I could never look away from something like this. It is my duty as a member of the Gotei 13 to save innocent lives.
+reply Only a coward would run away in such a situation.
+do end
+opt Let's save them.
+reply I appreciate your courage. Follow me closely!
+do fight 55 56 57 58 with 10 win kon +1
+
+enc 10 soul Rukia Kuchiki
+bg seireitei_gardens
+desc Rukia wants your neutral opinion on her drawing.
+line Stop right there! You are the first person I come across, so I need your neutral opinion on this. What do you think is this?
+say - | | Rukia shows you a poorly drawn picture she made.
+opt What a cute rabbit!
+reply I knew it was recognizable in an instant! Thank you a lot for your feedback.
+opt2 Always happy to help.
+reply I appreciate it. Here, take this as a token of my gratitude!
+do tali 1
+opt2 Can you draw bunny gifs, too?
+reply I...don't know what a gif is. Maybe I could try. I will do some research!
+do kon +1
+opt Dogs have different ears.
+reply You fool! This is Chappy the rabbit, not a dog! There is no way you would think this is a dog. Nothing about this drawing looks like one.
+reply Hmpf. I will keep going around and ask others. I can't accept defeat!
+do end
+
+enc 10 soul Rukia Kuchiki
+bg seireitei_grounds
+desc Rukia wants to spar to stay strong.
+line Aizen might be defeated, but we mustn't let our guard down. We need to make sure that peace remains for the future of the Soul Society.
+line Spar with me. We must both get stronger to do so.
+opt Let's get to it!
+reply Come at me with everything you got!
+do fight 10 win kon +2
+opt I don't really want to.
+reply That is a very cowardly way of thinking. I thought better of you.
+reply You might not care right now, but if another war emerges, you'll regret not training properly. Hopefully this time will never come tho.
+do end
+
+# ---------------- Nanao ----------------
+
+enc - soul Nanao Ise
+bg soul_reapers_room
+art nanao_ise
+desc Nanao is looking for Captain Kyoraku.
+line Where is Captain Kyoraku?! These papers are not going to fill themselves out!
+opt What a lazy Captain...
+reply You wouldn't believe what I have to put up with. There is so much work to do at his office,
+reply but the captain always wanders off and disappears like a child that tries to run away from its duties. A lot of times I need to do them-
+say - | | Nanao keeps going until you slowly doze off. When you wake up, the lieutenant is gone and your head hurts.
+say - | | It seemed like her rambling was mentally draining.
+do hurt 30
+opt Can I help you?
+reply Actually, yes. You can. Go look for Captain Kyoraku and make him come back.
+reply You might think that my wording implicates an act of violence. And you would be right. Someone needs to teach him a lesson!
+do fight 24
+
+enc - soul Nanao Ise
+bg seireitei_library
+art nanao_ise
+desc Nanao recommends books on defense and offense.
+line I have recently read a lot of books about the art of defense and offense for shinigami. I am sure you could benefit from doing so as well.
+opt I want to read the Art of Defense.
+reply Good choice. I hope you can improve with this.
+do tali_def
+opt I want to read the Art of Offense.
+reply Good choice. I hope you can improve with this.
+do tali_atk
+opt I never want to even touch a book.
+say - | | Nanao's expression becomes frustrated.
+reply I was just trying to help...
+do end
+
+enc - soul Nanao Ise
+bg rukongai_lake
+art nanao_ise
+desc Hollows are near the Women's Association picnic spot.
+line Excuse me, but would you be able to help me with some preparations for the Shinigami Women's Association?
+line There is a group of hollows near the place we're planning to have a picnic.
+opt Sure, I will help you!
+reply Thank you. You will receive a reward, once we arrive at the designated picnic spot without any hollows present.
+# note: the reply promises a reward but the doc names none -- no win tokens
+do fight 55 56 57 58 55
+opt Can't you guys defend yourself?
+reply Of course we can. But don't you think a picnic feels less relaxed after fighting?
+do fight 55 56 57 58 55
+
+# ================================================================ HUECO MUNDO
+# HUECO MUNDO -- design doc lines 469-894
+
+# ---- Charlotte Chuhlhourne ----
+enc - hueco Charlotte Chuhlhourne
+bg las_noches_hallway
+art charlotte_chuhlhourne
+desc Charlotte wants your first impression of him.
+line I need to see your true beauty. Tell me... what is your first very first impression of me?
+opt You are gorgeous!
+reply Ah!~ You passed the test! If this is your first impression of me, I can see your beauty as clear as day now!
+reply You have earned yourself not only my respect, but also this talisman to remind you of my reassurance!
+do tali 1
+opt It hurts to look at you.
+reply What?! Oh I see now. Your ugliness disgusts me. Not only are denying my own beauty and insult me, you are a bad person on top!
+reply Someone like you could never be beautiful, no matter how hard you try.
+do kon -2
+
+enc - hueco Charlotte Chuhlhourne
+bg las_noches_pathways
+art charlotte_chuhlhourne
+desc Charlotte sings the praises of Lord Barragan.
+line You have no idea what an honor it is to serve under Lord Barragan.
+opt I will never serve under someone else.
+reply If you won't his majesty, then you are already doomed I'm afraid. You are either with us or against us.
+reply And if you don't respect Lord Barragan, you are an enemy to any of us!
+do fight 55 56 57 85
+opt Can I join?
+reply I don't think I can answer this question. Wanting to serve under Lord Barragan is already an important first step.
+reply Maybe you should prove yourself first and show us your strength.
+do fight 55 56 57 58 win ally 85
+
+enc - hueco Charlotte Chuhlhourne
+bg las_noches_corridor
+art charlotte_chuhlhourne
+desc Charlotte lost his favorite shampoo.
+line Oh no, I lost my favorite shampoo and I almost didn't shower for an entire day! ...Wait. I know what to do.
+line You there. Go to Cirucci and bring me her shampoo. It always smells so good when I walk past her, because I don't like talking to her.
+opt On my way!
+reply Your enthusiasm is so beautiful!
+do fight 71 win kon +2
+opt Wouldn't this cause a fight between arrancar?
+reply Nobody messes with Lord Barragan's fraccion. Don't worry, just bring me the shampoo. I can start feeling how dry my hair is...
+do fight 71 win tali 1
+
+# ---- Yammy ----
+enc 93 hueco Yammy
+art yammy_llargo
+bg las_noches_desert
+desc Yammy sizes you up.
+line Hey, what does a pathetic little weakling like you doing here?
+opt I want to work with you!
+reply Huuuh? What are you even talking about? You think you can escape me by submitting like a dog to me?!
+do fight 93
+opt Who are you calling a weak?
+reply Do you think you're worth more than trash, or what? I'll show you what I meant by that!
+do fight 93:sd
+
+enc 93 hueco Yammy
+art yammy_llargo
+bg hueco_mundo_desert
+desc Yammy wants to kill something.
+line Man, I wanna kill something. You might be the next best thing.
+opt I won't be the one getting killed.
+reply What a joke, you think you stand a chance? I'll crush you beneath my feet!
+do fight 93 fx foe_unblockable
+opt Wait, let's kill... Grimmjow!
+reply Grimmjow? Ugh... I don't really care for him. Although it pisses me off, when he refers to himself as king. Yeah, let's kill that guy.
+do fight 38 with 93 win kon +1
+opt Wait, let's kill... Nnoitra!
+reply Nnoitra? That bastard keeps telling everyone he's the strongest, when in reality there is not a single espada stronger than me.
+reply Let's make sure he'll learn his lesson.
+do fight 37 with 93 win kon +1
+
+enc 93 hueco Yammy
+art yammy_llargo
+bg las_noches_rubble
+desc Only Lord Aizen holds Yammy back.
+line The only thing that stops me from killing every single bastard in Hueco Mundo is Lord Aizen. If it wasn't for me, nobody could stop me.
+opt It would be boring if everyone is dead, too.
+reply Yeah, that's true as well. It's also boring when everyone's alive, but at least there is a chance to have some excitement.
+reply If you find some strong opponent, tell me so I can kill them, before the boredom kills me.
+do ally 93
+opt I don't think Aizen could stop you either.
+reply Obviously! I mean... yeah, why aren't I just killing him? Sounds like a good time to me.
+reply Come along if you want, since Sosuke Aizen won't be alone either. Not that it'd matter to me.
+do fight 20 25 18 with 93 win tali 2 kon +3
+
+# ---- Aaroniero ----
+enc 41 hueco Aaroniero
+bg las_noches_corridor
+art aaroniero_aaruruerie
+desc Aaroniero asks you to clear a Hollow nest.
+line I have a favor to ask of you. There is a hollow nest near our location and I would like you to destroy it, so I can take care of the corpses.
+opt I'm on it!
+reply I will await your return.
+do fight 55 56 57 58 55 win kon +3
+opt Why don't you do it yourself?
+reply Because I am already occupied with something more important. You could simply do me a favor and help me evolving my body.
+reply Sadly, it seems like you have no interest in doing so. You will regret this decision.
+do kon -2
+
+enc 41 hueco Aaroniero
+bg las_noches_corridor
+art aaroniero_aaruruerie
+desc Aaroniero asks what you seek: strength or evolution.
+line Tell me, are you satisfied with strength? Or do you seek evolution until there is nothing that could rival your power?
+opt Evolution is what keeps me alive!
+reply Well then. Let me aid you in your goal and take this with you. If you evolve enough, not even a vasto lorde could stand in your way.
+do crys 1
+opt I'm happy with how I am.
+reply How disappointing. I guess someone like you is just too privileged to feel the need to truly evolve.
+reply But it's people like you who don't worry about survival, who will get devoured first.
+do end
+
+enc 41 hueco Aaroniero
+bg las_noches_corridor
+art aaroniero_aaruruerie
+desc Aaroniero, the only Gillian among the Espada.
+line Did you know that I am the only gillian under the espada? I might just be number 9, but the more hollows I devour, the stronger I will become
+line until I eventually surpass every single one of them.
+opt I want to help you evolve!
+reply Help? Me? I don't need help absorbing common hollows. Although... you might come across some stronger folks.
+reply In that case, let me know when you do so. Maybe I could really do benefit from you.
+do ally 41
+opt No way a gillian is that strong.
+reply Foolish to doubt my espada rank simply due to my status as a hollow. I will show you what my evolution has lead to.
+do fight 41
+
+# ---- Szayel ----
+enc 39 hueco Szayel
+bg las_noches_hallway
+art szayelaporro_granz
+desc Szayel eyes a new test subject.
+line A walking talking test subject, what a wonderful sight.
+opt Hands off, buddy.
+reply I was not asking for your cooperation. I'm sorry if you had the illusion of choice for even a mere moment.
+do fight 39 fx poison
+opt My body is yours.
+reply Huh? I'm surprised about that excitement and in particular that wording, but I won't back off from such an opportunity!
+do chance 50 kon +3 heal 30 else kon -3 hurt 30
+
+enc 39 hueco Szayel
+bg las_noches
+art szayelaporro_granz
+desc Szayel wants some Hollow masks.
+line There is a group of hollows just outside of Las Noches, which holds very valuable data to me.
+line Unfortunately I am way too busy right now to take care of this. Do me a favor and bring me their masks.
+opt I'll be right back!
+reply What a good little henchman you are. I await your return.
+do fight 55 56 57 win crys 1
+opt What's in it for me?
+reply Not becoming my valuable data yourself. At least for now. So why are you still here? Go fetch me some masks.
+do fight 55 56 57
+
+enc 39 hueco Szayel
+bg las_noches_pathways
+art szayelaporro_granz
+desc Szayel's enhanced Hollows need testing.
+line I just finished genetically enhancing a bunch of hollows and need to test how capable these are.
+opt I'll test them!
+reply Now this is what I wanted to hear. Not like I would've taken a no either way.
+do fight 55 56 57 fx foe_strong+foe_sturdy+foe_unblockable win crys 1
+opt Sorry, I don't have time.
+reply I don't remember asking you for permission.
+do fight 55 56 57 fx foe_strong+foe_sturdy+foe_unblockable
+
+# ---- Zommari ----
+enc 73 hueco Zommari
+art zommari_rureaux
+bg las_noches_desert
+desc Zommari boasts of his Sonido.
+line Did you know that I have the fastest Sonido across all espada?
+opt You can't be that fast.
+reply Are you questioning my speed? Don't you know I'm fast enough to create afterimages who are equal to clones? I will show you just how fast I am.
+# note: doc says "Fight 5 Zommari" (his Sonido clones) -- written as five Zommari foes
+do fight 73 73 73 73 73 fx foe_swift
+opt Yeah, you really are the fastest. I'm so impressed.
+reply Most people are. But there is still room for improvement. I will make Lord Aizen is proud of my results.
+do tali 1
+
+enc 73 hueco Zommari
+art zommari_rureaux
+bg las_noches_pathways
+desc Zommari mutters about arrogance.
+line Arrogant.
+opt Who are you talking to?
+reply I was just talking myself when I thought about the way of the shinigami. I would never call someone I don't know arrogant.
+reply That would be arrogant of myself, which couldn't be further from the truth. I am not arrogant.
+opt2 Yeah, obviously.
+reply I knew you would understand. If you ever come across any shinigami or others who oppose Lord Aizen, just let me know. I will make them pay for their arrogance.
+do ally 73
+opt2 Can I leave? Or is that arrogant, too?
+reply No, that is just disrespectful. What an arrogant question.
+do end
+opt Pretty arrogant to assume that.
+reply I was just thinking about the way of the shinigami for a second.
+reply But directing my sense towards yourself, thinking that every single word that reaches your ear is based on your very existence, is arrogant indeed.
+reply Maybe my unconsciousness was able to sense your arrogance beforehand.
+do kon -2
+
+enc 73 hueco Zommari
+art zommari_rureaux
+bg las_noches_hallway
+desc Zommari offers to show you "love".
+line Do you want me to show you love?
+opt Excuse me?
+reply Did you not understand? I'm talking about my ability, Armor. I don't understand what's so confusing about this. Maybe you need to feel it for yourself.
+do fight 73
+opt Yes, Zommari. Teach me, please.
+reply Teach you? I doubt you will be able to learn my resurreccion's ability Armor. But maybe you could learn something from facing it.
+do fight 73 win tali 1
+
+# ---- Halibel ----
+enc 35 hueco Halibel
+bg tres_cifras
+desc Halibel is settling a fight between her Fraccion.
+line I am deeply sorry, but I don't have any time right now. I'm resolving a fight between my fraccions.
+opt Can I help you in some way?
+reply Perhaps. Apache, Mila & Sun Sun are all fighting each other, but maybe they could calm down by working together and fighting you instead.
+reply Prepare yourself, these three are not to be underestimated.
+# stand-in: Ayon (no fighter) -> 94 Exquias Arrancar
+do fight 94 win tali 1
+opt Then I don't want to distract you.
+reply I appreciate it.
+do end
+
+enc 35 hueco Halibel
+bg hueco_mundo_desert
+desc Halibel warns of approaching Hollows.
+line Be careful. A group of hollows is heading towards this direction.
+opt No problem, I'll take care of this.
+reply If you say so, I will believe you. Take this and be careful.
+do heal 50 fight 55 56 57 58 55 win tali 1
+opt This doesn't look good...
+reply They seem to be aggressive. Stay behind me, I will get rid of them.
+do fight 55 56 57 58 55 with 35 win heal 30
+
+enc 35 hueco Halibel
+bg las_noches
+desc Halibel hunts a Shinigami intruder.
+line We need to investigate something. Apparently at least one Shinigami has invaded Hueco Mundo in search of Lord Aizen.
+line I don't know how many they are, but we better act sooner than later.
+opt I'll stay by your side!
+reply Thank you. Take this and make good use of it. Now be prepared for anything.
+do tali 1 fight 62 with 35
+opt I don't think I'm strong enough.
+reply Then I will take care of this on my own. You won't need to inform the others, I'm sure the news will rapidly spread by itself.
+do end
+
+# ---- Barragan ----
+enc 91 hueco Barragan
+art pl030
+bg las_noches_ruins
+desc Barragan demands you kneel.
+line Kneel before your King, insect.
+opt As you wish.
+reply You have just saved your own life. Now leave and remember who your king is.
+do tali 1
+opt I will never kneel before a lowly hollow.
+reply How dare you insult your king like this! I will make you regret these words, before my army will eat you alive!
+do fight 91 85 55 56 57
+
+enc 91 hueco Barragan
+art pl030
+bg las_noches_desert
+desc Barragan asks why you entered his kingdom.
+line What made you set foot on my kingdom?
+opt I want you to conquer new land.
+reply What are you saying? Hueco Mundo is already entirely under my control! Are you saying there is any place in this world that is not mine?!
+reply Show it to me. I will make sure whoever is ruling there, will kneel before me.
+do ally 91
+opt I wanted to show my loyalty.
+reply I know about your loyalty, otherwise you'd be already dead. Don't waste my time, or I will make sure to show you how replaceable you are.
+do end
+
+enc 91 hueco Barragan
+art pl030
+bg las_noches_pathways
+desc Barragan wants the other "king" dead.
+line Have you heard of another so-called king in Hueco Mundo? He is another Espada, below me in any way imaginable. I want you to find and kill him.
+opt You mean... Grimmjow?
+reply Yes, he has been calling himself a king in my presence countless times and I'm going to put an end to this.
+reply It is time to show him the power of Barragan Louisenbairn's army!
+# stand-in: Edrad (no fighter) -> 94 Exquias Arrancar
+# note: doc allies are Barragan, Abirama and two hollows; `with` takes one ally, so only Barragan (91) is kept
+do fight 38 66 94 87 with 91 win tali 3
+opt Do it yourself.
+reply Your disobedience will be the death of you!
+do fight 91 55 56
+
+# ---- Starrk ----
+enc 33 hueco Starrk
+bg las_noches_hallway
+desc Starrk wonders if Lord Aizen sent you.
+line Hm? What is it? Did Lord Aizen send you?
+opt I wanted to train with you.
+reply I'm really not feeling it right now. But I guess that if you came here, I could take a few minutes. But only one match.
+do fight 33 win kon +1
+opt Nothing.
+reply Huh? Nothing? So I can just... keep sleeping? I expected anything but this. I appreciate not being bothered for once. Here, take this before you leave.
+do tali 1
+
+enc 33 hueco Starrk
+bg las_noches_pathways
+desc Starrk pretends to be asleep.
+say - | | You find Starrk sleeping on an oversized pillow in Las Noches. You can tell he woke up and is just pretending to be sleeping right now.
+opt Nice try, but it's time to fight.
+reply Ugh, I can't be left alone even if I try. And it's always fighting, why does nobody ask me something nice for a change of pace? What a drag.
+do fight 33
+opt Leave quietly
+say - | | Starrk keeps up his act of sleeping until you're fully gone. When you return later to the same spot, you find a talisman on the pillow.
+do tali 1
+
+enc 33 hueco Starrk
+bg above_las_noches
+desc Starrk talks about Lilynette.
+line As much as I'm fighting with Lilynette, her companionship means the world to me. Do you have someone like this?
+opt I actually do.
+reply Glad to hear that. Hold onto someone like this. Sometimes a single person on your side can change your whole life.
+do kon +2
+opt No, but I don't need anybody.
+reply If you think so. Don't feel ashamed if you ever find yourself feeling different about it. There is a difference between being alone and being lonely.
+do tali 1
+opt Sadly not. I am quite lonely.
+reply I'm sorry to hear that. I definitely can't fill that spot for you, but let me know if you ever get into trouble.
+do ally 33
+
+# ---- Tosen ----
+enc 25 hueco Tosen
+bg las_noches_hallway
+desc Tosen is lost in thought.
+say - | | Tosen seems to be in deep thought and is not reacting to you approaching him.
+opt Is everything alright?
+reply I'm thinking about something. Since hollows eat other hollows, I was wondering whether their flesh could be used for a cooking recipe.
+reply Do me a favor and bring me some. I won't get to rest until I have tried.
+do heal 30 kon +1
+opt Are you mute now, too?
+reply Watch your mouth.
+do fight 25:sd
+
+enc 25 hueco Tosen
+bg aizens_throne
+desc Tosen hears rumors of a coup.
+line I have heard rumors of one of our espada thinking about starting a coup to dethrone Lord Aizen.
+line Obviously they won't succeed, but I still don't want to bother him even a second. Will you help me with this task?
+opt Of course, I do everything for Lord Aizen!
+reply Good, your service will be greatly appreciated.
+do fight 91 55 56 57 win tali 2 ally 25
+opt I actually don't really feel like it right now.
+reply What a disgraceful answer to an honorable duty.
+do end
+
+enc 25 hueco Tosen
+bg las_noches_pathways
+desc Tosen asks about justice.
+line Have you ever wondered whether your decisions are truly just?
+opt I think about this quite often.
+reply Be sure to know what you believe in. Understanding yourself is the first step to find the right paths to walk.
+do kon +3
+opt Not really.
+reply I see. In that case I don't think there's a reason to continue this conversation.
+do end
+
+# ---- Kukkapuro ----
+# stand-in: Kukkapuro (no fighter, no EX sprite) -> 94 Exquias Arrancar as the pin
+enc 94 hueco Kukkapuro
+art kukkapuro
+bg hueco_mundo_desert
+desc A little arrancar dog whimpers.
+say - | | The little arrancar dog whimpers in front of you.
+opt Stay by his side
+say - | | Kukkapuro stays cautious, but slowly calms down by your side. Only a few minutes later, a group of hollows attack.
+do fight 55 56 57 win kon +1
+opt Leave him alone
+do end
+
+# stand-in: Kukkapuro (no fighter, no EX sprite) -> 94 Exquias Arrancar as the pin
+enc 94 hueco Kukkapuro
+art kukkapuro
+bg las_noches_desert
+desc The arrancar dog wags his tail.
+say - | | The arrancar dog approaches you happy and wags his tail.
+opt Pet his head
+say - | | You pet the dog and the tail wagging continues. Then suddenly a tall and intimidating man approaches.
+# note: Yammy has no plNNN id or EX sprite for `say` -- shown as narration with his name
+say - | Yammy | Look at what that little mutt just found. Some disgusting pile of trash!
+do fight 93
+opt Leave him alone
+do end
+
+# stand-in: Kukkapuro (no fighter, no EX sprite) -> 94 Exquias Arrancar as the pin
+enc 94 hueco Kukkapuro
+art kukkapuro
+bg hueco_mundo_desert
+desc The arrancar dog is digging in the sand.
+say - | | The arrancar dog seems to be digging in the sand.
+opt Wait for what he finds
+# note: the doc's per-result narration (finds a crystal / a talisman / a hollow attacks) has no place in a `pick`; dropped
+do pick 50: crys 1 | 30: tali 1 | 20: fight 55
+opt Leave him alone
+do end
+
+# ---- Apache ----
+enc - hueco Apache
+bg las_noches_desert
+art emilou_apache
+desc Apache is looking for someone.
+line Damn it, where is she?!
+opt Who are you looking for?
+reply Mila! I can't find my talisman, I just know that she stole it! I swear, I'll kill her! If you see her, you better come back and tell me!
+say - | | Apache leaves with clenched fists.
+do end
+opt Can I help you with something?
+reply No you can't, this is personal! If you don't know where Mila and Sun Sun are, there is nothing to help with!
+say - | | During Apache's rambling, it seems like a horde of hollows is approaching.
+reply If you really wanna do something, take care of this. I don't have time for this now.
+do fight 55 56 57 win crys 1
+
+enc - hueco Apache
+bg las_noches_rubble
+art emilou_apache
+desc Apache is fending off aggressive Hollows.
+line Damn it, these hollows are more aggressive than ever today!
+opt Do you need help?
+reply I'll definitely take some. I don't wanna waste too much time on these bastards.
+do fight 55 56 57 58 55 win tali 1
+opt Just contact the other Tres Bestias.
+reply Thanks for stating the obvious! Just get the hell out of here!
+do end
+
+enc - hueco Apache
+bg tres_cifras
+art emilou_apache
+desc Apache is out to kill someone.
+line I'm going to kill this guy! How dare he speak like that about Lady Halibel?!
+opt Who are you talking about?
+reply This bastard Nnoitra! He keeps claiming that he's the strongest and that no woman could ever be stronger than him! I'll show him!
+opt2 Yeah, good luck with that!
+reply You'll notice when I'm done with him, when you see a new espada!
+say - | | Apache left and you never saw her again.
+# note: narration says you never saw her again, but the doc's outcome is "End the event" -- kept `end`, not `never`
+do end
+opt2 Let me do the dirty work.
+reply You know what? I shouldn't even waste my time on someone like that. Beat his ass, I appreciate it!
+do fight 37 win tali 1 crys 1
+
+# ---- Mila Rose ----
+enc - hueco Mila Rose
+bg las_noches_ruins
+art mila_rose
+desc Mila Rose is screaming.
+line Raaaaaaaaahhhh!
+opt What's wrong?
+reply Apache has stolen my favorite Talisman! I got that one from Lady Halibel a while ago! If I find her, I will-
+say - | | The loud screams of several hollows interrupt Mila's rambling.
+reply As much as I wanna kill someone right now, I have only one specific target! You can take care of this and I will track this thief down!
+do fight 55 56 57 win crys 1
+opt Am I in danger?
+reply Are you Apache or Sun Sun?! If not, then you're totally fine! Ugh, I can't believe she is hiding something from me. At this point, I will tell Lady Halibel!
+say - | | After another short scream, Mila leaves and grits her teeth.
+do end
+
+enc - hueco Mila Rose
+bg las_noches_pathways
+art mila_rose
+desc Mila Rose is hungry.
+line Hmm.... I wonder what I could eat today...
+opt You could ask Tosen to cook something.
+reply I don't want someone to cook for me, I want to eat right now! Why is this so difficult?! I hate waiting!
+reply Maybe... maybe there is some food stored in Las Noches. I know now! Just go in there and take whatever you can find,
+reply I will share the food with Lady Halibel and the others as well!
+say - | | As you make your way to the destination, Kaname Tosen appears in front of you and denies your access to the fridge.
+# note: the doc gives no outcome here; Tosen blocking your way read as a fight with Tosen
+do fight 25
+opt What did you eat before you became an arrancar?
+reply Other hollows obviously. But... things have changed. For quite some time actually. Nowadays I'm killing hollows for other reasons.
+say - | | A group of hollows seem to approach.
+reply And that reason is to protect the weak. Let's see whether you're one of them.
+do fight 55 56 57 win tali 1
+
+enc - hueco Mila Rose
+bg tres_cifras
+art mila_rose
+desc Mila Rose guards Lady Halibel.
+line Hey, you! You better back off from here! Lady Halibel doesn't want to be disturbed!
+opt So... I just leave...?
+reply Exactly. And you better not come back for the next few hours!
+do end
+opt I want to bring Lady Halibel a gift.
+need item
+reply A gift? You can give it to me and I will bring it to her later. I won't let you get near her either way, but your appreciation will be remembered.
+# note: doc says "lose a Talisman or Crystal"; no lose-one-item token, written as a 50/50 pick between losing a talisman and a crystal
+do pick 50: ally 35 lose_tali 1 | 50: ally 35 lose_crys 1
+
+# ---- Sun Sun ----
+enc - hueco Sun Sun
+bg las_noches_hallway
+art sun-sun
+desc Sun Sun asks about Apache and Mila.
+line Have you seen Apache or Mila around?
+opt Yeah, I have.
+reply Interesting. This means they're probably around and this means I'll take my leave. Do not tell them you have seen me, I want to have at least a single relaxing day.
+do end
+opt No, I haven't.
+reply What a relief. It seems my mood has suddenly increased. Here, take these as a thank you.
+do tali 2
+
+enc - hueco Sun Sun
+bg tres_cifras
+art sun-sun
+desc Sun Sun shares some gossip.
+line Did you hear about what happened to Apache and Mila? They apparently ran into someone who just became a shinigami and lost. Can you believe it?
+opt Wow, they're so weak.
+reply Right? If you ask me, I wonder why Lady Halibel even bothers with these two. I'm glad I'm not the only one who sees this.
+do tali 1
+opt There is no way!
+reply If you say so. Sounds more like you're biased, but what else did I expect?
+do end
+
+enc - hueco Sun Sun
+bg above_las_noches
+art sun-sun
+desc Sun Sun muses on Hueco Mundo's peace.
+line Hueco Mundo is quite the peaceful place if you're strong enough, don't you think so?
+opt It really is. I enjoy the silence and the scenery.
+reply It is especially enjoyable, if nobody keeps screaming into your ear.
+reply You know, despite being so dangerous for the weaker hollows, you would be surprised how many deeply connected bonds were forged during some deadly encounters.
+reply I guess life is really just what you make out of it, don't you agree?
+do tali 2
+opt I think it's scary.
+reply Like I said, this place only seems beautiful to those who aren't weak enough to die against a common hollow. Speaking of which...
+say - | | Sun Sun whistles, which is followed by the sound of a bunch of hollows.
+reply Maybe it is time for you to learn how to appreciate Hueco Mundo.
+do fight 55 56 57 58 55
+
+# ---- Wonderweiss ----
+enc - hueco Wonderweiss
+bg las_noches_corridor
+art wonderweiss_margela
+desc Wonderweiss stares at you.
+say - | | The arrancar is staring at you and you can't make out what he wants from you.
+opt This is uncomfortable.
+say - | | Wonderweiss doesn't seem to understand what you said and keeps staring. You want to leave, but wouldn't that make it weirder?
+say - | | No, it is already weird. But would it be rude to just go away? You keep thinking. None of you two likes the outcome.
+do kon -2
+opt Clap your hands and smile at him
+say - | | Wonderweiss doesn't react to your attempt at communication. Now you just feel dumb.
+do hurt 20
+
+enc - hueco Wonderweiss
+bg las_noches_hallway
+art wonderweiss_margela
+desc Wonderweiss tries to touch you.
+say - | | The boy is making incomprehensible noises and tries to touch you.
+opt Touch his hand
+say - | | Wonderweiss seems to place something in your hand and kind of smiles at you.
+do crys 1
+opt Slap his hand away
+say = | Wonderweiss | Uaaaaahhhhhhhhh!
+say pl025 | Tosen | What is happening here? What have you done to him?
+do fight 25
+
+enc - hueco Wonderweiss
+bg las_noches_corridor
+art wonderweiss_margela
+desc Wonderweiss hasn't noticed you.
+say - | | You entered the room, but Wonderweiss doesn't seem to have noticed you.
+opt Boo!
+say - | | You decide to scare him from behind. Wonderweiss did in fact not notice you and starts screaming like he is about to die.
+say - | | His high pitch voice makes certain objects in your surrounding crack and summons a bunch of powerful hollows.
+do fight 60 60 60
+opt Turn around and leave
+do end
+
+# ---- Cirucci ----
+enc 71 hueco Cirucci
+art cirucci_sanderwicci
+bg las_noches_pathways
+desc Cirucci insists she's still strong.
+line You better not underestimate me, just because I'm not an espada anymore. I'm still as strong as ever!
+opt What was your former rank?
+reply You don't know? Heh, I was by far the strongest of the privaron espada. My power was unrivaled, that's why I'm on the frontlines.
+reply Just between us, I could probably take down at least half of the current espada.
+do tali 1
+opt But are you stronger than me?
+reply What a dumb question, of course I am! I could never lose to scum like you!
+do fight 71
+
+enc 71 hueco Cirucci
+art cirucci_sanderwicci
+bg las_noches_hallway
+desc Cirucci lists the women of Las Noches.
+line Tia Harribel. Emilou Apacci. Franceska Mila Rose. Cyan Sun Sun....
+opt What girl rivalry did I stumble into?
+reply Rivalry? Huh, as if. I was just thinking loudly to myself which women live in Las Noches.
+reply And after carefully considering all of them, I came to the conclusion that I am truly the most beautiful.
+opt2 You really are.
+reply I didn't need you to agree with me, I already know. But at least you got taste.
+do tali 1
+opt2 Yikes.
+reply Huh?!
+do fight 71:sd fx foe_unblockable
+opt Nelliel Tu Odelschwanck.
+reply Did I ask you to join in?! You don't even know what I'm doing! Ugh, can't even talk to myself anymore. Don't follow me!
+opt2 Follow her
+reply That's it, you're purposely provoking me!
+do fight 71:sd
+opt2 Don't follow her
+do end
+
+enc 71 hueco Cirucci
+art cirucci_sanderwicci
+bg las_noches_desert
+desc Cirucci is having an annoying day.
+line What an annoying day. Everywhere I go someone starts bothering me.
+opt Hello
+reply This is ridiculous. What do you want?!
+opt2 Can you play yo-yo with your weapon?
+reply This is what you came to ask? This dumb question?! This is why I can't have a silent day?! That's it, you're dying right here and right now!
+do fight 71:sd fx foe_unblockable
+opt2 You are.... bugging me.
+reply ... RIP OFF, GOLONDRINA!
+do fight 71:sd fx foe_unblockable+foe_strong+foe_sturdy+foe_swift
+opt Just leave
+do end
+
+# ---- Dordoni ----
+enc 70 hueco Dordoni
+art dordoni_alessandro_del_socaccio
+bg hueco_mundo_desert
+desc Dordoni offers to train you.
+line You seem like an uprising star. I, Dordoni Alessandro of the privaron espada, will personally train you!
+opt What was your former rank?
+reply My former rank? Hmm... does something like this matter to you? In that case, let me try to remember!
+reply It's been a long time, all I know is that Cirucci was our lowest rank if I remember correctly. I was probably the number one espada! You're not surprised, aren't you, nino?
+do tali 1
+opt I am ready, master!
+reply This is the fire I was expecting, nino! Come at me with everything you got!
+do fight 70 win ally 70
+
+enc 70 hueco Dordoni
+art dordoni_alessandro_del_socaccio
+bg las_noches_desert
+desc Dordoni found two talismans in the desert.
+line Stop right there, nino. I have found two different talisman in the Hueco Mundo desert, but I will give you only one of them!
+line Now answer me, what is more important to you? Your strength, or your spirit?
+opt Strength is more important.
+reply I see. Strength is indeed important. In that case you will appreciate this gift. Be careful out there, nino. And never stop thriving!
+# note: doc says "Gain 1 Talisman" for both choices; strength/spirit read as an attack / defense talisman
+do tali_atk
+opt My Spirit is what counts.
+reply I expected nothing else from you. I agree, a warrior is nothing without the spirit to fight! No strength could ever compensate a weak soul!
+reply Take this, I know you will make good use of this, nino.
+# note: doc says "Gain 1 Talisman" for both choices; strength/spirit read as an attack / defense talisman
+do tali_def
+
+enc 70 hueco Dordoni
+art dordoni_alessandro_del_socaccio
+bg hueco_mundo_desert
+desc Dordoni enjoys the afternoon wind.
+line Can you hear it? The blowing wind. The dancing sand. The breaking tree branches and big amount of spiritual pressure. What a lovely afternoon.
+opt I think that's a group of hollow.
+reply Huh?! What a sharp sense of danger you have! Come with me. Let's defeat these hollows together and reclaim peace for our home!
+do fight 55 56 57 58 55 with 70 win tali 1
+opt Sadly, I have to leave already.
+reply You don't know what you're missing out on. Hueco Mundo is not always this peacefu- am I hearing something? Wait, where these come from?!
+do end
+
+# ---- Luppi ----
+enc 67 hueco Luppi
+art luppi_antenor
+bg las_noches_hallway
+desc Luppi is bored.
+line What a boring day. Maybe it'll be more entertaining when I destroy you.
+opt Go ahead and try!
+reply Oh, you think you stand a chance? You'll be disappointed!
+do fight 67 win tali 1
+opt Excuse me? What about a hello first?
+reply Ugh, whatever. Talking to you makes me more mad than excited.
+do end
+
+enc 67 hueco Luppi
+art luppi_antenor
+bg las_noches_pathways
+desc Luppi wants a little fun.
+line You there, how about we have a little fun? I'm sure you're just as bored as I am.
+opt I am always up for fun!
+reply Good. Then let us take care of that good for nothing and inferior sexta espada.
+do fight 38:sd with 67 win ally 67
+opt It really depends on what you're thinking of.
+reply Your hesitation disgusts me. I changed my mind, go away.
+do end
+
+# ================================================================ WORLD OF THE LIVING
+# WORLD OF THE LIVING -- doc lines 895-1109
+# Ichigo, Uryu, Chad, Orihime, Urahara, Shinji, Ryuken, Isshin: no encounters in the doc, no pins.
+
+# ---- Yoruichi ----
+enc 7 living Yoruichi
+bg karakura_side_street
+art yoruichi_shihoin_cat_form
+desc A cat surrounded by Hollows looks your way.
+say - | | You find a cat surrounded by a bunch of hollows. The cat looks over its shoulder to you.
+opt "I'll save you, don't worry!"
+say - | | The cat seems to smile and jumps out of the way, once you step in to fight.
+do fight 55 56 57 58 win kon +2
+opt "This looks tough. But...I have to fight!"
+say - | | The cat looks at you for a moment, before it runs away. The hollows slowly walk towards you, while you're standing in place. Slightly shaking out of fear.
+say - | | Suddenly a hand grabs your shoulder.
+say = | Yoruichi | "I appreciate the concern. Come on, let's get rid of them."
+do fight 55 56 57 58 with 7 win tali 2
+opt "Poor cat."
+say - | | The cat seems to be disappointed, before you decide to walk away. Shortly after, you hear an explosion like noise and look behind you.
+say - | | The cat is gone and the hollows seem to disintegrate.
+do end
+
+# note: Yoruichi's only EX sprite is her cat form; she speaks in person here, so her fighter art is used (no art line)
+enc 7 living Yoruichi
+bg urahara_shop_day
+desc Yoruichi on the freedom she had in exile.
+line "You know, when I was exiled from the soul society, I felt like I finally had the freedom I always wanted.
+line No more duties, no more tasks, I was able to transform into a cat and could do everything that came to my mind.
+line But now that Aizen is gone and we're all allowed back, I'm realising my freedom wasn't so free after all."
+opt "Are you planning on going back?"
+reply "Of course I do. For occasional visits obviously. I might have been free in this world, but I couldn't even enter the place I was born at.
+reply Now I can finally roam all realms as much as I like. I might prefer the human world, but I'm glad I'm not forced to live here anymore."
+do kon +1
+opt "I don't get it."
+say - | | Yoruichi chuckles.
+reply "You don't need to. Just be glad that the war is over. Although there seem to be more hollows than usual.
+reply If you ever run into trouble that's too big for you, let me know. I'll come around."
+do ally 7
+
+# note: Yoruichi's only EX sprite is her cat form; she speaks in person here, so her fighter art is used (no art line)
+enc 7 living Yoruichi
+bg inside_urahara_shop
+desc Yoruichi offers a talisman from Urahara.
+line "You wanna get stronger? I actually got a talisman from Urahara that could help you out."
+opt "I gladly take it!"
+reply "Here you go. Be careful out there, hollows have been pretty aggressive recently. Hopefully this can help you a little."
+do tali 1
+opt "I'd rather train."
+reply "Oh? That's a response I didn't expect, but I like it. If you really want to train, why not just go ahead and do that right now?"
+do fight 7 win tali 2
+
+# ---- Hiyori ----
+enc 68 living Hiyori
+bg visored_warehouse
+art hiyori_sarugaki
+desc Hiyori fumes about Shinji going back.
+line "I can't believe Shinji is planning on going back to the soul society. First they exile us and now they want us back.
+line Of course baldy is falling for it."
+opt "Why don't you go back, too?"
+reply "Huh?! Why would I do that? Screw them, I'm living here now. Just because Shinji wants his captain position back, doesn't mean I'll become a lieutenant again."
+do end
+opt "Yeah, let's beat him up!"
+reply "Now you're speaking my language! Let's get him!"
+# note: the doc gives no reward for this fight
+do fight 32 with 68
+
+enc 68 living Hiyori
+bg karakura_side_street
+art hiyori_sarugaki
+desc Hiyori is on her way to get snacks.
+line "Hey, out of the way. I'm on the way to get some snacks."
+opt "Hello? I can't see you up here."
+reply "What did you say?! Is this supposed to be a joke?! I'll make you look up to me, after beating you to the ground!"
+# note: the doc gives no reward for this fight
+do fight 68
+opt "Sorry, I was in thoughts."
+reply "Just move when I ask you. I have a very bad day today, the last thing I need now is anyone adding onto that.
+reply And you're actually the first person to not do that today either, so...I'll share one of my snacks after getting them. But only one! Don't get ahead of yourself!"
+do crys 1
+
+enc 68 living Hiyori
+bg karakura_street
+art hiyori_sarugaki
+desc Hiyori is sick of the Hollows.
+line "Stupid hollows. They keep showing up and way more frequent than before!"
+opt "Isn't this your job?"
+reply "Huh?! First of all, I'm not even a soul reaper anymore! Second of all, are you trying to order me around?!
+reply I'll take care of the hollows, right after I'm done with you!"
+do fight 68 55 56 win kon +2
+opt "Let me help you."
+reply "I don't really care what you do, but as long as I'm being done here faster, I'll take it."
+do fight 55 56 with 68 win tali 1
+
+# ---- Hachigen ----
+enc - living Hachigen
+bg visored_warehouse
+art hachigen_ushoda
+desc Hachigen offers to treat your wounds.
+line "Excuse me, but it seems you have been injured. Let me take care of this, please."
+opt "Thank you very much."
+reply "Here you go. Please, take this as well to be safe."
+do heal 50 tali 1
+opt "Don't touch me."
+reply "I was just trying to help you. Please take care either way."
+do end
+
+enc - living Hachigen
+bg visored_warehouse
+art hachigen_ushoda
+desc Hachigen offers to teach you kido.
+line "Back in the soul society I was the vice-chief of the kido corps. Do you perhaps need any assistance in the art of kido I could help you with?"
+opt "Yes, I want to improve."
+reply "Then let me tell you some secrets. With these, you will improve your kido in no time."
+# note: doc says "Gain 1 Talisman/Crystal (Kido related or SP related)" -- no kido/SP-specific item token; even pick of 1 talisman or 1 crystal
+do pick 50: tali 1 | 50: crys 1
+opt "I don't care about Kido."
+reply "Oh. I'm deeply sorry, but I don't think I could help you with anything else."
+do end
+
+enc - living Hachigen
+bg karakura_park
+art hachigen_ushoda
+desc Hachigen on the Visoreds' chance to return.
+line "I'm happy to hear that the soul society is trying to find replacements for their three captains.
+line It seems like they're giving us visoreds a chance to come back after all this time."
+opt "You weren't a captain, right?"
+reply "No, I was the vice-chief of the kido corps. I'm pretty sure they have someone else in my position now who's even better.
+reply Now that Aizen is defeated, things should normalize over there. And if a few of us can get their life back, it seems like a happy ending to me."
+do kon +2
+opt "Don't you want to go back, too?"
+reply "No, I like the world of the living. I know that some of the other visoreds feel the same, so I certainly won't be alone.
+reply But I got used to this new life and I feel way more comfortable here than I did back in the soul society.
+reply I believe everything happens for a reason and luckily, none of us have died during this war."
+do tali 1
+
+# ---- Lisa ----
+enc - living Lisa
+bg visored_warehouse
+art lisa_yadomaru
+desc Lisa praises the world of the living.
+line "You know, the world of the living is quite nice to live in too. They don't have those in the soul society."
+say - | | She holds up a bikini magazine.
+opt "Yeah, I'd live here, too."
+reply "You like those, too? I think I have an old one you can have. I don't mind sharing, I'm rarely reading the same ones twice."
+do tali 1
+opt "Don't you miss anyone?"
+reply "Doesn't really matter now. I mean, now that Aizen is defeated, I heard that we could return.
+reply I would lie if I'd say I'm not considering it, but I will probably stay here. I'm kind of used to living here now."
+do kon +1
+
+enc - living Lisa
+bg karakura_sleepy_street
+art lisa_yadomaru
+desc Lisa senses a Hollow nearby.
+line "So many hollows have appeared recently. Can't even relax for a single day. Seems like one is near us right now."
+opt "I'll take care of it for you."
+reply "Really? I mean if you're sure, I could finally take a rest and read my newest manga. Thank you."
+# note: doc says "one is near" but the outcome is "Fight 3 Hollows" -- followed the outcome
+do fight 55 56 57 win tali 1
+opt "Just ignore it."
+reply "I can't ignore a hollow attack. If there is nobody else who can take care of it, I will. The world of the living is my home now, after all."
+do end
+
+enc - living Lisa
+bg karakura_river_evening
+art lisa_yadomaru
+desc Lisa looks back on hollowfication.
+line "Hollowfication was a curse at the beginning when me and the others were exiled from our homes.
+line But now that we can all control it and use it to our advantage, I don't see it as that bad anymore. Now that Aizen is defeated, maybe it all had to happen this way."
+opt "You made the best out of it."
+reply "We all did. And in the end, we won and our names got cleared.
+reply We might not get all these years back, but living in a warehouse as a bunch of outcasts wasn't all that bad either."
+do crys 1
+opt "I want hollowfication, too!"
+say - | | Lisa looks at you slightly confused.
+reply "No, I don't think you want this. Trust me, it was a long way and a painful process I wouldn't wish on anyone."
+do tali 1
+
+# ---- Love ----
+enc - living Love
+bg visored_warehouse
+art love_aikawa
+desc Love is let down by a new manga chapter.
+line "This new chapter does not live up to the hype the rest of the series was building up. That's so disappointing man."
+opt "Maybe there will be a plot twist!"
+reply "Hm, I don't see that happening. But then again, that's kind of the point of a plot twist.
+reply Maybe you're right and the end to this manga isn't doomed yet. It would be a shame, because so far this was one hell of an arc!"
+do tali 1
+opt "Hop on Zombiepowder."
+reply "That name does ring a bell. Maybe I'll check out the first few chapters and see how I'll like it. Thanks for the recommendation."
+do kon +1
+
+enc - living Love
+bg karakura_park
+art love_aikawa
+desc Love on the open captain seats.
+line "Seems like the Soul Society is in need of new captains and welcomes us back after all this time."
+opt "Will you take the spot?"
+reply "Definitely not. I'm sure there are other visoreds who are actually interested, but you won't see me in my captain position again.
+reply I got way too comfortable in the world of the living."
+do crys 1
+opt "Isn't that great?"
+reply "I mean it's great for the others, but I don't care that much. I kind of enjoy the world of the living more.
+reply No duties, lots of shonen jump and if I ever feel like fighting, this town still draws in a lot of hollows. As far as I'm concerned, this is my new home."
+do kon +1
+
+enc - living Love
+bg karakura_town_garganta
+art love_aikawa
+desc Two Menos Grande have come into town.
+line "Huh, seems like two menos grande found their way into town."
+opt "I'll go fight them."
+reply "You sure? As long as you're cut out for it, I'll let you handle this one."
+do fight 60 60 win tali 1
+opt "You better hurry."
+reply "Don't make it sound like you're giving me orders. I was about to go, man."
+do end
+
+# ---- Rose ----
+enc - living Rose
+bg karakura_park
+art rojuro_ootoribashi
+desc Rose plays a few tunes on his guitar.
+line "Now that Aizen is defeated, we can finally turn ourselves to the important things in life. Music!"
+say - | | Rose starts playing a few tunes on his guitar.
+opt "A free concert?! For me?!"
+reply "Who said anything about free? Heh, just kidding. Sit down if you want to listen for a bit. I'm feeling the blues today!"
+do heal 30
+opt "You are so good at this!"
+reply "Thank you. Music has always been my true passion and ever since me and the others were exiled from the soul society,
+reply I had plenty of time to practice my guitar skills."
+do tali 1
+
+enc - living Rose
+bg karakura_road
+art rojuro_ootoribashi
+desc Rose thinks Shinji will go back.
+line "I heard the soul society is in need of new captains after Aizen's betrayal. I feel like Shinji is surely going back for this."
+opt "Why do you think that?"
+reply "He's a responsible guy. As much of a grudge we held against them, in the end we all knew that we were framed.
+reply Some of us will probably still never return, but Shinji is not one of them. He probably feels guilty for all of this and not noticing earlier what Aizen was up to.
+reply I can see him trying to correct this mistake in his mind."
+do tali 1
+opt "What about you?"
+reply "I don't know yet. I enjoy the world of the living and all their music quite a lot. But the soul society is also my home and I would like to be a captain again.
+reply The only thing I want nowadays is enough free time to play my guitar and practice new songs. If I could do that as a captain, why not?"
+do kon +1
+
+enc - living Rose
+bg karakura_road_evening
+art rojuro_ootoribashi
+desc Rose is working on a new song.
+line "Ein Heldenleben!"
+opt "....What?"
+reply "Oh, I'm sorry, I didn't notice you. I'm working on the lyrics for a song I'm writing right now.
+reply The song will be called Ein Heldenleben and it's supposed to be so good, one could die!"
+opt2 "I wouldn't buy that..."
+reply "I know it sounds scary, but music needs to be made by one's soul. It needs to break boundaries and out of the box to show the artist's passion when one listens to it!
+reply Oh and I didn't mean for anyone to actually die. This is still a song..."
+do tali 1
+opt2 "Good luck for the rest of it..."
+reply "I appreciate it. Okay, so where was I? Right....Ein Heldenleben!"
+do kon -1
+opt "Don't scream at me!"
+reply "Screaming? I was singing, although I was especially loud this time. I am working on a song right now and this part needs to be special.
+reply It needs to be louder, more prominent than all the others. That is....Ein Heldenleben!"
+say - | | Rose continues to randomly sing like a maniac, totally forgetting you were even there.
+do end
+
+# ---- Kensei ----
+enc - living Kensei
+bg karakura_skyline
+art kensei_muguruma
+desc Kensei weighs becoming a captain again.
+line "I'm really wondering whether I should become a captain again. Seems like the soul society is trying to replace their traitors."
+opt "Why do you want to go back?"
+reply "I kind of miss my duties and training more intensely than I'm able to here.
+reply That position was also taken away from me, I feel like going back there is the only appropriate thing to do in this scenario. The world of the living is in good hands."
+do tali 1
+opt "What speaks against it?"
+reply "I like the human world, I would miss hanging out with the others and reading manga. At the same time I don't want to slack off for the rest of my life.
+reply I'll have to make a choice pretty soon."
+do crys 1
+
+enc - living Kensei
+bg karakura_town_invasion
+art kensei_muguruma
+desc Three Menos Grande appear before Kensei.
+line "Three Menos Grande?! What is going on here?!"
+opt "I'll beat them all on my own."
+reply "Are you serious? I'll stay here and watch in any case. But if you'd be strong enough to defeat them on your own, then...maybe..."
+do fight 60 60 60 win kon +3 tali 1
+opt "Guess you gotta work overtime."
+reply "I guess so. Maybe someone else has to become the new captain of the 9th squad. As long as shit like this is happening, I ain't going nowhere!"
+do end
+
+enc - living Kensei
+bg visored_warehouse
+art kensei_muguruma
+desc Kensei explains hollowfication and Bankai.
+line "Hollowfication gives you a boost in terms of strength, so using it in combination with your shikai will put you above most soul reapers.
+line However, if you're using it combined with your Bankai, you're almost impossible."
+opt "Wow! Who did you beat this way?"
+reply "... Hey, are you making fun of me? I'm just saying that the hollowfication boost will make you even stronger when using your bankai.
+reply I don't need any examples or whatever, I'm speaking facts right now. Besides, we're not using our bankais against each other when training.
+reply And a foe worthy of seeing it rarely comes across. Experience does not matter for the point I'm trying to make!"
+do end
+opt "Stronger than the Head Captain?"
+reply "What? Listen, just because I said almost impossible, I didn't mean it literally. Obviously fighting the Head Captain is an entirely different story.
+reply I haven't even seen his bankai and I don't think I want to."
+do tali 1
+
+# ---- Mashiro ----
+enc - living Mashiro
+bg karakura_town_street
+art mashiro_kuna
+desc Mashiro has news about Kensei.
+line "Have you heard the news?! Kensei might become a captain again!"
+opt "Isn't this great?!"
+reply "Y-yeah! But...if he goes, I also want to go! I was his lieutenant before we got exiled, but now there already is one for our squad! I don't want to be left behind."
+do crys 1
+opt "Are you happy for him?"
+reply "Of course! But... our old squad already has a lieutenant. I wanna go back with Kensei, but it's impossible for a squad to have two lieutenants, right?
+reply Maybe...maybe nobody ever asked about this! I should secretly do so and surprise Kensei! Mashirooooooo go!"
+do kon +1
+
+enc - living Mashiro
+bg karakura_town_bright
+art mashiro_kuna
+desc Hollows are attacking a kindergarten!
+line "Is it a bird? Is it a plane?! No. It is... a horde of hollows attacking a kindergarten!"
+opt "DO SOMETHING!"
+say - | | She suddenly strikes a pose.
+reply "Don't worry, because the great Mashiro is oooooooon her way! Be gone, evil hollows!"
+do end
+opt "I will hurry over there!"
+reply "You want to help me?! Good idea, take this super hero badge and wear it on your chest. Everybody needs to know you are my henchman.
+reply Now go! Let's save these innocent children! On your own, because you are still in training!"
+do fight 55 56 57 58 win tali 1
+
+enc - living Mashiro
+bg karakura_town_raining
+art mashiro_kuna
+desc Mashiro brags about her hollow mask.
+line "You probably won't believe me, but out of all the visoreds, I'm able to keep my hollow mask on for the longest time without a side effect!"
+opt "That's awesome!"
+reply "Of course it is, I'm a hero after all! But...a hero also needs to eat something. Come with me, I know a local restaurant fit for us!"
+say - | | You and Mashiro go buy some cup noodles and eat at a bus stop, after it started raining.
+do heal 30
+opt "Are you so much better?"
+reply "Hehe, I am super duper strong after all. Nobody else is as awesome as me, not even Kensei is! I'm trying to help him, but he doesn't wanna wear the costume I bought...."
+do tali 1
+
+# ================================================================ ORA'S ENCOUNTERS (dcbossrush 0.18.29)
+# "Bleach Encounter Databank" by Ora (tester), 2026-11-22: the characters the "Bleach EX Mission" doc left empty.
+# Dialogue verbatim apart from obvious typos. Courage is left out for now (the user, 2026-11-22): where the doc
+# gives or takes Courage there is a `# courage +N` comment, the rest of the effect is kept.
+# "reward" / "reward_good" / "reward_big" draw from the encounters' reward table (guides/ENCOUNTERS.md).
+
+# ================================================================ SOUL SOCIETY
+
+# ---------------- Shunsui Kyoraku ----------------
+
+enc 24 soul Shunsui Kyoraku
+art shunsui_kyoraku
+key shunsui
+bg seireitei_grounds
+desc The Captain of the 8th Squad is looking for his old friend.
+line Heeey, you there! Have you seen Ukitake somewhere around?
+opt Yeah, I saw him at the Academy a little while back.
+need met ukitake
+reply Ahh, thank you. You've just saved my afternoon. Here, I've already bought everything I need, go treat yourself to something nice.
+# note: "gets something good for free" -> a good reward
+do reward_good 1
+opt Sadly I have not, Sir.
+say - | You | Sadly I have not, Sir. He might be at the academy building, though. I heard he was supposed to give a lecture there sometime this week.
+reply I see. Well, I'll try my luck. Here, take this and enjoy your day. I bought too many Monaka sweets anyways.
+# note: "heals hp something hp/konpaku" -> 50% Reishi and 1 Konpaku
+do heal 50 kon +1
+opt I have not, but if you want, I can help you look for him.
+reply Ahh, now that's an offer I can't refuse! Let's go!
+# note: "another combat encounter for the region, Shunsui buffs you, next encounter is guaranteed to be Ukitake" ->
+# a Hollow fight now with Shunsui at your side, and the next encounter pin you take is Ukitake's
+do next ukitake fight 55 56 with 24
+
+enc 24 soul Shunsui Kyoraku
+art shunsui_kyoraku
+key shunsui
+bg seireitei_gardens
+desc A lazy captain wants a game partner.
+line Hey there, slow down a bit. No need to rush life on such a lovely day. Care to join me for a game?
+opt I am terribly sorry, but I am busy. Maybe another time.
+reply Ohh.. I see. Well, it seems Nanao will have to indulge me for today's game as well, haha. Good luck on your day.
+# note: "something with better rng" -> a small reward
+do reward 1
+opt Sure, as long as a Newbie is good enough, haha.
+say - | You | Sure, as long as a Newbie is good enough, haha. What are the rules?
+reply Wonderful! Nanao-chan will be pleased to hear I found another opponent for today! Let's start with the basics!
+reply Choose either a Hollow, a Quincy, or a Shinigami. Hollows beat Shinigami, Shinigami beat Quincy, and Quincy beat Hollows!
+# Rock, paper, scissors: Shunsui's pick is random. Lose: -1 Konpaku. Win: +2 Konpaku. Tie: nothing.
+opt2 A Hollow!
+do pick 1: tell Shunsui_picks_a_Shinigami._The_Hollow_wins! kon +2 | 1: tell Shunsui_picks_a_Quincy._The_Quincy_wins. kon -1 | 1: tell Shunsui_picks_a_Hollow_too._A_tie,_nobody_wins.
+opt2 A Quincy!
+do pick 1: tell Shunsui_picks_a_Hollow._The_Quincy_wins! kon +2 | 1: tell Shunsui_picks_a_Shinigami._The_Shinigami_wins. kon -1 | 1: tell Shunsui_picks_a_Quincy_too._A_tie,_nobody_wins.
+opt2 A Shinigami!
+do pick 1: tell Shunsui_picks_a_Quincy._The_Shinigami_wins! kon +2 | 1: tell Shunsui_picks_a_Hollow._The_Hollow_wins. kon -1 | 1: tell Shunsui_picks_a_Shinigami_too._A_tie,_nobody_wins.
+
+enc 24 soul Shunsui Kyoraku
+art shunsui_kyoraku
+key shunsui
+bg seireitei_grounds
+desc A bored captain wants a spar.
+line Well, hello there. Everyone else seems to have left me to go train for today, leaving me all alone.
+line Hmm.. You seem strong enough to put up a decent challenge. How about a spar with a bored middle aged man?
+opt Hell yeah, bring it on, Captain Kyoraku!
+reply Ahh, that's the spirit! Well then, let's play a little game... Katen Kyokotsu.
+# courage +1
+do fight 24:evo
+opt Sure. Don't accidentally kill me though.
+reply Ban..
+reply ...
+reply Haha, you should've seen the look on your face! Relax, relax. This will just be a spar.
+do fight 24
+
+# ---------------- Jushiro Ukitake ----------------
+# Ukitake has no fighter: a fight with him uses Shunsui's (24) as a stand-in, shown as Jushiro Ukitake.
+
+enc - soul Jushiro Ukitake
+art jushiro_ukitake
+key ukitake
+bg seireitei_gardens
+desc The Captain of the 13th Squad offers some tea.
+line Hello there. You look a little stressed out. Would you like to join me for some tea?
+opt Yes, thanks! I'll have what you have!
+reply Wonderful! You're in for a treat!
+# note: "Gain idk" -> a small reward
+do reward 1
+opt Gladly, I had a pretty rough day... Surprise me!
+reply I'll ask Sentaro and Kiyone to find something out for you.
+# note: "a random positive effect" -> a good reward (crystal / +1 Konpaku / 2 talismans / 50% Reishi)
+do reward_good 1
+opt I'd love to, Captain Ukitake.
+say - | You | I'd love to, Captain Ukitake. I have a rather peculiar taste though, haha.
+reply Luckily, we have quite the selection! Here, choose whatever flavour is smiling at you.
+# note: "choose from a few positive effects, lesser than the random ones" -> three teas
+opt2 Green tea
+do heal 25
+opt2 Barley tea
+do sp 50
+opt2 Plum tea
+do tali_def
+
+enc - soul Jushiro Ukitake
+art jushiro_ukitake
+key ukitake
+bg shrine_gardens
+desc Ukitake offers you a rest.
+line You look like you could use a rest. You're welcome to spend some time with us.
+opt I'll take that invitation in a heartbeat, Captain!
+reply You really seem to need it. Don't push yourself too hard, alright? And feel free to stop by whenever you like!
+do kon +2
+opt Eh, not really needed.
+# courage +1
+say - | You | Eh, not really needed. While I appreciate the offer, I'd prefer to fight someone!
+do fight 10 8
+opt Actually, I came here for a spar, Captain.
+# courage +3
+# stand-in: no Ukitake fighter -> Shunsui (24), shown as Jushiro Ukitake, "powered up" = foe_strong+foe_sturdy
+# note: "Probably only after he is out" was not built (the choice is always there)
+say - | You | Actually, I came here for a spar, Captain. Show me what a veteran Captain can really do!
+do fight 24 fx foe_strong+foe_sturdy as Jushiro_Ukitake
+
+# ---------------- Renji Abarai ----------------
+
+enc 8 soul Renji Abarai
+art renji_abarai
+key renji
+bg seireitei_barracks
+desc The 6th Squad's lieutenant wants a training partner.
+line HEY! Good to meet you here. I've been looking for someone to train with for some time now! Dare to test your skills against mine?
+opt Hell yeah, I am. Bring it on!
+reply That's the spirit! Let's get right to it! ROAR, Zabimaru!
+do fight 8
+opt Did achieving Bankai get to your head that much?
+say - | You | Talking to me like that, huh? Did achieving Bankai get to your head that much? Well, show it to me then!
+reply Someone is cocky, huh? Let's see how long you can last! BANKAI!
+# courage +1
+# note: "starts in Awakening, Awakening stays active a little longer" -> Renji's Awakening is his timed Bankai giant,
+# which cannot be forced at the start (it breaks the fight): he starts with full Fighting Spirit instead (foe_fs_full),
+# so he can Bankai at once. "Stays active longer" is not built.
+do fight 8 fx foe_fs_full
+opt I doubt you'd be enough on your own right now.
+reply Oho! Let's see if there is any power behind that confidence!
+do pick 1: fight 8 13 | 1: fight 8 10 | 1: fight 8 14
+
+enc 8 soul Renji Abarai
+art renji_abarai
+key renji
+bg noble_manor
+desc Renji needs to get into the Kuchiki manor unnoticed.
+say - | | You spot Renji peeking around the corner near the Kuchiki facilities, nervously scanning the area.
+line Oi. You. Come here for a second, okay? I need to get in there unnoticed for some... important business.
+line Could you try distracting Captain Kuchiki for a bit? He isn't supposed to know.
+opt Not my circus, not my monkeys. Good luck with that tho.
+reply Pah. Thanks for that, you coward. Guess I'll have to figure something out myself.
+do end
+opt Hmm, why not? I always love a challenge.
+say - | You | Hmm, why not? I always love a challenge. See to your 'business', I'll keep him busy.
+reply Seriously?! You're a lifesaver! I owe you one! Here, have this.
+do reward 1
+aftersay - | | You approach Byakuya Kuchiki, who seems to practically smell that something is up.
+aftersay pl022 | Byakuya Kuchiki | Your presence here certainly does not ease my suspicions. State your business at the Kuchiki household.
+opt2 I wanted to know how you're doing after your fight in Hueco...
+say - | You | I wanted to know how you're doing after your fight in Hueco Mundo.
+say pl022 | Byakuya Kuchiki | I am well, thank you. Now, if you would excuse me, I'd appreciate some time for myself.
+say - | | Byakuya turns around, ready to go somewhere else.
+opt3 Let it be.
+say - | | You are about to leave as you hear Renji's surprised scream as a small storm of pink cherry blossoms surrounds the building he seems to be in.
+say - | | You leave, pretending like you have nothing to do with that.
+do end
+opt3 WAIT! If you have recovered, fight me!
+say pl022 | Byakuya Kuchiki | I can't ignore a challenge on my own estate. Very well, I shall entertain your hubris for a bit.
+do fight 22 win reward 1
+aftersay - | | A short while later:
+aftersay = | Renji Abarai | Thanks, man, you helped a lot. I was able to... err... finish my important business.
+aftersay = | Renji Abarai | My business partner wants you to have this for making our meeting possible.
+opt2 I... was sent to review plans for a pool in your backyard.
+say pl022 | Byakuya Kuchiki | What?! ... Is this the Shinigami Women's Association's doing again? I must investigate this matter at once.
+say pl022 | Byakuya Kuchiki | There is no work for you here, you may go.
+say - | | Byakuya leaves towards the Squad 10 barracks. A short while later:
+say = | Renji Abarai | Thanks, man, you helped a lot. I was able to... err... finish my important business.
+say = | Renji Abarai | My business partner wants you to have this for making our meeting possible.
+do reward 1
+
+# ================================================================ HUECO MUNDO
+
+# ---------------- Sosuke Aizen ----------------
+
+enc 20 hueco Sosuke Aizen
+key aizen
+bg espada_meeting_room
+desc Aizen invites you to tea with the Espada.
+line Oh? Who do we have here? Come and join me and the Espada for some tea.
+opt I decline. I'd rather take your head!
+reply How amusing. Alas, I don't have time for this. Privaron, deal with this. Don't disappoint me again.
+# Gantenbainne (72, en017) and two Exequias (94, en039 Arrancar), shown as one name
+do fight 72 94 94 as Gantenbainne_and_Exequias
+opt Why'd I ever join you and your gang of lowlifes for some tea?
+say - | You | Why'd I ever join you and your gang of lowlifes for some tea? By the Soul King, you're going down!
+say - | | You see Aizen freeze for a moment as if composing himself.
+reply Hado Number 90, Kurohitsugi.
+# courage +3
+# note: "Aizen starts with all resources, but can't evolve" -> full Fighting Spirit and Reverse, no Awakening
+do kon -2 fight 20 fx foe_fs_full+foe_rev_full+foe_no_awaken
+opt Uhh... Sure.
+reply Very well. Follow me.
+say - | | You follow Aizen into an enormous chamber dominated by an absurdly tall throne.
+say - | | The Espada are gathered around a table, while Gin and Tosen stand on the opposite side of the room.
+do goto espada_table
+
+enc 20 hueco Sosuke Aizen
+key aizen
+bg las_noches_desert
+desc Aizen stands alone on a dune.
+say - | | You spot Sosuke Aizen standing on a dune, gazing into the endless night of Hueco Mundo.
+opt Go for a sneak attack.
+reply As to be expected from someone like you.
+say - | | Aizen retrieves a small cube from his cloak and crushes it to dust in his palm.
+reply Let's make this 'even', shall we?
+# note: "1 less Konpaku and 1 random basic Hollow" -> Aizen on 2 Konpaku (encounter foes have 3) with Fishbone D or Shrieker
+do pick 1: fight 20:k2 55 | 1: fight 20:k2 56
+opt Enjoying your solitude?
+say - | | Aizen turns around, slowly examining you.
+reply ...You may leave.
+opt2 I'll leave you to it then. Take care.
+do end
+opt2 Sorry, no can do. I am here to stop you.
+reply So be it.
+do fight 20
+opt Traitor, Aizen Sosuke! Prepare to meet your end by my blade!
+say - | | Aizen turns around, drawing his sword.
+reply How foolish... Shatter, Kyoka Suigetsu.
+# courage +2
+# note: "Aizen has 2 extra Konpaku" -> 5 (encounter foes have 3)
+do fight 20:k5
+
+# ---------------- The Espada Table (reached only from Aizen's tea: goto espada_table) ----------------
+
+enc 20 hueco The Espada Table
+key espada_table
+chain
+bg aizens_throne
+desc Aizen, his Espada and his closest subordinates, around one table.
+say - | | Somehow, you've found yourself in a room surrounded by every current Espada, Aizen himself, and his remaining closest subordinates.
+opt Sneak out to rob Las Noches unguarded.
+scene las_noches_corridor
+say - | | Luppi appears before the treasure entrance.
+say luppi_antenor | Luppi | Where do you think you're going? I'll protect the treasury, defeat you AND GAIN MY DESERVED SPOT WITHIN THE ESPADA!!!
+say luppi_antenor | Luppi | STRANGLE, TREPADORA!
+# note: "Fight Luppi in Awakening" -> Luppi's fighter (67, en012) is his Resurreccion already
+do fight 67 win tali 3
+opt Join the Tea Party.
+scene espada_meeting_room
+say - | | You sit down on a chair provided to you by 2 Arrancar girls. Aizen greets everyone and Arrancar servants bring tea to the table.
+say - | | Grimmjow and Nnoitra argue about who'd survive an endless attack of low-level Hollows longer, completely ignoring their tea,
+say - | | while Ulquiorra, Halibel, Aaroniero, Tosen, Szayelaporro and even Yammy drink their tea in quiet, ignoring Numbers 5 and 6's arguments.
+say - | | Zommari on your left had already finished his 5th cup by the time Starrk was done senselessly stirring his.
+say - | | The only ones showing no intention of drinking theirs seem to be Barragan and Gin.
+say - | | Choose someone to talk to.
+# Twelve people, four choices at a time: grouped by seat
+opt2 Starrk, Barragan or Halibel
+opt3 Starrk
+say pl033 | Starrk | Huh? What do you want? Don't think I've seen you around. Whatever, I'm heading out.. You can drop by sometimes if you'd like.
+opt4 Follow him.
+do goto 33
+opt4 Stay at the table.
+do end
+opt3 Barragan
+say pl030 | Barragan | I don't have enough time for this nonsense. Come with me, I have to make sure you don't get the wrong idea!
+opt4 Follow him.
+do goto 91
+opt4 Stay at the table.
+do end
+opt3 Halibel
+say pl035 | Halibel | Your presence here was quite nice. I am about to head out and I recommend you do the same.
+say pl035 | Halibel | I predict it's going to get quite unpleasant around here soon.
+opt4 Follow her.
+do goto 35
+opt4 Stay at the table.
+do end
+opt2 Ulquiorra, Nnoitra or Grimmjow
+opt3 Ulquiorra
+say pl036 | Ulquiorra | ... It's rare to see an outsider getting invited by Lord Aizen. I thought you were trash. Maybe I was mistaken.. I will go now.
+opt4 Follow him.
+# note: Ulquiorra has no encounters of his own -> following him is a fight with him
+do fight 36
+opt4 Stay at the table.
+do end
+opt3 Nnoitra
+say pl037 | Nnoitra | HEY, YOU! This stupid feline says he'd survive longer in an endless attack of low-tier Hollows and Gillians THAN ME!
+say pl037 | Nnoitra | Come with me so you can tell him how I'd devour him!
+opt4 Follow him.
+# note: no encounters of his own -> a Hollow wave with Nnoitra at your side
+do fight 55 56 57 58 with 37
+opt4 Stay at the table.
+do end
+opt3 Grimmjow
+say pl038 | Grimmjow | HEY, YOU! This idiotic bug says he'd survive longer in an endless attack of low-tier Hollows and Gillians THAN ME!
+say pl038 | Grimmjow | Come with me and watch my power and tell him how I'd DESTROY him.
+opt4 Follow him.
+# note: no encounters of his own -> a Hollow wave with Grimmjow at your side
+do fight 55 56 57 58 with 38
+opt4 Stay at the table.
+do end
+opt2 Zommari, Szayelaporro or Aaroniero
+opt3 Zommari
+say zommari_rureaux | Zommari | I hope you appreciate Lord Aizen's invitation. Make sure to show proper gratitude.
+say zommari_rureaux | Zommari | Join me and I'll enlighten you to his greatness over more of his delicious tea!
+opt4 Follow him.
+do goto 73
+opt4 Stay at the table.
+do end
+opt3 Szayelaporro
+say szayelaporro_granz | Szayelaporro | Out of all these people you choose to talk to me, huh? What mad times.
+say szayelaporro_granz | Szayelaporro | You know, if you liked this tea already, I have something you'd enjoy even more back in my lab. Why don't you swing by sometimes?
+opt4 Follow him.
+do goto 39
+opt4 Stay at the table.
+do end
+opt3 Aaroniero
+say pl041 | Aaroniero | Wait. Don't say it! You've got something to tell me, don't you? Well, I invite you to my quarters. We can finish everything there.
+opt4 Follow him.
+do goto 41
+opt4 Stay at the table.
+do end
+opt2 Yammy, Tosen or Gin
+opt3 Yammy
+say yammy_llargo | Yammy | Gah! All this sitting around made me angry. I need to blow off some steam outside... or is it inside? Who gives a damn! See ya!!
+opt4 Follow him.
+do goto 93
+opt4 Stay at the table.
+do end
+opt3 Tosen
+say pl025 | Tosen | What drove you to come here? Your justice perhaps?
+say pl025 | Tosen | Whatever your reasons, know you'd regret even contemplating attacking Aizen or our justice. Even if you can't see me, you are never in my blind spot.
+do end
+opt3 Gin
+say pl018 | Gin | Well, well. Hello, you refreshing face! Thanks for breaking the monotony today. But well, I am getting bored now. See ya!
+opt4 Follow him.
+# note: Gin has no encounters of his own -> following him is a fight with him
+do fight 18
+opt4 Stay at the table.
+do end
+opt Challenge Aizen.
+# note: "+3 Konpaku and Butterfly +3 Konpaku" -> Aizen (Transcended, 21: his own Awakening is the butterfly form)
+# with 3 + 3 + 3 = 9 Konpaku, fought on his Story map (stage 48)
+do fight 21:k9
+
+# ================================================================ WORLD OF THE LIVING
+
+# ---------------- Kisuke Urahara ----------------
+
+enc 6 living Kisuke Urahara
+art kisuke_urahara
+key urahara
+bg urahara_shop_day
+desc A visit to Urahara's shop.
+line Uhhh, one of my dearest customers. What can I do for you today?
+opt I came to buy some of your best "sweets", Mr Urahara.
+say - | You | I came to buy some of your best "sweets" Mr Urahara. They are a big help whenever I am down.
+reply Haha, of course. As luck wills it, I just finished a mixture of all sorts of products.
+reply It's on the house, make sure to consume them soon though, the expiration date might be closer than I'd like to say without a lawyer present >.<
+do reward 3
+opt Actually I am here to challenge you.
+say - | You | Actually I am here to challenge you. There is a bet going on in Soul Society whether you truly possess a Bankai or not and I've been sent to find it.
+reply Fufufu, is that so? I am merely a humble and good looking Candy Shop owner. But there seems to be no stopping you.
+reply Let's go down to my basement before you start assaulting poor old me, okay?
+scene underground_training_hall
+reply Okay then. But, before we start, there is something I have to tell you.
+reply ... you should mind where you step and not blindly follow your opponents.
+say - | | You look down, as a crimson net wraps around you.
+reply Hiasobi Benihime, Juzutsunagi.
+# courage +2
+# note: "game starts with his Kikon animation" cannot be built -> Urahara starts with full Fighting Spirit, in his own
+# basement (stage 6, bg000_06)
+do fight 6 fx foe_fs_full at 6 win reward 1
+
+enc 6 living Kisuke Urahara
+art kisuke_urahara
+key urahara
+bg underground_training_hall
+desc Hollowfication experiments: a new healing medicine.
+say - | | You stumble into an empty Urahara Shop. Furthering investigation leads you to Urahara working on something in his basement.
+line Perfect timing. Would you like to earn some free sweets and probably increase your health as a test subject? No worries, it should be safe.
+opt I humbly decline your offer.
+say - | You | I humbly decline your offer. I'd be interested in some of your "sweets" though.
+reply Just take one product. See it as a reward for your good work here. Well, time to call a Volunteer.
+reply ... Helllloo Abarai-Kun. Remember when you were freeloading off of me? I have just the way for you to repay me!
+do reward 1
+opt Free stuff and increase to my health? Count me in.
+say - | You | Free stuff and increase to my health? Count me in. I am gonna punch you if something does go wrong though!
+reply That seems to be only fair. Take this syringe, it's made from random Hollows I found, that excel at high speed regeneration.
+reply Let's break a leg or three.
+scene inner_world
+say - | | You take the syringe and feel your consciousness fading.
+say - | | You wake up in your inner world, surrounded by multiple Hollows, ready to fight you.
+# courage +1
+# White = the Inner Hollow (63, en008) with two random Hollows, in the inner world (stage 49, bg003_05)
+do fight 63 55 56 at 49 win kon +3 reward 1
+after You look better than expected! How was it?
+opt2 Random Hollows my ass! You could have mentioned more details!
+reply You weren't asking >.<. Here, your reward.
+do end
+opt2 The way you talked I expected more. You're losing your edge.
+reply How mean. Well, you did well anyways. Take your rewards.
+do end
+
+enc 6 living Kisuke Urahara
+art kisuke_urahara
+key urahara
+bg karakura_night_sky
+desc Urahara sits on his shop's porch at night.
+say - | | You spot Urahara Kisuke sitting on his shop's porch, looking up into the night sky of the World of the Living.
+opt Enjoying the solitude?
+reply Ohh. I didn't notice you. Seems I was quite lost in thought.
+opt2 What were you thinking about?
+reply ..I thought about what is right. Centuries ago, I made the decision to protect the good that we already have at all costs.
+reply But sometimes, at evenings like this, I wonder whether his decision might have been the right one.
+opt3 Who is "him"?
+reply Ahh, don't you worry. No one important >.<. What brings you here though?
+reply I doubt it's to hear a pensive, but also undoubtedly dashing, Shopkeeper mumble about ancient decisions. Come in and have this! It's on the house.
+do reward 1
+opt3 Protecting good is never a wrong decision.
+say - | You | I don't think protecting good could ever be a wrong decision. Maybe "just" doing that isn't always the best one, but it's definitely never a wrong one.
+reply Thank you. Although that idea is nothing new to me, it felt good to hear someone else say it. Feel free to spend the night here.
+do kon +2
+opt2 Now that you're back in existence, can I buy something?
+reply Well of course. The package you ordered also arrived earlier. Wait here, I will ask Tessai to get it for you.
+do reward 2
+opt Is the shop already closed?
+reply Oh! You can't surprise a poor man like that! But yes, I closed for today.. Say. What do you think makes a loser?
+opt2 Losing a fight, obviously! Be it a real one or one of wits.
+reply Haha, that's fair. I might have closed already, but I have just the thing for you to stay a winner!
+do reward_good 1
+opt2 Being too weak to do what you really think is the best thing...
+say - | You | Being too weak to do what you really think is the best thing to do.
+reply .. I like that. Thank you for entertaining this thought experiment. Take this for your troubles.
+do reward_good 1
+opt2 A Winner takes it all, so a loser probably loses everything?
+say - | You | Hmm. Never thought about that. A Winner takes it all, so a loser is probably someone who loses everything?
+reply Someone likes references huh? Thanks for your input regardless. Take this, so you won't lose it all.
+do reward_good 1
+
+# ---------------- Ichigo Kurosaki ----------------
+
+enc 0 living Ichigo Kurosaki
+key ichigo
+bg karakura_street
+desc Ichigo is late for work.
+line Hey! Perfect timing! Look, I'm supposed to be at work right now, and Miss Ikumi's gonna kill me if I don't finish everything by five!
+line Could you take care of the Hollows a few blocks from here?
+opt Of course!
+say - | You | Of course! Don't worry about the Hollows, I'll take care of them immediately.
+reply Thanks, man. Here, take one of those! Yuzu baked them for me, but they aren't really my taste. Don't tell her I said that, though. Good luck!
+do fight 55 56 57
+opt Actually, I came here to test my skills against you.
+say - | You | Actually, I came here to test my skills against you. Your Miss Ikumi will have to wait a little longer.
+reply Were you listening?! I said I don't have time for this! Out of my way!
+opt2 Let him go.
+do end
+opt2 Stop him.
+say - | | Ichigo sighs, taking out his phone.
+reply Yo, Ishida. Two blocks south of the park. Yeah, now. Thanks.
+say - | | Click.
+reply Now to you. Let's make this quick. Bankai! Tensa Zangetsu!
+say - | | Three blue arrows pierce the air, followed by Hollows screaming in agony behind you, as Ichigo puts his Hollow mask on.
+# courage +2
+# note: "Awakened Shichigo (always in white / infinite reverse)" -> Ichigo (0) Awakened, his Reverse gauge kept full
+do fight 0:evo fx foe_rev_full
+
+enc 0 living Ichigo Kurosaki
+key ichigo
+bg karakura_river_evening
+desc Ichigo sits alone by the river.
+say - | | While walking along the river in Karakura Town, you spot Ichigo Kurosaki in his human form sitting alone on a bench.
+opt Whatcha doing out here?
+reply Huh? Oh, it's you. I come here every once in a while. What about you? What brings you here?
+opt2 I am looking for someone. Have you seen...
+opt3 Orihime?
+reply She should be at work. If you head there right now, you might still catch her. Tell her I said hi.
+do goto orihime
+opt3 Sado?
+reply Chad? Recently he's been hanging out at the park a few blocks in that direction.
+do goto 4
+opt3 Uryu?
+reply Ishida?! He's probably at home studying or something.
+# note: the doc gives this one no effect; it leads to an Uryu encounter like the others
+do goto 3
+opt3 Someone else...
+opt4 Isshin?
+reply My old man? He should be running some errands for the clinic right now. Try waiting for him at the clinic...
+reply Tell him not to wait for me to eat dinner tonight.
+do goto 82
+opt4 Urahara?
+reply Hat'n clogs? Yoruichi told me he is working on something at his shop right now.
+do goto urahara
+opt4 Yoruichi?
+reply Urahara-san told me she would stay in Karakura Town. You might find her if you follow the river downstream. She likes to drink there sometimes.
+# note: the doc gives this one no effect; it leads to a Yoruichi encounter like the others
+do goto 7
+opt Finally found you!
+say - | You | Finally found you! I want to challenge you to a spar and feel the power that defeated Aizen for myself.
+reply I don't possess that power anymore, but we can still fight! Good timing on your part too, this is probably your last chance to duel me.
+reply Let's go all out, alright? BANKAI! Tensa Zangetsu!
+# courage +1
+# Bichigo = Ichigo (Bankai), 1
+do fight 1
+opt Everything all right?
+reply Hmm? Oh, it's you. Yeah... I've just been thinking. I'll lose my powers soon.
+opt2 I'm sorry.
+reply Don't be. Just living a normal life is what I always wanted.
+say - | | Ichigo looks at you with a smile that never seems to quite reach his eyes.
+reply Hey, thanks for listening to me. Take this, it's not much, but I won't be needing it anymore.
+do reward_big 1
+opt2 You can be proud of yourself. You saved a lot of people.
+reply Proud, huh?
+say - | | Ichigo stares at a specific patch of grass along the riverbank.
+reply I guess you are right. Thanks, man. Here, I want you to have this, not like I'll be needing it anymore.
+do reward_big 1
+
+enc 0 living Ichigo Kurosaki
+key ichigo
+bg karakura_park
+desc Ichigo fights a bunch of Hollows on a football field.
+say - | | You spot Ichigo fighting a bunch of Hollows on a football field.
+line Hey! Little help here? I'd rather not have to unleash more power.
+opt Sure. I have your back!
+reply Thanks, man. Let's go!
+# courage +2
+# Shichigo = Ichigo (0), base, at your side
+do fight 55 56 57 58 with 0
+opt What's in it for me?
+reply Seriously?! Fine, I'll give you a talisman or something. Now stop standing there and help!
+# courage -1
+do tali 1
+opt Nah, you have this. Good evening.
+reply For real?! Great, seems like I'll have to sit through another one of Ishida's lectures.
+# courage -2
+do end
+
+# ---------------- Orihime Inoue ----------------
+# Orihime has no fighter: her pin is her sprite (key orihime, for Ichigo's goto).
+
+enc - living Orihime Inoue
+art orihime_inoue
+key orihime
+bg karakura_side_street
+desc Orihime works at the bakery at the end of the street.
+say - | | Feeling a little hungry, you decide to stop by the bakery at the end of the street.
+line Oh, hello! Welcome! What can I get for you?
+opt I'll have a salty pretzel.
+reply We're closing soon, and we've still got plenty of those left! Here, it's on the house! Have a wonderful day!
+do sp_max rev_max
+opt I'll have a sweet cake.
+reply We're closing soon, and we've still got plenty of those left! Here, it's on the house! Have a wonderful day!
+do heal 100
+opt I'll have a hearty sandwich.
+reply We're closing soon, and we've still got plenty of those left! Here, it's on the house! Have a wonderful day!
+do kon +1
+
+enc - living Orihime Inoue
+art orihime_inoue
+key orihime
+bg karakura_road_evening
+desc Orihime skips home with an enormous display of bread.
+say - | | You spot Orihime Inoue happily skipping home, carrying an enormous display full of bread.
+say - | | Almost as if she had eyes in the back of her head, she suddenly notices you.
+line Oh! Hello. Haven't seen you in a while. Want one of today's leftover pastries?
+opt I do, thank you.
+reply Here you go! Have a wonderful rest of your day! Bye-bye!
+do pick 1: sp_max rev_max | 1: heal 100 | 1: kon +1
+opt Only one? I want all of them.
+reply What? No way! They are for my friends and myself. You can still have this one, but you should be more grateful in the future. Goodbye.
+opt2 Let her go.
+do pick 1: sp_max rev_max | 1: heal 100 | 1: kon +1
+opt2 Stop her and put your hand on your blade.
+reply What are you doing?
+say - | | You feel her spiritual pressure flare up. Before you can react, you are surrounded by three spiritual pressure signatures.
+say pl000 | Ichigo Kurosaki | Get away from her! Getsuga Tensho!
+say uryu_ishida | Uryu Ishida | Not your wisest decision. Licht Regen.
+say yasutora_sado | Yasutora Sado | Brazo Derecha de Gigante!
+do fight 0 3 4
+
+enc - living Orihime Inoue
+art orihime_inoue
+key orihime
+bg karakura_town_street
+desc Orihime defends herself against a group of Hollows.
+say - | | You spot Orihime defending herself against a group of Hollows.
+line Could you help me? I don't know how much longer I can distract them.
+opt Don't you worry! I'll handle them!
+# courage +1
+say - | You | Don't you worry! I'll handle them! Hey, you ugly sand-eaters, I am your enemy now!
+do fight 55 56 57 win kon +4
+after Thank you so much... I really should be able to deal with threats like that by myself now, but... I just wasn't ready today...
+after Oh! Here, let me heal your wounds. Soten Kisshun, I reject!
+opt You are strong enough to defeat them yourself, no?
+say - | You | You are strong enough to defeat them yourself, no? I'll be on my way, good luck!
+reply ... He is right. I got this. Hinagiku! Baigon! Lily! Tsubaki! Shiten Koshun!
+do end
+
+enc - living Orihime Inoue
+art orihime_inoue
+key orihime
+bg karakura_town_street_night
+desc Orihime and Tatsuki walk home at night.
+say - | | While walking through Karakura Town at night, you spot Orihime and Tatsuki a short distance ahead of you. You decide to catch up with them.
+opt Hello, girls, how are you doing?
+say tatsuki_arisawa | Tatsuki Arisawa | Huh?! Get lost, you creep!
+reply It's okay, Tatsuki, I know him! He's from... you know where.
+say tatsuki_arisawa | Tatsuki Arisawa | That doesn't change anything! Listen here. I don't care if you're a Soul Reaper or whatever.
+say tatsuki_arisawa | Tatsuki Arisawa | If you hurt anyone around here, I will make you pay.
+do end
+opt Good evening, Inoue-san. Is this a friend of yours?
+reply She is! That's Tatsuki, my best friend in the world!
+say tatsuki_arisawa | Tatsuki Arisawa | ...You don't have to say it out like this... But thanks.
+say tatsuki_arisawa | Tatsuki Arisawa | ... Since I don't know you, I'm gonna assume you are one of 'those' friends. Here, take this.
+say tatsuki_arisawa | Tatsuki Arisawa | I've already got multiple, they just keep giving me those. I suppose you can make more use of it.
+do tali 1
+
+# ---------------- Uryu Ishida ----------------
+
+enc 3 living Uryu Ishida
+art uryu_ishida
+key uryu
+bg karakura_high_classroom
+desc Uryu works on a sewing project at school.
+say - | | You find Uryu Ishida working on a sewing project at school.
+line I didn't expect to see someone like you here. What do you want?
+opt My clothes got torn pretty badly during my last fight.
+need item
+say - | You | My clothes got torn pretty badly during my last fight. Can you fix them? I've got a talisman for you.
+reply Hmm. Child's play.
+say - | | Uryu takes out a needle and thread. His hands start moving in intricate patterns with remarkable precision, restoring your clothes in moments.
+# note: "Higher resistance, allows trading in bad/unwanted/unfitting talismans for another effect" -> one of your
+# talismans traded for a Soul Crystal (trade), and sturdier for the rest of the run (run:sturdy)
+do buff trade+run:sturdy
+opt To be honest, I am interested in sewing as well and hoped...
+say - | You | To be honest, I am interested in sewing as well and hoped you could show me some tricks.
+reply I usually don't take on students, but I suppose you could work next to me. You might learn a thing or two.
+say - | | You work quietly next to the Quincy, carefully observing his precise movements, allowing you to create a talisman.
+do tali 1
+
+enc 3 living Uryu Ishida
+art uryu_ishida
+key uryu
+bg karakura_high_rooftop
+desc A Quincy duel.
+line It's rare to see you around here. Were you looking for me?
+opt I was.
+say - | You | I was. I want to learn more about the Quincy, especially about their fighting techniques.
+reply Is that a challenge? If so, I accept. Be careful, I won't go easy on you.
+do fight 3
+opt Damn right I did.
+say - | You | Damn right I did. I want to see whether that so-called Quincy Pride of yours is actually justified. Show me whether your people have anything worth being proud of!
+reply Very well. Then I'll make sure you'll never have to question that again. On my Pride as a Quincy, you're going down!
+do fight 3:subl
+
+enc 3 living Uryu Ishida
+art uryu_ishida
+key uryu
+bg karakura_street
+desc Uryu fights Hollows on his way to an exam.
+say - | | You encounter Uryu, dressed in his school uniform, fighting a group of Hollows in Karakura Town.
+line Good to see a familiar face. I have an exam to attend shortly. Would you mind taking over here?
+opt Sure!
+say - | You | Sure! You go ace your exam, I'll protect the city in the meantime.
+reply Naturally. Here, this should keep you from getting killed.
+# courage +1
+do fight 55 56 57 win reward 1
+opt Nah, I got better things to do. You got this.
+reply ... I see.
+# courage -1
+do end
+opt It's just a few Hollows though?
+say - | You | It's just a few Hollows though? I think I'd prefer to even the odds a little.
+say - | | You draw your weapon.
+reply What? Have you gone mad? Ransotengai!
+# courage -2
+# note: "with 2 Hollows on your side" -> one Hollow at your side (a fight takes one ally)
+do fight 3:evo with 55
+
+# ---------------- Yasutora Sado (Chad) ----------------
+
+enc 4 living Yasutora Sado
+art yasutora_sado
+key chad
+bg bamboo_thicket
+desc Chad trains alone in a forest.
+say - | | You find Chad training alone in a forest, practicing his punches against several trees. He doesn't seem to notice you.
+opt I think I'd make a better training partner than that poor tree.
+reply !! You startled me. Guess I was quite focused.
+opt2 Let's train a bit.
+reply Gladly. You get the first strike.
+do fight 4
+opt2 Only if you go all out.
+say - | You | We can train if you want, but only if you go all out. Imagine Ishida is already down, and I'm about to land a nasty sneak attack on Ichigo.
+reply I know you are stronger than me, but you should brace yourself. Here I come.
+# courage +3 ("a lot of Courage")
+do fight 4:sd
+opt Silently watch him from behind a tree.
+say - | | You watch him continue his training for a few minutes until he turns slightly in your direction.
+reply You can come out now. Would you like to train with me?
+opt2 Let's train a bit.
+reply Gladly. You get the first strike.
+do fight 4
+opt2 Only if you go all out.
+say - | You | We can train if you want, but only if you go all out. Imagine Ishida is already down, and I'm about to land a nasty sneak attack on Ichigo.
+reply I know you are stronger than me, but you should brace yourself. Here I come.
+# courage +3 ("a lot of Courage")
+do fight 4:sd
+
+enc 4 living Yasutora Sado
+art yasutora_sado
+key chad
+bg karakura_park
+desc Chad hangs out with Keigo and Mizuiro at the park.
+say - | | You encounter Chad hanging out with Keigo Asano and Mizuiro Kojima at the park.
+say keigo_asano | Keigo Asano | Huh? I think I've seen you before. Weren't you one of Kurosaki's friends?
+say mizuiro_kojima | Mizuiro Kojima | I think you're right. Do you know him, Sado?
+line Yeah. Good to see you... Wanna come and join us?
+say keigo_asano | Keigo Asano | Hell yeah. We're testing each other's knowledge of the truly important things in life!
+say keigo_asano | Keigo Asano | First question! Can you imitate the legendary Don Kanonji's laugh?!
+opt BUHAHAHAHA!
+say keigo_asano | Keigo Asano | Ahh, sorry. That's wrong. Are you one of those larpers?
+do goto chad_quiz
+opt BAHAHAHAHA!
+say keigo_asano | Keigo Asano | Ahh, sorry. That's wrong. Are you one of those larpers?
+do goto chad_quiz
+opt BOHAHAHAHA!
+say keigo_asano | Keigo Asano | Correct! You seem to be another man of culture.
+do sp 50 goto chad_quiz
+
+# the quiz's second and third questions (parts of the park encounter, reached by goto)
+enc 4 living Yasutora Sado
+art yasutora_sado
+key chad_quiz
+part
+bg karakura_park
+line I've got one ready. Let's see if you remember. What are my powers called?
+opt Left Arm of the Devil and Right Arm of the Giant.
+reply That's correct. You are a perceptive fighter.
+do heal 33 goto mizuiro_quiz
+opt Left Arm of the Giant and Right Arm of the Devil.
+reply Hate to disappoint, but it's the other way around.
+do goto mizuiro_quiz
+opt Left Arm of the Demon and Right Arm of the Giant.
+reply Hate to disappoint, but it's the Left Arm of the Devil.
+do goto mizuiro_quiz
+
+enc 4 living Yasutora Sado
+art yasutora_sado
+key mizuiro_quiz
+part
+bg karakura_park
+say mizuiro_kojima | Mizuiro Kojima | Seems like it's my turn. Hmm... Shinigami are quite old, right? Who is the hottest Soul Reaper?
+# every answer gives 1 Reverse bar
+opt Rangiku Matsumoto
+say mizuiro_kojima | Mizuiro Kojima | Thank you. I will remember that name.
+do rev 1
+opt Yoruichi Shihoin
+say mizuiro_kojima | Mizuiro Kojima | Thank you. I will remember that name.
+say keigo_asano | Keigo Asano | Seriously?!
+reply I think that was too much for me for today.
+do rev 1
+opt Retsu Unohana
+say mizuiro_kojima | Mizuiro Kojima | Thank you. I will remember that name.
+say keigo_asano | Keigo Asano | Seriously?!
+reply I think that was too much for me for today. Also, Mizuiro. For your own good, don't.
+do rev 1
+opt Yamamoto
+say mizuiro_kojima | Mizuiro Kojima | Sounds dominant... I like it!
+say keigo_asano | Keigo Asano | Seriously?! And people say I'm the weird one.
+reply (He is in for a big disappointment.)
+do rev 1
+
+# ---------------- Isshin Kurosaki ----------------
+# Isshin's fighter is the Story one (82, en027); his pin uses his gigai sprite.
+
+enc 82 living Isshin Kurosaki
+art isshin_kurosaki_gigai
+key isshin
+bg kurosaki_clinic
+desc A visit to the Kurosaki Clinic.
+say - | | At the Kurosaki Clinic.
+line Hello! Good to see you. Did you want to see me, or were you looking for Ichigo?
+opt Could I get one of your protective talismans?
+say - | You | I was looking for you. I heard you have some knowledge about protective talismans. I was hoping I could get one for my journey ahead.
+reply I don't see why not. I've already made sure everyone else who might need one has one, so I guess you can have a spare.
+do tali 1
+opt I got hurt pretty badly in my last fight. Could you treat me?
+say - | You | Nah, I was actually looking for you. I got hurt pretty badly in my last fight, and I was hoping you could treat me.
+reply Let's see what we can do. Please, follow me to the exam room.
+do heal 50
+opt Yeah, sorry. I'm looking for your son. Is he home?
+reply Not yet. Ever since his fight with Aizen, he's been staying out longer...
+reply Go and cheer him up for me, will ya? According to the girls, he should be around somewhere that way.
+do goto ichigo
+
+enc 82 living Isshin Kurosaki
+art isshin_kurosaki_gigai
+key isshin
+bg karakura_side_street
+desc Isshin hides in an alleyway, playing Cupid.
+say - | | You notice Isshin hiding in an alleyway, secretly glancing around a corner. As you get closer, you can hear Ichigo and Orihime talking.
+line Hey, shhhh! Be quiet. Ichigo's out with a nice girl today, but I heard Sado and Ishida are supposed to show up soon.
+line Wanna help me distract the boys to give those oblivious lovebirds some time together?
+opt They're that oblivious, huh? Let's do this, then.
+reply Perfect. I knew I could count on you. I'll give you something once our mission is a success.
+reply Would you like to handle Ishida or Sado?
+opt2 I'll take on Sado.
+reply It's Ishida for me, then, haha. Funny how that always works out.
+say yasutora_sado | Yasutora Sado | Hello. Good to see you around. You want to train now? I guess I have time for a little spar. Make it quick, though.
+do fight 4 win reward 1
+aftersay - | | You manage to hold off Chad for over an hour, annoying him in the process. But your mission was a success.
+opt2 I'll take on Ishida.
+reply Guess I'll be spared an Ishida arrow today, thanks!
+say uryu_ishida | Uryu Ishida | What exactly do you mean by 'I shall not pass'? I have somewhere to be. Move aside.
+opt3 You'll have to fight me, Quincy boy.
+say uryu_ishida | Uryu Ishida | Tss. I see how it is. Let's fight, then.
+do fight 3 win reward 1
+aftersay - | | You manage to hold off Uryu for over an hour, severely annoying him in the process. But your mission was a success.
+opt3 YOU SHALL NOT PASS!
+say uryu_ishida | Uryu Ishida | Tss. I see how it is. Let's fight, then.
+do fight 3 win reward 1
+aftersay - | | You manage to hold off Uryu for over an hour, severely annoying him in the process. But your mission was a success.
+opt You shouldn't stalk your children.
+say - | | You kick him out of his hiding spot.
+reply Ouch!
+say orihime_inoue | Orihime Inoue | Kurosaki-san?
+say pl000 | Ichigo Kurosaki | Old man?! What are you doing here? Don't tell me...
+reply Uhh... I was just on my way to buy some groceries. Don't mind me, byyyee!
+say - | | Isshin runs off, trying to avoid Ichigo's angry glare.
+say pl000 | Ichigo Kurosaki | Seriously, that guy... Anyway, thanks. We ordered too much food earlier. Here, take some. It's still warm, so eat it while you can.
+do heal 50
+
+# ---------------- Ryuken Ishida ----------------
+# Ryuken's foe is the Story Ryuken (64, en009).
+
+enc 64 living Ryuken Ishida
+art ryuken_ishida
+key ryuken
+bg bamboo_thicket
+desc A Quincy in the forest.
+say - | | While making your way through a forest, you hear the sound of arrows being fired.
+say - | | Following the noise, you spot Ryuken Ishida secretly practicing his Quincy abilities in a secluded part of the forest, with an old notebook lying nearby.
+say - | | He hasn't noticed you yet.
+opt Quietly leave without disturbing him.
+say - | | You leave the doctor alone, never telling anyone what you saw.
+do end
+opt I'd never have expected you to train in the ways of the Quincy.
+say - | You | From what I know about you, I'd never have expected you to train in the ways of the Quincy.
+reply ?! So I've been found. I'd call it less training and more... preparation, should the worst come to pass.
+reply ... I'd appreciate your discretion. How about this in exchange for your secrecy?
+do reward 1 flag ryuken_forest
+opt I bet I could help you train better than that tree.
+reply !? I presume you would make a more suitable target. Very well. But I trust this little encounter will remain between us.
+# the user (2026-11-22): a win gives Ryuken's Ally Talisman for this run (his Reborn stays the "A Doctor's Condition" Event's)
+do flag ryuken_forest fight 64 win ally_tali 53
+
+enc 64 living Ryuken Ishida
+art ryuken_ishida
+key ryuken
+bg karakura_offices
+desc A visit to Karakura General Hospital.
+say - | | You visit Karakura General Hospital and come across its director, Ryuken Ishida.
+line Why are you here? I'd assume there are better places for you to receive treatment.
+opt Sometimes you just prefer some real, human help.
+say - | You | Well, there are. But sometimes you just prefer some real, human help instead of... you know.
+reply I understand. I'll treat you personally. Follow me.
+do heal 100
+opt Care to grab some coffee sometime?
+say - | You | I wanted to check on you, actually. You always seem to have a lot on your mind whenever I see you. Care to grab some coffee sometime?
+reply ... I've heard and seen a lot in my life, but this is a first. I appreciate your offer, but I'll decline.
+reply I can't deny that the idea sounds nice. I might call an old... acquaintance of mine sometime. Thank you.
+reply Now, out of my hospital. There are patients who are more in need of my time than you.
+do end
+opt I just haven't seen Uryu in a while and wanted to ask how...
+say - | You | I just haven't seen Uryu in a while and wanted to ask how he's doing.
+reply Don't worry. He's doing well. He's studied a lot recently and spent most of his spare time with his friends.
+reply And now, leave. A hospital is no place for idle conversations like this.
+do end
+opt I'd like to fight you.
+need flag ryuken_forest
+say - | You | I'd like to fight you. What I saw in the forest made me curious to see more of your abilities.
+reply I suppose there's no reason to refuse. Wait outside for me to finish my shift.
+say - | | After Ryuken finishes his shift, he brings you to his underground training room.
+reply I'm treating this as overtime, so know that I won't be holding back.
+# courage +2
+# "buffed Ryuken" = foe_strong+foe_sturdy, under the hospital (stage 10, bg000_10)
+do fight 64 fx foe_strong+foe_sturdy at 10
+
+# ---------------- Shinji Hirako ----------------
+
+enc 32 living Shinji Hirako
+art shinji_hirako
+key shinji
+bg visored_warehouse
+desc Shinji packs his belongings in the Visored hideout.
+say - | | You enter the Visored hideout and find Shinji packing his belongings into several bags and boxes. Jazz music plays from a record player nearby.
+line Hey! You like the music?
+opt I do. What's with all the packing?
+say - | You | I do. What's with all the packing? Are you guys changing hideouts?
+reply I suppose one could call it that. I've decided to return to Squad 5 as their captain again.
+reply Rose and Kensei want to return as well, but haven't fully decided yet. Not everyone seems to agree with the idea, though...
+reply Anyway, could you help me pack those things over there? You can have this talisman I found while tidying up for helping.
+do tali 1
+opt It's certainly what I'd expect you to listen to.
+say - | You | It's certainly what I'd expect you to listen to. I was hoping to train with you guys for a bit.
+reply I guess some distraction would do me good. Let's head to Soul Society, though.
+reply There's a lot of tension here right now, and I fear Urahara's basement won't do either. But enough of that. Let's go. I'll go all out, by the way.
+# courage +2
+# in Soul Society: stage 36 (bg002_08, Seireitei square)
+do fight 32:sd at 36
+
+enc 32 living Shinji Hirako
+art shinji_hirako
+key shinji
+bg xcution_bar
+desc A night of jazz.
+say - | | After an exhausting day, you enter a jazz club filled with a sweet scent, encountering a familiar face, or rather, a familiar bowl cut.
+line Jazz is that gold absolute the to listens that type the be to you expect didn't I. Here around you seeing fancy.
+opt Excuse me, what?!
+reply Haha, you should've seen your face. I'm currently learning how to speak backwards. You can have a sip of my drink as an apology.
+do sp 50
+opt Jazz about you fascinates what?
+reply ..Question similar very a me asked once he. Jazz about thinking when Aizen about think to had always I since, time long a for fully it enjoy couldn't I.
+reply Peace me gives it. Express can it freedom the love I.
+reply By the way, good job adapting to speaking backwards. That was some good training for me. Order whatever you want; the first drink is on me.
+do sp 150
+
+enc 32 living Shinji Hirako
+art shinji_hirako
+key shinji
+bg visored_warehouse
+desc Shinji trains alone in the Visored hideout.
+say - | | You enter the Visored hideout and find it empty, with the exception of their de facto leader, Shinji Hirako.
+line Hey! Seems I won't be all alone today after all. The others left me. They find my training disorienting for some reason. Can you believe that?
+opt I actually can.
+say - | You | I actually can. But I'd still be happy to be your training partner.
+reply No reason to wait, then. Let's go!
+do fight 32
+opt That's actually exactly what I've been looking for.
+say - | You | That's actually exactly what I've been looking for. I'd like to get some experience with perception-altering Zanpakuto.
+reply Let's get right to the point, then! Collapse, Sakanade!
+# note: "starting in an enhanced state" -> Shinji Awakened, and Sakanade turns your controls around (inverted)
+do fight 32:evo fx inverted
+

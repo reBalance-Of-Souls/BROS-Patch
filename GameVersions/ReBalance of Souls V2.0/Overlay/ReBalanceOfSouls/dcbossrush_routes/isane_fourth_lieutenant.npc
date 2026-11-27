@@ -1,0 +1,271 @@
+# An ADVENTURE event's story nodes -- written by DataChakka's Events Builder.
+# The format is dcbossrush_npc.txt's (npc / spot, art, image, line, exit, desc, a | ..., b | ...).
+
+npc 40 soul A Nervous Beginning
+bg seireitei_grounds
+desc A tall, quiet student tries to find the courage to choose her future.
+say - |  | Long, long ago; the Shin'o Academy, Seireitei.
+say kiyone_kotetsu | Kiyone Kotetsu | Sis! There you are! You've been staring at that recruitment board for ages!
+say pl040 | Isane Kotetsu | O-oh, Kiyone... Sorry. I was just... Thinking.
+say kiyone_kotetsu | Kiyone Kotetsu | About the Squads, right? You've got that face again. The worried one.
+say pl040 | Isane Kotetsu | ...The assignments are coming soon. I keep wondering if any Squad would even want someone like me.
+say pl040 | Isane Kotetsu | I'm not strong like the students who want the Eleventh. I don't even like fighting very much... I'm too tall, unlike the students who want the Second. That'd make me stick out like a sore thumb... I couldn't even sneak up on a bear at this height...
+say kiyone_kotetsu | Kiyone Kotetsu | ...So where do you WANT to go?
+say pl040 | Isane Kotetsu | ...Hm... Uh... The Fourth Division. The relief Squad. If I could heal people instead of hurting them... I think I could be useful there.
+say kiyone_kotetsu | Kiyone Kotetsu | Then that's where you'll go! Easy!
+say pl040 | Isane Kotetsu | It isn't that easy, Kiyone...
+say - |  | As the sisters walk the academy grounds, an upperclassman steps into Kiyone's path, wooden sword resting on his shoulder.
+say - | Rowdy Senior | Well, well. The 'lil Kotetsu pipsqueak. Still taggin' along after 'yer big sister? C'mere!!
+say kiyone_kotetsu | Kiyone Kotetsu | H-hey, let go of my arm! I didn't do anything to you!
+say - | Rowdy Senior | You bumped me yest'rday. Thought 'ya could just run off..? Let's see how tough that Kotetsu blood really is...
+say pl040 | Isane Kotetsu | ...Please let go of my sister. Immediately.
+say - | Rowdy Senior | ...Or what? Th' beanpole wants t' spar? Fine. Pick up a sword. I don't mind knockin' a woman who dares 't speak up to me down a few rungs.
+say pl040 | Isane Kotetsu | (My hands are shaking... But I won't let him hurt Kiyone... I won't let him belittle me..!)
+exit Isane picks up a wooden training sword and prepares to duel.
+
+npc 40 soul A Broken Blade
+bg seireitei_grounds
+desc The bully lies in the dirt. Isane stands over him, still gripping her wooden sword.
+say - |  | The senior staggers back, his wooden sword knocked from his grip.
+say pl040 | Isane Kotetsu | ...
+say - |  | Isane grips her own practice sword in both hands... And snaps it cleanly over her knee in one swift movement.
+say pl040 | Isane Kotetsu | Please... Don't come near my sister ever  again.
+say - | Rowdy Senior | Wh..?! How did-..?! Uh... Y-yeah, whatever! S-sorry for all the trouble ma'am!! You won't see me again! Damn, you Kotetsus are crazy..!
+say - |  | The bully scrambles off without looking back, tripping over his heels as he scampers away, nothing more than a sweaty mess. Isane drops the broken halves of her practice sword and rushes to her sister.
+say pl040 | Isane Kotetsu | Kiyone! Are you hurt? Did he twist your arm? Let me see-
+say kiyone_kotetsu | Kiyone Kotetsu | I'm fine, I'm fine! Geez! Don't fuss, sis!
+say kiyone_kotetsu | Kiyone Kotetsu | ...But that was AMAZING!!! Since when can you fight like that?! And your practice sword! Snaped! Right in half like a twig! Haha!!
+say pl040 | Isane Kotetsu | I-it wasn't anything special... I just didn't want him to hurt you...
+say - |  | A small crowd of students had gathered to watch.
+say pl011 | Shuhei Hisagi | Not bad. Clean footwork, you kept your cool, and you never once took your eyes off him. I'm impressed.
+say pl012 | Rangiku Matsumoto | Ooh, and that sword break! Very dramatic. I like her already!
+say momo_hinamori | Momo Hinamori | You were really cool, Isane! Great job showing that bully not to mess with others!
+say pl040 | Isane Kotetsu | U-um... Th-thank you...
+say - |  | Isane's face turns bright red. She tries, and fails, to hide behind her much smaller sister.
+say - |  | At the edge of the courtyard, a Captain inspecting the year's recruits has stopped to watch.
+say pl019 | Retsu Unohana | ...Hm... She broke her own blade rather than strike a beaten man...
+say pl019 | Retsu Unohana | How very soft... How very interesting.
+say - |  | The Captain of the Fourth Division walks on without another word. None of the students notice the cold edge in her smile.
+
+npc 19 soul An Invitation at Dusk
+bg captains_meeting_hall
+desc A few weeks on, late in the evening. An empty training hall in the Fourth Division's barracks is lit by a single lantern.
+say - |  | Weeks later - The Fourth Division barracks, after dark.
+say pl040 | Isane Kotetsu | C-Captain Unohana! You asked to see me...?
+say pl019 | Retsu Unohana | I did. Thank you for coming so late, Isane. I wished to talk to you about the incident at the Shin'o Academy a few weeks ago.
+say pl019 | Retsu Unohana | ...But first, a question.
+say pl019 | Retsu Unohana | Why do you wish to be a Soul Reaper?
+say pl040 | Isane Kotetsu | ...To protect others. Even on a battlefield, someone has to keep people alive.
+say pl040 | Isane Kotetsu | And... I want to be strong enough for my sister. So that she never has to be afraid...
+say pl019 | Retsu Unohana | ...
+say pl019 | Retsu Unohana | ...Hahah...
+say - |  | The Captain laughs - A real laugh, soft, short, and surprised. Somewhere deep in the barracks, old Soul Reapers would swear they had not heard that sound in centuries...
+say pl040 | Isane Kotetsu | (Wh-what did I say?! Was that the wrong answer?! Was it too simple?!)
+say - |  | A bead of sweat slides down Isane's temple as her heart begins to waver.
+say pl019 | Retsu Unohana | Forgive me. That was a fine answer. A very fine answer indeed.
+say pl019 | Retsu Unohana | However, words are but one aspect of an answer, Isane. Soul Reapers are taught in the Shin'o Academy that there are three main forms of communication, correct?
+say pl040 | Isane Kotetsu | Y-yes Captain! Soul Reapers may communicate with words, with Reiatsu, or with their blades!
+say pl019 | Retsu Unohana | Correct. We have communicated with our words, and I have been keeping an eye on your Reiatsu ever since you joined my Squad... So now we must hold this questioning in a different format. The third format.
+say pl019 | Retsu Unohana | It is time to pick up your blade, Isane. I wish to spar with you. Show me your soul, laid bare upon your Asauchi.
+exit Unohana's hand rests lightly on her hilt.
+
+npc 16 soul The Head Captain's Eye
+bg captains_meeting_hall
+desc The match is over. Isane kneels, breathing hard and sweating harder. Someone else has been watching from the shadows.
+say - |  | Isane's knees give out. Unohana has not so much as loosened her braid
+say pl040 | Isane Kotetsu | I... I'm sorry, Captain... I couldn't even touch you...
+say pl019 | Retsu Unohana | You touched more than you know. Your Kido was very well done; far beyond what I expected at your level, and your blade did reach me. It reached my ears, my eyes, and my soul. I see now that your desire to protect your cohorts is sincere, and shines brighter than any star in the skies.
+say pl016 | Shigekuni Genryusai Yamamoto | Hm. She is right.
+say - |  | An old man steps out from the far end of the hall, cane tapping against the floorboards.
+say pl040 | Isane Kotetsu | Head Captain Shigekuni Genryusai Yamamoto?! Forgive me, I didn't--
+say - |  | Isane bows so quickly she nearly hits the floor with her forehead.
+say pl016 | Shigekuni Genryusai Yamamoto | Raise your head child. A healer who can stand her ground is rarer than any swordsman; a rare thing indeed... And something I have not seen for a long, long time.
+say pl016 | Shigekuni Genryusai Yamamoto | Do not mistake gentleness for weakness, girl. Hone it, and it will hold where steel breaks.
+say - |  | ...The Head Captain glances over towards Retsu Unohana...
+say pl016 | Shigekuni Genryusai Yamamoto | Over the thousands of years I have known you... I have never once seen you like this, 'Retsu'.
+say pl016 | Shigekuni Genryusai Yamamoto | ...Train her well, 'Retsu' Unohana. She is like the spitting image of yourself.
+say - |  | The Captain-Commander leaves. Unohana watches the door close, lingering for a second longer than she likely should, before turning back with a gentle smile.
+say pl019 | Retsu Unohana | Isane Kotetsu. Would you serve as the Lieutenant of the Fourth Division in the near future?
+say pl040 | Isane Kotetsu | ...Y-yes! Yes, Captain!
+scene soul_reapers_room
+say - |  | Later that night - In the Kotetsu sisters' room.
+say kiyone_kotetsu | Kiyone Kotetsu | LIEUTENANT?! You?! Of the Fourth?! On your FIRST--
+say - |  | Kiyone scampers around the room in a confused bundle of emotion - Pride, rage, fear, jealousy... As Isane catches her just before she hits the floor.
+say pl040 | Isane Kotetsu | Kiyone! Kiyone, don't faint! It's good news, I promise! And besides, it's not like I'm going to be the Lieutenant right away... I... Uh... I think..?
+say kiyone_kotetsu | Kiyone Kotetsu | ...I'm okay! I'm okay. WHOOO... Ok, ok, I'm calm, I'm calm... And... Actually, sis... I have news too.
+say kiyone_kotetsu | Kiyone Kotetsu | Captain Ukitake asked if I'd like to work under him. In the Thirteenth Division!
+say pl040 | Isane Kotetsu | Kiyone, that's wonderful!
+say - |  | The two sisters talk late into the night, too excited to sleep, their ambitions burning brighter than any lantern in their dormitory...
+
+npc 40 soul The Execution Order
+bg seireitei_barracks
+desc Years later, after Isane Kotetsu's promotion to Lieutenant of Squad Four. Rukia Kuchiki's execution has been brought forward, and the Seireitei is in uproar.
+say - |  | Years later - The Fourth Division, during the Ryoka invasion.
+say hanataro_yamada | Hanataro Yamada | L-Lieutenant Kotetsu... Is it true? They moved Rukia-san's execution up again?
+say pl040 | Isane Kotetsu | ...It's true, Hanataro... The order came down from Central 46, and the Head Captain has sworn to carry it out.
+say hanataro_yamada | Hanataro Yamada | But that's not fair! Nobody's ever been executed so fast before! She doesn't even get to...
+say pl040 | Isane Kotetsu | I know. It isn't fair. Something about all of this feels... Wrong...
+say pl040 | Isane Kotetsu | We heal people... We don't usually get to decide what's fair. But this time, I... Wish we could.
+say hanataro_yamada | Hanataro Yamada | ...I'm going to go and help her, Lieutenant. I just wanted you to know.
+say pl040 | Isane Kotetsu | Hanataro... Be careful.
+scene seireitei_alleyway
+say - |  | That evening - In a corridor between the Squad Barracks.
+say kiyone_kotetsu | Kiyone Kotetsu | Sis! You're okay!! Everyone's saying the Ryoka are tearing through every Squad... Ikkaku and Yumichika are already...
+say pl040 | Isane Kotetsu | I know. They arrived last night, and are stable. Ikkaku suffered a pretty nasty wound to his shoulder, but otherwise is alright... But don't worry - I'm fine, Kiyone. How is Captain Ukitake?
+say kiyone_kotetsu | Kiyone Kotetsu | Coughing worse than ever. He won't say it, but he's furious about the execution... Rukia was... Is... One of ours...
+say pl040 | Isane Kotetsu | ...Stay close to him. Please. Whatever happens, don't do anything reckless.
+say kiyone_kotetsu | Kiyone Kotetsu | Says the one who used to snap swords in half! You be careful too, okay?
+scene sokyoku_hill_day
+say - |  | Sokyoku Hill - During Rukia's execution ceremony
+say pl019 | Retsu Unohana | Isane. You have been troubled all day. What is ailing you?
+say pl040 | Isane Kotetsu | Captain... This whole execution is wrong... Rukia has committed no crime, and the wounds on Third Seat Ikkaku Madarame, Fourth Seat Yumichika Ayasegawa and Captain Zaraki weren't made with killing intent...
+say pl019 | Retsu Unohana | ...You might be onto something, Isane.
+say - |  | As the ceremony proceeded, the Head Captain ushered forth the blazing phoenix of the Sokyoku... However...
+say pl000 | Ichigo Kurosaki | Yo. I'm here to save you, Rukia.
+say - |  | Suddenly, as swift as lightning, that orange-haired Ryoka appears, standing atop the Sokyoku Hill's execution frame...
+say - |  | Before Isane could even realise, the boy had repelled the Sokyoku, Captains Ukitake and Shunsui had dispelled the phoenix, and Rukia had been thrown Renji Abarai - It was all far too quick to process within reason; amongst the chaos, a sole voice rang out sharply.
+say pl017 | Soi Fon | Lieutenants! Intercept the Ryoka!!
+exit Isane heads out to intercept the Ryoka boy, alongside her fellow Lieutenants Chojiro Sasakibe and Marechiyo Omaeda.
+
+npc 19 soul The Central Tower
+bg seireitei_grounds
+desc The Ryoka managed to escape, and continued to face Byakuya Kuchiki in a brutal duel... But the wounded are everywhere, and something about the Central 46 does not add up.
+say pl000 | Ichigo Kurosaki | ...You're not trying to kill me. What are you, a medic?
+say pl040 | Isane Kotetsu | The Fourth Division's Lieutenant. Isane Kotetsu... And you're bleeding. Sit still.
+say - |  | Isane closes the worst of his wounds before she returns to her Captain.
+say pl040 | Isane Kotetsu | (That feeling of uncertainty... Something still doesn't sit right... Combined with Captain Hitsugaya and Lieutenant Matsumoto heading to the Central 46... Something is wrong. Very, very wrong...)
+say pl019 | Retsu Unohana | You did well today, Isane. I am proud of you.
+say pl040 | Isane Kotetsu | Captain... Can I ask you something? The execution order... Central 46 has never acted this quickly before... I feel we should follow Captain Hitsugaya and Lieutenant Matsumoto to the Central 46, in-case something is happening there...
+say pl019 | Retsu Unohana | ...You're right, Isane. I have been thinking the same thing. If there are more wounded over at the Central 46, our presence there is most imperative.
+say pl019 | Retsu Unohana | Come with me Isane. We are going to the Central 46 immediately.
+scene central_46
+say - |  | Beneath the Seireitei - The Great Hall of Central 46.
+say pl040 | Isane Kotetsu | Captain... The doors are open... And the smell...
+say - |  | Every member of Central 46 lies dead at their seats. The blood has long since dried - It has been days, if not weeks, since the legal council of the Seireitei has been slaughtered. Isane and Captain Unohana move deeper into the grand archives of the tower, following Captain Toshiro's Spiritual Pressure...
+say pl019 | Retsu Unohana | You...
+say pl020 | Sosuke Aizen | You noticed sooner than I expected, Captain Unohana.
+say pl040 | Isane Kotetsu | C-Captain Aizen?! But you were... You... Are...?! We saw your body..! We even held an autopsy..!!
+say pl020 | Sosuke Aizen | You saw what I wished you to see, Lieutenant. You always have.
+say pl040 | Isane Kotetsu | (Captain Unohana examined that corpse herself... It was perfect. Every detail. There was no doubt that Sosuke Aizen had died that day. But... If that's the case... Then...)
+say pl040 | Isane Kotetsu | (His Zanpakuto... Kyoka Suigetsu... A water type... Reflecting... A... Hypnosis..?! Everyone who ever saw it released...)
+say pl040 | Isane Kotetsu | (But... But when..?! He's been missing for days..! Was it during a ceremony..? During a meeting..? Or... No... Even back during the Academy..?! That's... That's absurd..! Then nothing I'm seeing right now can be trusted..!)
+exit Aizen draws his sword without hurry.
+
+npc 40 soul Peaceful Days
+bg sakura_pathway
+desc Years after the Winter War against Sosuke Aizen, Kaname Tosen, Gin Ichimaru and the Espada, the Seireitei is quiet, and the Shinigami Women's Association has an idea.
+say - |  | Isane never landed a blow that mattered. When the illusion finally lifted, Aizen was already gone - To Sokyoku Hill, and then beyond the sky.
+say pl019 | Retsu Unohana | You saw through more of it than most captains, Isane. Remember that.
+say - |  | A year later, after the war with Aizen - A peaceful spring in the Seireitei.
+say pl040 | Isane Kotetsu | (It's so quiet these days... I should be studying my Kido. I haven't polished it since our rescue mission in Hueco Mundo.)
+say yachiru_kusajishi | Yachiru Kusajishi | Isa-Isa! Isa-Isa! Big meeting! The Soul Reaper's Women's Association is having a TOURNAMENT!!
+say pl040 | Isane Kotetsu | A t-tournament, Lieutenant Kusajishi?!  Fighting isn't really...
+say yachiru_kusajishi | Yachiru Kusajishi | Too late, I already wrote your name down! And you go FIRST!!
+say pl019 | Retsu Unohana | Hmm... I will be watching, Isane. Do your best.
+say pl040 | Isane Kotetsu | C-Captain?! You too?!
+scene seireitei_gardens
+say pl022 | Byakuya Kuchiki | ...Hello, established and honored members of the Soul Reaper's Women's Association. You are welcome to use the Kuchiki manor grounds again for your soiree.
+say yachiru_kusajishi | Yachiru Kusajishi | Byakushi! You came to cheer!
+say pl022 | Byakuya Kuchiki | I came to warn you. Keep the mess to a minimum, please.
+say - |  | He leaves. Nobody takes the warning seriously.
+say yachiru_kusajishi | Yachiru Kusajishi | First match! Isa-Isa versus... Nemu-Nemu!
+say nemu_kurotsuchi | Nemu Kurotsuchi | Lieutenant Kotetsu. Please do not hold back. Mayuri-sama would be displeased if I lost easily.
+say pl040 | Isane Kotetsu | O-of course... Let's both do our best. Good luck..!
+say - | Isane Kotetsu | (...How exactly is this a soiree..?)
+
+npc 40 soul Round After Round
+bg seireitei_gardens
+desc Isane keeps winning, much to her own surprise.
+say yachiru_kusajishi | Yachiru Kusajishi | Isa-Isa wins! Next up... Mo-Mo-Mo!
+say momo_hinamori | Momo Hinamori | Isane, I won't let anyone take advantage of me again!! Don't think it'll be easy this time!!!
+say pl040 | Isane Kotetsu | (Wow... She's doing... Surprisingly well, given her wound that she suffered in the Fake Karakura Town - It's a relief to know that she's bounced back so well...)
+
+npc 40 soul The Last Challenger
+bg seireitei_gardens
+desc One opponent left before the final - And she is not taking it seriously at all.
+say yachiru_kusajishi | Yachiru Kusajishi | Isa-Isa's on a roll! Last challenger... Ran-Ran!
+say pl012 | Rangiku Matsumoto | Ehh... Do I have to..? Fine, fine. But if I win, Isane, you're buying the sake!
+say pl040 | Isane Kotetsu | Th-that wasn't one of the rules! I won't be responsible for your alcoholism!!
+
+npc 22 soul The Kuchiki Grounds in Ruins
+bg seireitei_gardens
+desc Craters, broken walls and scorched pond shores... Byakuya Kuchiki has come home.
+say - |  | Three rounds later, the Kuchiki grounds are barely recognizable.
+say pl022 | Byakuya Kuchiki | ...
+say yachiru_kusajishi | Yachiru Kusajishi | Uh-oh. Byakushi's back..!!
+say pl022 | Byakuya Kuchiki | I said... To keep the destruction to a minimum.
+say pl040 | Isane Kotetsu | C-Captain Kuchiki, I'm so sorry! We'll repair everything, I'll personally--
+say pl022 | Byakuya Kuchiki | You were the one standing at the end of it, Lieutenant Kotetsu.
+say pl022 | Byakuya Kuchiki | Then you will answer for it. Since you ladies have been enjoying your soiree so much, it seems only fair that I am your final opponent. Draw your sword, Isane Kotetsu.
+say pl040 | Isane Kotetsu | (Why does this always happen to me...?! And why does HE call domestic terrorism a soiree too?!)
+exit Byakuya's Zanpakuto is already scattering into petals before Isane can react.
+
+npc 40 soul A Unanimous Vote
+bg noble_manor
+desc The tournament is over, and Byakuya's patience has been tested to its limit.
+say - |  | Somehow, the Kuchiki manor still stands. Mostly.
+say pl012 | Rangiku Matsumoto | Phew! After all that, I say we've earned a holiday. Who's up for a trip to the beach?!
+say yachiru_kusajishi | Yachiru Kusajishi | BEACH! BEACH! Everybody vote!
+say momo_hinamori | Momo Hinamori | Yes!
+say nemu_kurotsuchi | Nemu Kurotsuchi | ...If Master Mayuri deems it a requirement.
+say pl040 | Isane Kotetsu | E-everyone voted yes before I even...
+say pl019 | Retsu Unohana | Then it is decided. I will see to the swimwear budget. Let us plan this trip at our next Soul Reaper's Women's Association meeting.
+say pl040 | Isane Kotetsu | Captain?!
+
+npc 40 soul Ten Years On
+bg soul_reapers_room
+desc Six months after the war with the Quincy. The newly elected Captain of the Fourth Division sits alone in her office.
+say - |  | Six months after the Thousand-Year Blood War - The Fourth Division headquarters.
+say pl040 | Isane Kotetsu | (Captain Isane Kotetsu... I still can't get used to hearing it.)
+say pl040 | Isane Kotetsu | (Captain Unohana... It has been six months. I still think of that day so often.)
+say pl040 | Isane Kotetsu | (Have I become the Captain you hoped I would be? Am I protecting them the way you did?)
+scene terrifying_domain
+say - |  | Isane closes her eyes. In the dark behind them, two shadows stand waiting -- One gentle, one wild.
+say pl019 | Retsu Unohana | ...
+exit The shadows draw their swords.
+
+npc 27 soul Words for the Shadows
+bg terrifying_domain
+desc The first shadow fades. The second has been waiting for a real fight.
+say pl040 | Isane Kotetsu | Captain... Thank you. For every lesson. For believing in me before I did.
+say - |  | The shadow of Unohana smiles, and dissolves like ink in water.
+say pl027 | Kenpachi Zaraki | Heh. Nice. She'd have liked that. But if you're gonna hack it as a Captain, you need to not only kill 'em with kindness.
+say pl027 | Kenpachi Zaraki | My turn. Heal with your rage! Kill with your kindness! And don't you dare go easy on me!!!
+say pl040 | Isane Kotetsu | ...I won't.
+
+npc 40 soul Two Sisters
+bg soul_reapers_room
+desc The vision fades. Someone is knocking loudly on the Captain's door.
+say pl040 | Isane Kotetsu | Captain Zaraki... You were the one she was waiting for, all along. I hope you found what you were looking for in her.
+say - |  | The second shadow grins, and fades like smoke.
+say kiyone_kotetsu | Kiyone Kotetsu | Siiis! You're daydreaming again, aren't you?! I knocked like five times!
+say pl040 | Isane Kotetsu | K-Kiyone! I was just... Thinking.
+say kiyone_kotetsu | Kiyone Kotetsu | About Captain Unohana..?
+say pl040 | Isane Kotetsu | ...Yes. And about whether I've done right by her.
+say kiyone_kotetsu | Kiyone Kotetsu | I think about Captain Ukitake all the time too. He'd say we're doing just fine, you know.
+say pl040 | Isane Kotetsu | He would... Kiyone, would you come with me? To visit them both?
+say kiyone_kotetsu | Kiyone Kotetsu | Of course! I'll bring the flowers. You bring the incense.
+scene seireitei_evening
+say - |  | In a cemetery crested by the remains of the Sokyoku Hill. Two grave sites are found.
+say - |  | Someone is already there. A tall, scarred man stands in silence before Unohana's grave, a katana draped around the headstone.
+say pl027 | Kenpachi Zaraki | ...
+say kiyone_kotetsu | Kiyone Kotetsu | (Sis... Is that Captain Zaraki..?)
+say pl040 | Isane Kotetsu | (Let's give him a moment.)
+say - |  | Kenpachi Zaraki lowers his head, just slightly, then turns and walks away without a word.
+say - |  | The two sisters lay their flowers at the graves of their Captains, and stay until the sun goes down.
+say pl040 | Isane Kotetsu | That sword... It's Minazuki. In English, I think it means... "Flesh-Drops' Gorge"...
+say kiyone_kotetsu | Kiyone Kotetsu | It was Captain Unohana's Zanpakuto, right..?
+say pl040 | Isane Kotetsu | That's right. It had the amazing ability to heal, and to summon a physical form for transportation... The flesh itself was soft, and sticky, but healed like a poultice...
+say kiyone_kotetsu | Kiyone Kotetsu | Oh yeah, that weird manta ray-looking thing... It does seem pretty suited for someone like Captain Unohana, to be fair...
+say pl040 | Isane Kotetsu | ...But that's not all. If you look at the name a little differently, you can read 'Minazuki' as "All Things' End".
+say pl040 | Isane Kotetsu | I remember, once I asked Captain Unohana to show me her Bankai, and she refused me... The face she flashed me was unlike anything I'd seen from her before, or since, and I'll never forget it.
+say kiyone_kotetsu | Kiyone Kotetsu | You mean that scary look she did sometimes?
+say pl040 | Isane Kotetsu | No. Different. The look of death, Kiyone. But, despite that, I challenged her assertion. I demanded to know why, if her Zanpakuto was made for healing, why she would never use it...
+say pl040 | Isane Kotetsu | She told me "Isane, my Bankai is also named 'Minazuki'. And just as the flesh coagulates and can heal, it can bubble and sour, stripping away all life. It is not a tool for healing. It is the tool of a bygone age."...
+say pl040 | Isane Kotetsu | I always struggled to understand, but... I think I get it now. The Captain had lived a long, and fulfilling life... Longer than all, except for maybe the former Head Captain himself... The battles she must have endured... The wounds she must have accumulated...
+say pl040 | Isane Kotetsu | There will always be a point where mere healing cannot resolve a situation. Where you will need to eat, or be eaten.
+say pl040 | Isane Kotetsu | Captain Unohana would always tell me, "Isane, kill them with your rage. Heal them with your kindness."... But recently, I've been thinking about the opposite, too.
+say pl040 | Isane Kotetsu | Healing with my rage, and killing with my kindness. If such a tragedy like the Quincy invasion were to happen again... I need to be able to shelter those who need sheltering... And to be able to defeat those who need defeating...
+say kiyone_kotetsu | Kiyone Kotetsu | Sis...
+say pl040 | Isane Kotetsu | ...Don't worry, Kiyone - I'm not going to fall off the deep end. It's a balance... And if one side of the balance tips, then all will be lost... Healing is a kindness, but killing too can be a kindness. Healing can be an act of hatred, sustaining the life of those who wish to die... Or it can be a kindness. What's important is...
+say pl040 | Isane Kotetsu | ...Knowing that 'all things end'.

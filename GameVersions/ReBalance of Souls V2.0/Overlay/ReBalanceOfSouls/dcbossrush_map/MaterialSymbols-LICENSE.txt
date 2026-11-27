@@ -1,0 +1,3 @@
+Material Symbols (the flavor-spot glyphs in spot_*.png / spotbig_*.png)
+Copyright Google LLC. Licensed under the Apache License, Version 2.0:
+https://www.apache.org/licenses/LICENSE-2.0

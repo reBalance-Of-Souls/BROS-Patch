@@ -1,0 +1,157 @@
+# ADVENTURE music library (dcbossrush 0.17.122): every track the game's Wwise "bgm" state group can play,
+# with its Sound Gallery title (CommonText EXTRAS_SOUNDS_*). Generated from Sound/bgm.txt -- 135 tracks.
+#
+# Use a track's name (the first column) in the event files (dcbossrush_npc.txt, dcbossrush_routes/*.npc):
+#   bgm <track>     in an encounter / story node: its music while it is on screen
+#   music <track>   before a `say` line: the music from that line on (a scene that turns)
+#   bgm none        keep the game's own music (the menu's)
+# and the defaults in dcbossrush.txt: bgm_realm <hueco|soul|living|schatten> <track>, bgm_spot <track>, bgm_on 0|1.
+# Untitled tracks are in the game's data but not in its Sound Gallery.
+
+# --- STORY ---
+bgm_adv_0000     Karakura First High School
+bgm_adv_0010     Urahara's Shop (Exit)
+bgm_adv_0020     Karakura Days
+bgm_adv_0030     Familiar Lullaby
+bgm_adv_0040     Quiet Afternoons
+bgm_adv_0050     Blowin' in the Sand
+bgm_adv_0060     Welcome to Las Noches
+bgm_adv_0070     Death Sentence
+bgm_adv_0080     City of Reapers
+bgm_adv_0090     Empty Shell
+bgm_adv_0100     Results of Visored Training
+bgm_adv_0110     Forbidden Boundary
+bgm_adv_0120     Glistening Strength
+bgm_adv_0130     Burgeoning Memory
+bgm_adv_0140     Tales Told, Tales Spun
+bgm_adv_0150     Forward!
+bgm_adv_0160     Shaken Hearts
+bgm_adv_0170     Tension & Tension
+bgm_adv_0180     Suspicion
+bgm_adv_0190     Release
+bgm_adv_0200     Unending Conflict
+bgm_adv_0210     Crossroads of Emotion
+bgm_adv_0220     Emergent Commination
+bgm_adv_0230     Harbinger
+bgm_adv_0240     Strength, Unbound
+bgm_adv_0250     Pouring Sadness
+bgm_adv_0260     Requiem for the Lost
+bgm_adv_0270     The Ashes of Victory
+bgm_adv_0280     Revitalize
+bgm_adv_0290     Before You Say Goodbye
+bgm_adv_0300     Corruption in Darkness
+bgm_adv_0310     Perish All Hope
+bgm_adv_0320     Wager of the Soul
+bgm_adv_0330     YOUNG,ALIVE,IN RHYTHM
+bgm_adv_0340     Fleeting Tranquility
+bgm_adv_0350     Crossed Blades
+bgm_adv_0360     Touch and Go
+bgm_adv_0370     Chasing Lights
+bgm_adv_0380     Breakthrough
+
+# --- STAGES ---
+bgm_bg_0000      Bring Down Thine Blade
+bgm_bg_0010      On Thunderous Lyric
+bgm_bg_0020      Lesson One
+bgm_bg_0030      Reforged
+bgm_bg_0040      The Fifth Tower
+bgm_bg_0050      Adiós, Privaron Espada
+bgm_bg_0060      Canopy Deathmatch
+bgm_bg_0070      Once upon a night
+bgm_bg_0080      That Which Stands in Our Way
+bgm_bg_0081      Thrill-seeking Reaper
+bgm_bg_0090      Countdown to Demise
+bgm_bg_0100      Main Street Bumpin'
+bgm_bg_0110      In Defense of Karakura Town
+bgm_bg_0120      Inferno
+bgm_bg_0130      The Final Battle
+bgm_bg_0140      Killing Another Me
+bgm_bg_0150      Wheel of Fate
+bgm_bg_0151      (untitled)
+bgm_bg_0160      Through the Limit
+bgm_bg_0161      (untitled)
+bgm_bg_0170      One Shot
+bgm_bg_0171      (untitled)
+bgm_bg_0180      Absolution
+bgm_bg_0181      (untitled)
+bgm_bg_0190      Moonlight Strategy
+bgm_bg_0191      (untitled)
+
+# --- CHARACTERS ---
+bgm_rev_0000     Glinting Getsuga
+bgm_rev_0010     A Hollow Mask
+bgm_rev_0020     PROTECT
+bgm_rev_0030     Volley
+bgm_rev_0040     To Lose it All
+bgm_rev_0050     Ataque del Diablo
+bgm_rev_0060     Checkmate
+bgm_rev_0070     Instant War Cry
+bgm_rev_0080     Kneel Before Hihio
+bgm_rev_0090     Shirayuki in White
+bgm_rev_0100     One Designed to Take Lives
+bgm_rev_0110     Lively Inflorescence
+bgm_rev_0120     Unforgivable Sin
+bgm_rev_0130     Games of Death
+bgm_rev_0150     Descend Unto Hell
+bgm_rev_0160     Stinger
+bgm_rev_0170     Slithering at Mach One
+bgm_rev_0180     fuse
+bgm_rev_0190     Stand at the Top
+bgm_rev_0200     Scatter, Senbonzakura
+bgm_rev_0210     Path to Devotion
+bgm_rev_0220     Forbidden Games
+bgm_rev_0230     Enma Korogi
+bgm_rev_0240     Soaring Ice Dragon
+bgm_rev_0250     Kenpachi
+bgm_rev_0260     Mid-dream
+bgm_rev_0270     Rage Through the Seas
+bgm_rev_0280     citsidaS
+bgm_rev_0290     Unto the Lonely Horizon
+bgm_rev_0300     World Without Sacrifice
+bgm_rev_0310     La Campanella
+bgm_rev_0320     Existence of HEART
+bgm_rev_0330     Towering Santa Teresa
+bgm_rev_0340     King of Beasts
+bgm_rev_0350     Unapologetic Perfectionist
+bgm_rev_0360     Gratitude
+bgm_rev_0370     Edge of Death
+bgm_rev_0380     (untitled)
+bgm_rev_0390     The Monk of True Names
+bgm_rev_0400     Thousand-Year Funeral March
+bgm_rev_0410     (untitled)
+bgm_rev_0420     (untitled)
+bgm_rev_0430     (untitled)
+bgm_rev_0440     Save You
+bgm_rev_0450     Crimson Sky
+
+# --- SYSTEM ---
+bgm_pro_0010     Start of Souls
+bgm_pro_200      Die for Love
+bgm_pro_210      Die for Love (Instrumental)
+bgm_sys_0000     Rebirth
+bgm_sys_0001     (untitled)
+bgm_sys_0010     Soul's Choice
+bgm_sys_0020     March unto Tomorrow
+bgm_sys_0030     Battle Preparations
+bgm_sys_0040     Taking on Risk
+bgm_sys_0050     Urahara's Shop (Entrance)
+bgm_sys_0060     Never Stop Training
+bgm_sys_0070     Perusal
+bgm_sys_0080     Decisions
+bgm_sys_0090     Options
+bgm_sys_0100     Reminiscing
+bgm_sys_0110     Last Credits
+bgm_sys_0120     Credits
+bgm_sys_0121     (untitled)
+bgm_sys_0122     (untitled)
+
+# --- OTHER ---
+bgm_0000         (untitled)
+bgm_0010         (untitled)
+bgm_0020         (untitled)
+bgm_0030         (untitled)
+bgm_0040         (untitled)
+bgm_0050         (untitled)
+
+# --- ADDED (Files/Music/mk_bgm_extra.py: new states in Sound/bgm.bnk, not in the Sound Gallery) ---
+bgm_ext_bbs_summer       Summer Event (Bleach: Brave Souls)

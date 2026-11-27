@@ -1,0 +1,3764 @@
+# Extras > MODEL GALLERY (replay.dll, 2026-11-16). One entry per model:
+#   model <playable|boss|npc> <chara id> <costume index> <pose action|-> <preview picture|-> <name>
+#   desc <text>      (optional, the line after; \n starts a new line)
+# The preview is model_gallery\<picture>.png beside this file, shown above the description box.
+
+model playable 0 0 - mg_000 Ichigo Kurosaki
+desc A high school student in Karakura Town who has been able to see ghosts for as long as he can remember. When Rukia Kuchiki gave him her powers to save his family, he took over her work as a Substitute Soul Reaper. His Zanpakuto, Zangetsu, is a huge cleaver of a sword with no guard.
+form 0 0 Base
+form 0 1 Base (Reverse)
+pose 0 ntrl_loop 20 Idle
+pose 0 sp_ntrl_loop 20 Special Idle
+pose 0 guard_loop 20 Guard
+pose 0 walk 14 Walk
+pose 0 run_loop 10 Run
+pose 0 dash_f_loop 8 Dash
+pose 0 step_f 8 Step
+pose 0 dam_parry 6 Staggered
+pose 0 atk_da01 12 Attack 1
+pose 0 atk_ex01 12 Attack 2
+pose 0 atk_ex02 12 Attack 3
+pose 0 atk_gr01 12 Attack 4
+pose 0 atk_gr02 12 Attack 5
+pose 0 atk_hi01 12 Attack 6
+pose 0 atk_hi02 12 Attack 7
+pose 0 atk_hi03 12 Attack 8
+pose 0 sp_atk01 14 Special 1
+pose 0 sp_atk02 14 Special 2
+pose 0 !sp_break01_in+sp_break01_out 0 Hakugeki
+pose 0 !ct_sp_break01 0 Kikon Move 1
+pose 0 !ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 0 !ct_guardbreak 0 Guard Break
+pose 0 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 0 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 0 !ct_syunpo_out_just@ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 0 !mg_awaken 0 Awakening
+pose 0 !mg_hit:atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 0 !mg_hit:sp_atk01>sp_atk01_1 394 Special 1 (Hit)
+pose 0 !mg_hit:sp_atk02>sp_atk02_1|sp_atk02_2 130 Special 2 (Hit)
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+form 1 0 Awakening
+form 1 1 Awakening (Reverse)
+pose 1 evo_ntrl_loop 20 Idle
+pose 1 evo_sp_ntrl_loop 20 Special Idle
+pose 1 evo_guard_loop 20 Guard
+pose 1 evo_walk 14 Walk
+pose 1 evo_run_loop 10 Run
+pose 1 evo_dash_f_loop 8 Dash
+pose 1 evo_step_f 8 Step
+pose 1 evo_dam_parry 6 Staggered
+pose 1 evo_atk_da01 12 Attack 1
+pose 1 evo_atk_ex01 12 Attack 2
+pose 1 evo_atk_ex02 12 Attack 3
+pose 1 evo_atk_gr01 12 Attack 4
+pose 1 evo_atk_gr02 12 Attack 5
+pose 1 evo_atk_hi01 12 Attack 6
+pose 1 evo_atk_hi02 12 Attack 7
+pose 1 evo_atk_hi03 12 Attack 8
+pose 1 evo_sp_atk01 14 Special 1
+pose 1 evo_sp_atk02 14 Special 2
+pose 1 !evo_sp_break01_in+evo_sp_break01_out 0 Hakugeki
+pose 1 !evo_ct_sp_break01 0 Kikon Move 1
+pose 1 !evo_ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 1 !evo_ct_sp_break02 0 Kikon Move 2
+pose 1 !evo_ct_sp_break02_maxout 0 Kikon Move 2 (Max)
+pose 1 !evo_ct_guardbreak 0 Guard Break
+pose 1 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 1 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 1 !evo_ct_syunpo_out_just@evo_ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 1 !mg_hit:evo_atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 1 !mg_hit:evo_sp_atk01>evo_sp_atk01_1 130 Special 1 (Hit)
+pose 1 !mg_hit:evo_sp_atk02>sp_atk02_1|sp_atk02_2 130 Special 2 (Hit)
+pose 1 evo_mg_apose 3 A-Pose
+pose 1 evo_mg_tpose 3 T-Pose
+model playable 1 0 - mg_001 Ichigo Kurosaki (Bankai)
+desc Ichigo reached Bankai in three days of training with Yoruichi Shihoin, where most Soul Reapers need ten years. Tensa Zangetsu packs his power into a slim black blade and a long coat, and lets him move faster than most captains can follow.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 sp_ntrl_loop 20 Special Idle
+pose 0 guard_loop 20 Guard
+pose 0 walk 14 Walk
+pose 0 run_loop 10 Run
+pose 0 dash_f_loop 8 Dash
+pose 0 step_f 8 Step
+pose 0 dam_parry 6 Staggered
+pose 0 atk_da01 12 Attack 1
+pose 0 atk_ex01 12 Attack 2
+pose 0 atk_gr01 12 Attack 3
+pose 0 atk_gr02 12 Attack 4
+pose 0 atk_hi01 12 Attack 5
+pose 0 atk_hi02 12 Attack 6
+pose 0 atk_hi03 12 Attack 7
+pose 0 atk_lo01 12 Attack 8
+pose 0 sp_atk01 14 Special 1
+pose 0 sp_atk02 14 Special 2
+pose 0 !sp_break01_in+sp_break01_out 0 Hakugeki
+pose 0 !ct_sp_break01 0 Kikon Move 1
+pose 0 !ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 0 !ct_guardbreak 0 Guard Break
+pose 0 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 0 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 0 !ct_syunpo_out_just@ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 0 !mg_awaken 0 Awakening
+pose 0 !mg_hit:atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 0 !mg_hit:+atk_hi03>atk_hi03_1 130 Flash 3 (Hit)
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+form 1 0 Awakening
+pose 1 evo_ntrl_loop 20 Idle
+pose 1 evo_sp_ntrl_loop 20 Special Idle
+pose 1 evo_guard_loop 20 Guard
+pose 1 evo_walk 14 Walk
+pose 1 evo_run_loop 10 Run
+pose 1 evo_dash_f_loop 8 Dash
+pose 1 evo_step_f 8 Step
+pose 1 evo_atk_da01 12 Attack 1
+pose 1 evo_atk_ex01 12 Attack 2
+pose 1 evo_atk_gr01 12 Attack 3
+pose 1 evo_atk_gr02 12 Attack 4
+pose 1 evo_atk_hi01 12 Attack 5
+pose 1 evo_atk_hi02 12 Attack 6
+pose 1 evo_atk_hi03 12 Attack 7
+pose 1 evo_atk_lo01 12 Attack 8
+pose 1 evo_sp_atk01 14 Special 1
+pose 1 evo_sp_atk02 14 Special 2
+pose 1 !evo_sp_break01_in+evo_sp_break01_out 0 Hakugeki
+pose 1 !evo_ct_sp_break01 0 Kikon Move 1
+pose 1 !evo_ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 1 !evo_ct_sp_break02 0 Kikon Move 2
+pose 1 !evo_ct_sp_break02_maxout 0 Kikon Move 2 (Max)
+pose 1 !evo_ct_guardbreak 0 Guard Break
+pose 1 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 1 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 1 !evo_ct_syunpo_out_just@evo_ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 1 !mg_reawaken 0 Reawakening
+pose 1 !mg_hit:evo_atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 1 !mg_hit:+evo_atk_hi03>atk_hi03_1 130 Flash 3 (Hit)
+pose 1 evo_mg_apose 3 A-Pose
+pose 1 evo_mg_tpose 3 T-Pose
+form 2 0 Reawakening
+pose 2 rev_ntrl_loop 20 Idle
+pose 2 rev_sp_ntrl_loop 20 Special Idle
+pose 2 rev_guard_loop 20 Guard
+pose 2 rev_walk 14 Walk
+pose 2 rev_run_loop 10 Run
+pose 2 rev_dash_f_loop 8 Dash
+pose 2 rev_step_f 8 Step
+pose 2 rev_dam_parry 6 Staggered
+pose 2 rev_atk_da01 12 Attack 1
+pose 2 rev_atk_ex01 12 Attack 2
+pose 2 rev_atk_gr01 12 Attack 3
+pose 2 rev_atk_gr02 12 Attack 4
+pose 2 rev_atk_hi01 12 Attack 5
+pose 2 rev_atk_hi02 12 Attack 6
+pose 2 rev_atk_hi03 12 Attack 7
+pose 2 rev_atk_lo01 12 Attack 8
+pose 2 rev_sp_atk01 14 Special 1
+pose 2 rev_sp_atk02 14 Special 2
+pose 2 !rev_sp_break01_in+rev_sp_break01_out 0 Hakugeki
+pose 2 !rev_ct_sp_break01 0 Kikon Move 1
+pose 2 !rev_ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 2 !rev_ct_sp_break02 0 Kikon Move 2
+pose 2 !rev_ct_sp_break02_maxout 0 Kikon Move 2 (Max)
+pose 2 !rev_ct_guardbreak 0 Guard Break
+pose 2 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 2 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 2 !rev_ct_syunpo_out_just@rev_ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 2 !mg_hit:rev_atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 2 !mg_hit:rev_sp_atk02>rev_sp_atk02_1 130 Special 2 (Hit)
+pose 2 rev_mg_apose 3 A-Pose
+pose 2 rev_mg_tpose 3 T-Pose
+model playable 2 0 - mg_002 Ichigo Kurosaki (Final Getsugatensho)
+desc The form Ichigo took to stop Aizen after training inside the Dangai. He became the Final Getsugatensho itself, and using it cost him his powers as a Soul Reaper.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 sp_ntrl_loop 20 Special Idle
+pose 0 guard_loop 20 Guard
+pose 0 walk 14 Walk
+pose 0 run_loop 10 Run
+pose 0 dash_f_loop 8 Dash
+pose 0 step_f 8 Step
+pose 0 dam_parry 6 Staggered
+pose 0 atk_da01 12 Attack 1
+pose 0 atk_ex01 12 Attack 2
+pose 0 atk_gr01 12 Attack 3
+pose 0 atk_gr02 12 Attack 4
+pose 0 atk_hi01 12 Attack 5
+pose 0 atk_hi02 12 Attack 6
+pose 0 atk_hi03 12 Attack 7
+pose 0 atk_lo01 12 Attack 8
+pose 0 sp_atk01 14 Special 1
+pose 0 sp_atk02 14 Special 2
+pose 0 !sp_break01_in+sp_break01_out 0 Hakugeki
+pose 0 !ct_sp_break01 0 Kikon Move 1
+pose 0 !ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 0 !ct_sp_break02 0 Kikon Move 2
+pose 0 !ct_sp_break02_maxout 0 Kikon Move 2 (Max)
+pose 0 !ct_guardbreak 0 Guard Break
+pose 0 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 0 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 0 !ct_syunpo_out_just@ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 0 !mg_awaken 0 Awakening
+pose 0 !mg_hit:atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 0 !mg_counter:-=0SU@L5/sp_atk01>sp_atk01_1 150 Special 1 (Counter)
+pose 0 !mg_counter:-=1SU@L5/sp_atk01>sp_atk01_2 150 Special 1 (Counter 2)
+pose 0 !mg_counter:-=2SU@L5/sp_atk01_0>sp_atk01_3 150 Special 1 (Counter 3)
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+form 1 0 Mugetsu
+pose 1 evo_ntrl_loop 20 Idle
+pose 1 evo_sp_ntrl_loop 20 Special Idle
+pose 1 evo_guard_loop 20 Guard
+pose 1 evo_walk 14 Walk
+pose 1 evo_run_loop 10 Run
+pose 1 evo_dash_f_loop 8 Dash
+pose 1 evo_atk_da01 12 Attack 1
+pose 1 evo_atk_ex01 12 Attack 2
+pose 1 evo_atk_gr01 12 Attack 3
+pose 1 evo_atk_gr02 12 Attack 4
+pose 1 evo_atk_hi01 12 Attack 5
+pose 1 evo_atk_hi02 12 Attack 6
+pose 1 evo_atk_hi03 12 Attack 7
+pose 1 evo_atk_lo01 12 Attack 8
+pose 1 evo_sp_atk01 14 Special 1
+pose 1 evo_sp_atk02 14 Special 2
+pose 1 !evo_sp_break01_in+evo_sp_break01_out 0 Hakugeki
+pose 1 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 1 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 1 evo_mg_apose 3 A-Pose
+pose 1 evo_mg_tpose 3 T-Pose
+model playable 3 0 - mg_003 Uryu Ishida
+desc Ichigo's classmate and one of the last Quincy. He blamed the Soul Reapers for letting his grandfather die, and he first came at Ichigo with a contest to see who could kill more Hollows. He fights with a bow made from gathered spirit particles.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 sp_ntrl_loop 20 Special Idle
+pose 0 guard_loop 20 Guard
+pose 0 walk 14 Walk
+pose 0 run_loop 10 Run
+pose 0 dash_f_loop 8 Dash
+pose 0 step_f 8 Step
+pose 0 dam_parry 6 Staggered
+pose 0 atk_da01 12 Attack 1
+pose 0 atk_ex01 12 Attack 2
+pose 0 atk_gr01 12 Attack 3
+pose 0 atk_gr02 12 Attack 4
+pose 0 atk_hi01 12 Attack 5
+pose 0 atk_hi02 12 Attack 6
+pose 0 atk_hi03 12 Attack 7
+pose 0 atk_lo01 12 Attack 8
+pose 0 sp_atk01 14 Special 1
+pose 0 sp_atk02 14 Special 2
+pose 0 !sp_break01_in+sp_break01_out 0 Hakugeki
+pose 0 !ct_sp_break01 0 Kikon Move 1
+pose 0 !ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 0 !ct_guardbreak 0 Guard Break
+pose 0 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 0 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 0 !ct_syunpo_out_just@ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 0 !mg_awaken 0 Awakening
+pose 0 !mg_hit:atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+form 1 0 Awakening
+pose 1 evo_ntrl_loop 20 Idle
+pose 1 evo_sp_ntrl_loop 20 Special Idle
+pose 1 evo_guard_loop 20 Guard
+pose 1 evo_walk 14 Walk
+pose 1 evo_run_loop 10 Run
+pose 1 evo_dash_f_loop 8 Dash
+pose 1 evo_step_f 8 Step
+pose 1 evo_atk_da01 12 Attack 1
+pose 1 evo_atk_ex01 12 Attack 2
+pose 1 evo_atk_gr01 12 Attack 3
+pose 1 evo_atk_gr02 12 Attack 4
+pose 1 evo_atk_hi01 12 Attack 5
+pose 1 evo_atk_hi02 12 Attack 6
+pose 1 evo_atk_hi03 12 Attack 7
+pose 1 evo_atk_lo01 12 Attack 8
+pose 1 evo_sp_atk01 14 Special 1
+pose 1 evo_sp_atk02 14 Special 2
+pose 1 !evo_sp_break01_in+evo_sp_break01_out 0 Hakugeki
+pose 1 !evo_ct_sp_break01 0 Kikon Move 1
+pose 1 !evo_ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 1 !evo_ct_sp_break02 0 Kikon Move 2
+pose 1 !evo_ct_sp_break02_maxout 0 Kikon Move 2 (Max)
+pose 1 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 1 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 1 !mg_reawaken 0 Reawakening
+pose 1 !mg_hit:evo_atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 1 evo_mg_apose 3 A-Pose
+pose 1 evo_mg_tpose 3 T-Pose
+form 2 0 Reawakening
+pose 2 rev_ntrl_loop 20 Idle
+pose 2 rev_sp_ntrl_loop 20 Special Idle
+pose 2 rev_guard_loop 20 Guard
+pose 2 rev_walk 14 Walk
+pose 2 rev_run_loop 10 Run
+pose 2 rev_dash_f_loop 8 Dash
+pose 2 rev_step_f 8 Step
+pose 2 rev_atk_da01 12 Attack 1
+pose 2 rev_atk_ex01 12 Attack 2
+pose 2 rev_atk_gr01 12 Attack 3
+pose 2 rev_atk_gr02 12 Attack 4
+pose 2 rev_atk_hi01 12 Attack 5
+pose 2 rev_atk_hi02 12 Attack 6
+pose 2 rev_atk_hi03 12 Attack 7
+pose 2 rev_atk_lo01 12 Attack 8
+pose 2 rev_sp_atk01 14 Special 1
+pose 2 rev_sp_atk02 14 Special 2
+pose 2 !rev_sp_break01_in+rev_sp_break01_out 0 Hakugeki
+pose 2 !rev_ct_sp_break01 0 Kikon Move 1
+pose 2 !rev_ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 2 !rev_ct_sp_break02 0 Kikon Move 2
+pose 2 !rev_ct_sp_break02_maxout 0 Kikon Move 2 (Max)
+pose 2 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 2 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 2 !mg_hit:rev_atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 2 rev_mg_apose 3 A-Pose
+pose 2 rev_mg_tpose 3 T-Pose
+model playable 4 0 - mg_004 Yasutora Sado
+desc Ichigo's tall, quiet friend, called Chad by almost everyone. He promised his grandfather that he would only use his strength to protect other people. His right arm turns into armor and his left into a weapon.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 sp_ntrl_loop 20 Special Idle
+pose 0 guard_loop 20 Guard
+pose 0 walk 14 Walk
+pose 0 run_loop 10 Run
+pose 0 dash_f_loop 8 Dash
+pose 0 step_f 8 Step
+pose 0 dam_parry 6 Staggered
+pose 0 atk_da01 12 Attack 1
+pose 0 atk_ex01 12 Attack 2
+pose 0 atk_gr01 12 Attack 3
+pose 0 atk_gr02 12 Attack 4
+pose 0 atk_hi01 12 Attack 5
+pose 0 atk_hi02 12 Attack 6
+pose 0 atk_hi03 12 Attack 7
+pose 0 atk_lo01 12 Attack 8
+pose 0 sp_atk01 14 Special 1
+pose 0 sp_atk02 14 Special 2
+pose 0 !sp_break01_in+sp_break01_out 0 Hakugeki
+pose 0 !ct_sp_break01 0 Kikon Move 1
+pose 0 !ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 0 !ct_guardbreak 0 Guard Break
+pose 0 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 0 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 0 !ct_syunpo_out_just@ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 0 !mg_awaken 0 Awakening
+pose 0 !mg_hit:atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 0 !mg_counter:=0SR@L6/sp_atk02>sp_atk02_2 150 Special 2 (Counter)
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+form 1 0 Awakening
+pose 1 evo_ntrl_loop 20 Idle
+pose 1 evo_sp_ntrl_loop 20 Special Idle
+pose 1 evo_guard_loop 20 Guard
+pose 1 evo_walk 14 Walk
+pose 1 evo_run_loop 10 Run
+pose 1 evo_dash_f_loop 8 Dash
+pose 1 evo_step_f 8 Step
+pose 1 evo_atk_da01 12 Attack 1
+pose 1 evo_atk_ex01 12 Attack 2
+pose 1 evo_atk_gr01 12 Attack 3
+pose 1 evo_atk_gr02 12 Attack 4
+pose 1 evo_atk_hi01 12 Attack 5
+pose 1 evo_atk_hi02 12 Attack 6
+pose 1 evo_atk_hi03 12 Attack 7
+pose 1 evo_atk_lo01 12 Attack 8
+pose 1 evo_sp_atk01 14 Special 1
+pose 1 evo_sp_atk02 14 Special 2
+pose 1 !evo_sp_break01_in+evo_sp_break01_out 0 Hakugeki
+pose 1 !evo_ct_sp_break01 0 Kikon Move 1
+pose 1 !evo_ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 1 !evo_ct_sp_break02 0 Kikon Move 2
+pose 1 !evo_ct_sp_break02_maxout 0 Kikon Move 2 (Max)
+pose 1 !evo_ct_guardbreak 0 Guard Break
+pose 1 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 1 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 1 !evo_ct_syunpo_out_just@evo_ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 1 !mg_hit:evo_atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 1 !mg_counter:=0SR@L6/evo_sp_atk02>evo_sp_atk02_2 150 Special 2 (Counter)
+pose 1 evo_mg_apose 3 A-Pose
+pose 1 evo_mg_tpose 3 T-Pose
+model playable 5 0 - mg_005 Zangetsu
+desc The old man in the long black cloak who lives in Ichigo's inner world and calls himself the spirit of his sword. He never wanted Ichigo to become a Soul Reaper, and he held back Ichigo's power for years before he came around to helping him.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 sp_ntrl_loop 20 Special Idle
+pose 0 guard_loop 20 Guard
+pose 0 walk 14 Walk
+pose 0 run_loop 10 Run
+pose 0 dash_f_loop 8 Dash
+pose 0 step_f 8 Step
+pose 0 dam_parry 6 Staggered
+pose 0 atk_da01 12 Attack 1
+pose 0 atk_ex01 12 Attack 2
+pose 0 atk_ex02 12 Attack 3
+pose 0 atk_gr01 12 Attack 4
+pose 0 atk_gr02 12 Attack 5
+pose 0 atk_hi01 12 Attack 6
+pose 0 atk_hi02 12 Attack 7
+pose 0 atk_hi03 12 Attack 8
+pose 0 sp_atk01 14 Special 1
+pose 0 sp_atk02 14 Special 2
+pose 0 !sp_break01_in+sp_break01_out 0 Hakugeki
+pose 0 !ct_sp_break01 0 Kikon Move 1
+pose 0 !ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 0 !ct_guardbreak 0 Guard Break
+pose 0 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 0 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 0 !ct_syunpo_out_just@ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 0 !mg_awaken 0 Awakening
+pose 0 !mg_hit:atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 0 !mg_hit:sp_atk02>sp_atk02_1 80 Special 2 (Hit)
+pose 0 !mg_hit:sp_atk02_1b>sp_atk02_2|sp_atk02_2a 130 Special 2 (Hit 2)
+pose 0 !mg_hit:sp_atk02_2a>atk_lo03_d01a 130 Special 2 (Hit 3)
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+form 1 0 Awakening
+pose 1 evo_ntrl_loop 20 Idle
+pose 1 evo_sp_ntrl_loop 20 Special Idle
+pose 1 evo_guard_loop 20 Guard
+pose 1 evo_walk 14 Walk
+pose 1 evo_run_loop 10 Run
+pose 1 evo_dash_f_loop 8 Dash
+pose 1 evo_step_f 8 Step
+pose 1 evo_dam_parry 6 Staggered
+pose 1 evo_atk_da01 12 Attack 1
+pose 1 evo_atk_ex01 12 Attack 2
+pose 1 evo_atk_ex02 12 Attack 3
+pose 1 evo_atk_gr01 12 Attack 4
+pose 1 evo_atk_gr02 12 Attack 5
+pose 1 evo_atk_hi01 12 Attack 6
+pose 1 evo_atk_hi02 12 Attack 7
+pose 1 evo_atk_hi03 12 Attack 8
+pose 1 evo_sp_atk01 14 Special 1
+pose 1 evo_sp_atk02 14 Special 2
+pose 1 !evo_sp_break01_in+evo_sp_break01_out 0 Hakugeki
+pose 1 !evo_ct_sp_break01 0 Kikon Move 1
+pose 1 !evo_ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 1 !evo_ct_sp_break02 0 Kikon Move 2
+pose 1 !evo_ct_sp_break02_maxout 0 Kikon Move 2 (Max)
+pose 1 !evo_ct_guardbreak 0 Guard Break
+pose 1 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 1 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 1 !evo_ct_syunpo_out_just@evo_ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 1 !mg_reawaken 0 Reawakening
+pose 1 !mg_hit:evo_atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 1 !mg_hit:evo_sp_atk02>evo_sp_atk02_1 130 Special 2 (Hit)
+pose 1 !mg_hit:evo_sp_atk02_1b>evo_sp_atk02_2|evo_sp_atk02_2a 130 Special 2 (Hit 2)
+pose 1 !mg_hit:evo_sp_atk02_2a>evo_atk_lo03_d01a 130 Special 2 (Hit 3)
+pose 1 evo_mg_apose 3 A-Pose
+pose 1 evo_mg_tpose 3 T-Pose
+form 2 0 Reawakening
+pose 2 rev_ntrl_loop 20 Idle
+pose 2 rev_sp_ntrl_loop 20 Special Idle
+pose 2 rev_guard_loop 20 Guard
+pose 2 rev_walk 14 Walk
+pose 2 rev_run_loop 10 Run
+pose 2 rev_dash_f_loop 8 Dash
+pose 2 rev_step_f 8 Step
+pose 2 rev_dam_parry 6 Staggered
+pose 2 rev_atk_da01 12 Attack 1
+pose 2 rev_atk_ex01 12 Attack 2
+pose 2 rev_atk_gr01 12 Attack 3
+pose 2 rev_atk_gr02 12 Attack 4
+pose 2 rev_atk_hi01 12 Attack 5
+pose 2 rev_atk_hi02 12 Attack 6
+pose 2 rev_atk_hi03 12 Attack 7
+pose 2 rev_atk_hi04 12 Attack 8
+pose 2 rev_sp_atk01 14 Special 1
+pose 2 rev_sp_atk02 14 Special 2
+pose 2 !rev_sp_break01_in+rev_sp_break01_out 0 Hakugeki
+pose 2 !rev_ct_sp_break01 0 Kikon Move 1
+pose 2 !rev_ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 2 !rev_ct_guardbreak 0 Guard Break
+pose 2 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 2 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 2 !rev_ct_syunpo_out_just@rev_ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 2 !mg_hit:rev_atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 2 !mg_hit:rev_sp_atk02>rev_sp_atk02_1 130 Special 2 (Hit)
+pose 2 !mg_hit:rev_sp_atk02_1b>rev_sp_atk02_2|rev_sp_atk02_2a 130 Special 2 (Hit 2)
+pose 2 rev_mg_apose 3 A-Pose
+pose 2 rev_mg_tpose 3 T-Pose
+model playable 6 0 - mg_006 Kisuke Urahara
+desc The owner of a small candy shop in Karakura Town that sells Soul Reaper goods out the back. He once led the 12th Division and founded its research institute, until Aizen framed him for the Hollowfication of several captains and he fled Soul Society.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 sp_ntrl_loop 20 Special Idle
+pose 0 guard_loop 20 Guard
+pose 0 walk 14 Walk
+pose 0 run_loop 10 Run
+pose 0 dash_f_loop 8 Dash
+pose 0 step_f 8 Step
+pose 0 dam_parry 6 Staggered
+pose 0 atk_da01 12 Attack 1
+pose 0 atk_ex01 12 Attack 2
+pose 0 atk_gr01 12 Attack 3
+pose 0 atk_gr02 12 Attack 4
+pose 0 atk_hi01 12 Attack 5
+pose 0 atk_hi02 12 Attack 6
+pose 0 atk_hi03 12 Attack 7
+pose 0 atk_lo01 12 Attack 8
+pose 0 sp_atk01 14 Special 1
+pose 0 sp_atk02 14 Special 2
+pose 0 !sp_break01_in+sp_break01_out 0 Hakugeki
+pose 0 !ct_sp_break01 0 Kikon Move 1
+pose 0 !ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 0 !ct_guardbreak 0 Guard Break
+pose 0 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 0 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 0 !ct_syunpo_out_just@ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 0 !mg_awaken 0 Awakening
+pose 0 !mg_hit:atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 0 !mg_counter:R@L3/atk_ex01>atk_ex01_1 150 Signature (Counter)
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+form 1 0 Awakening
+pose 1 evo_ntrl_loop 20 Idle
+pose 1 evo_sp_ntrl_loop 20 Special Idle
+pose 1 evo_guard_loop 20 Guard
+pose 1 evo_walk 14 Walk
+pose 1 evo_run_loop 10 Run
+pose 1 evo_dash_f_loop 8 Dash
+pose 1 evo_step_f 8 Step
+pose 1 evo_atk_da01 12 Attack 1
+pose 1 evo_atk_ex01 12 Attack 2
+pose 1 evo_atk_gr01 12 Attack 3
+pose 1 evo_atk_gr02 12 Attack 4
+pose 1 evo_atk_hi01 12 Attack 5
+pose 1 evo_atk_hi02 12 Attack 6
+pose 1 evo_atk_hi03 12 Attack 7
+pose 1 evo_atk_lo01 12 Attack 8
+pose 1 evo_sp_atk01 14 Special 1
+pose 1 evo_sp_atk02 14 Special 2
+pose 1 !evo_sp_break01_in+evo_sp_break01_out 0 Hakugeki
+pose 1 !evo_ct_sp_break01 0 Kikon Move 1
+pose 1 !evo_ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 1 !evo_ct_sp_break02 0 Kikon Move 2
+pose 1 !evo_ct_sp_break02_maxout 0 Kikon Move 2 (Max)
+pose 1 !evo_ct_guardbreak 0 Guard Break
+pose 1 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 1 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 1 !evo_ct_syunpo_out_just@evo_ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 1 !mg_hit:evo_atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 1 !mg_counter:+R@SU-45/evo_atk_ex01_0>evo_atk_ex01_2 0 Signature (Counter)
+pose 1 !mg_counter:-R@SU-45/evo_atk_ex01>evo_atk_ex01_2 0 Signature (Counter 2)
+pose 1 !mg_counter:+R@L3/evo_atk_ex01_0>evo_atk_ex01_1 150 Signature (Counter 3)
+pose 1 !mg_counter:-R@L3/evo_atk_ex01>evo_atk_ex01_1 150 Signature (Counter 4)
+pose 1 evo_mg_apose 3 A-Pose
+pose 1 evo_mg_tpose 3 T-Pose
+model playable 7 0 - mg_007 Yoruichi Shihoin
+desc Former captain of the 2nd Division and commander of the Stealth Force, known as the Flash Goddess for her speed. She left Soul Society alongside Urahara a century ago and spent most of that time living as a black cat.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 sp_ntrl_loop 20 Special Idle
+pose 0 guard_loop 20 Guard
+pose 0 walk 14 Walk
+pose 0 run_loop 10 Run
+pose 0 dash_f_loop 8 Dash
+pose 0 step_f 8 Step
+pose 0 dam_parry 6 Staggered
+pose 0 atk_da01 12 Attack 1
+pose 0 atk_ex01 12 Attack 2
+pose 0 atk_ex02 12 Attack 3
+pose 0 atk_gr01 12 Attack 4
+pose 0 atk_gr02 12 Attack 5
+pose 0 atk_hi01 12 Attack 6
+pose 0 atk_hi02 12 Attack 7
+pose 0 atk_hi03 12 Attack 8
+pose 0 sp_atk01 14 Special 1
+pose 0 sp_atk02 14 Special 2
+pose 0 !sp_break01_in+sp_break01_out 0 Hakugeki
+pose 0 !ct_sp_break01 0 Kikon Move 1
+pose 0 !ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 0 !ct_guardbreak 0 Guard Break
+pose 0 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 0 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 0 !ct_syunpo_out_just@ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 0 !mg_awaken 0 Awakening
+pose 0 !mg_hit:atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 0 !mg_counter:SR@L7/sp_atk02>sp_atk02_1 150 Special 2 (Counter)
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+form 1 0 Awakening
+pose 1 evo_ntrl_loop 20 Idle
+pose 1 evo_sp_ntrl_loop 20 Special Idle
+pose 1 evo_guard_loop 20 Guard
+pose 1 evo_walk 14 Walk
+pose 1 evo_run_loop 10 Run
+pose 1 evo_dash_f_loop 8 Dash
+pose 1 evo_step_f 8 Step
+pose 1 evo_atk_da01 12 Attack 1
+pose 1 evo_atk_ex01 12 Attack 2
+pose 1 evo_atk_ex02 12 Attack 3
+pose 1 evo_atk_gr01 12 Attack 4
+pose 1 evo_atk_gr02 12 Attack 5
+pose 1 evo_atk_hi01 12 Attack 6
+pose 1 evo_atk_hi02 12 Attack 7
+pose 1 evo_atk_hi03 12 Attack 8
+pose 1 evo_sp_atk01 14 Special 1
+pose 1 evo_sp_atk02 14 Special 2
+pose 1 !evo_sp_break01_in+evo_sp_break01_out 0 Hakugeki
+pose 1 !evo_ct_sp_break01 0 Kikon Move 1
+pose 1 !evo_ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 1 !evo_ct_sp_break02 0 Kikon Move 2
+pose 1 !evo_ct_sp_break02_maxout 0 Kikon Move 2 (Max)
+pose 1 !evo_ct_guardbreak 0 Guard Break
+pose 1 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 1 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 1 !evo_ct_syunpo_out_just@evo_ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 1 !mg_hit:evo_atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 1 !mg_counter:SR@L7/evo_sp_atk02>evo_sp_atk02_1 150 Special 2 (Counter)
+pose 1 !mg_counter:+SR@L7/evo_sp_atk02>evo_sp_atk02_2 150 Special 2 (Counter 2)
+pose 1 evo_mg_apose 3 A-Pose
+pose 1 evo_mg_tpose 3 T-Pose
+model playable 8 0 - mg_008 Renji Abarai
+desc Lieutenant of the 6th Division, who grew up with Rukia in one of the roughest districts of Rukongai. His Zanpakuto, Zabimaru, is a jointed blade that lashes out like a whip, and its Bankai turns it into a giant snake made of bone.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 sp_ntrl_loop 20 Special Idle
+pose 0 guard_loop 20 Guard
+pose 0 walk 14 Walk
+pose 0 run_loop 10 Run
+pose 0 dash_f_loop 8 Dash
+pose 0 step_f 8 Step
+pose 0 dam_parry 6 Staggered
+pose 0 atk_da01 12 Attack 1
+pose 0 atk_ex01 12 Attack 2
+pose 0 atk_ex02 12 Attack 3
+pose 0 atk_ex03 12 Attack 4
+pose 0 atk_gr01 12 Attack 5
+pose 0 atk_gr02 12 Attack 6
+pose 0 atk_hi01 12 Attack 7
+pose 0 atk_hi02 12 Attack 8
+pose 0 sp_atk01 14 Special 1
+pose 0 sp_atk02 14 Special 2
+pose 0 !sp_break01_in+sp_break01_out 0 Hakugeki
+pose 0 !ct_sp_break01 0 Kikon Move 1
+pose 0 !ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 0 !ct_guardbreak 0 Guard Break
+pose 0 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 0 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 0 !ct_syunpo_out_just@ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 0 !mg_awaken 0 Awakening
+pose 0 !mg_hit:atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+form 1 0 Bankai
+pose 1 evo_ntrl_loop 20 Idle
+pose 1 evo_sp_ntrl_loop 20 Special Idle
+pose 1 evo_guard_loop 20 Guard
+pose 1 evo_walk 14 Walk
+pose 1 evo_run_loop 10 Run
+pose 1 evo_dash_f_loop 8 Dash
+pose 1 evo_step_f 8 Step
+pose 1 evo_dam_parry 6 Staggered
+pose 1 evo_atk_da01 12 Attack 1
+pose 1 evo_atk_ex01 12 Attack 2
+pose 1 evo_atk_gr01 12 Attack 3
+pose 1 evo_atk_hi01 12 Attack 4
+pose 1 evo_atk_hi02 12 Attack 5
+pose 1 evo_atk_hi03 12 Attack 6
+pose 1 evo_atk_lo01 12 Attack 7
+pose 1 evo_atk_lo02 12 Attack 8
+pose 1 evo_sp_atk01 14 Special 1
+pose 1 evo_sp_atk02 14 Special 2
+pose 1 !evo_sp_break01_in+evo_sp_break01_out 0 Hakugeki
+pose 1 !evo_ct_sp_break01 0 Kikon Move 1
+pose 1 !evo_ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 1 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 1 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 1 !mg_weaken 0 Weakening
+pose 1 evo_mg_apose 3 A-Pose
+pose 1 evo_mg_tpose 3 T-Pose
+form 2 0 Weakened
+pose 2 rev_ntrl_loop 20 Idle
+pose 2 rev_sp_ntrl_loop 20 Special Idle
+pose 2 rev_guard_loop 20 Guard
+pose 2 rev_walk 14 Walk
+pose 2 rev_run_loop 10 Run
+pose 2 rev_dash_f_loop 8 Dash
+pose 2 rev_step_f 8 Step
+pose 2 rev_dam_parry 6 Staggered
+pose 2 rev_atk_da01 12 Attack 1
+pose 2 rev_atk_ex01 12 Attack 2
+pose 2 rev_atk_ex02 12 Attack 3
+pose 2 rev_atk_ex03 12 Attack 4
+pose 2 rev_atk_ex04 12 Attack 5
+pose 2 rev_atk_gr01 12 Attack 6
+pose 2 rev_atk_gr02 12 Attack 7
+pose 2 rev_atk_gr03 12 Attack 8
+pose 2 rev_sp_atk01 14 Special 1
+pose 2 rev_sp_atk02 14 Special 2
+pose 2 !rev_sp_break01_in+rev_sp_break01_out 0 Hakugeki
+pose 2 !rev_ct_sp_break01 0 Kikon Move 1
+pose 2 !rev_ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 2 !rev_ct_guardbreak 0 Guard Break
+pose 2 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 2 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 2 !rev_ct_syunpo_out_just@rev_ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 2 !mg_hit:rev_atk_gr01>rev_atk_gr02|rev_atk_gr03 130 Breaker (Hit)
+pose 2 !mg_counter:-R@L1/rev_atk_ex01>rev_atk_ex01_1 150 Signature (Counter)
+pose 2 rev_mg_apose 3 A-Pose
+pose 2 rev_mg_tpose 3 T-Pose
+model playable 10 0 - mg_010 Rukia Kuchiki
+desc A Soul Reaper of the 13th Division and the adopted sister of Byakuya Kuchiki. Lending her powers to Ichigo was a crime in Soul Society, and she was sentenced to death for it. Her Zanpakuto, Sode no Shirayuki, freezes whatever it touches.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 sp_ntrl_loop 20 Special Idle
+pose 0 guard_loop 20 Guard
+pose 0 walk 14 Walk
+pose 0 run_loop 10 Run
+pose 0 dash_f_loop 8 Dash
+pose 0 step_f 8 Step
+pose 0 dam_parry 6 Staggered
+pose 0 atk_da01 12 Attack 1
+pose 0 atk_ex01 12 Attack 2
+pose 0 atk_gr01 12 Attack 3
+pose 0 atk_gr02 12 Attack 4
+pose 0 atk_hi01 12 Attack 5
+pose 0 atk_hi02 12 Attack 6
+pose 0 atk_hi03 12 Attack 7
+pose 0 atk_lo01 12 Attack 8
+pose 0 sp_atk01 14 Special 1
+pose 0 sp_atk02 14 Special 2
+pose 0 !sp_break01_in+sp_break01_out 0 Hakugeki
+pose 0 !ct_sp_break01 0 Kikon Move 1
+pose 0 !ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 0 !ct_guardbreak 0 Guard Break
+pose 0 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 0 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 0 !ct_syunpo_out_just@ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 0 !mg_awaken 0 Awakening
+pose 0 !mg_hit:atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+form 1 0 Awakening
+pose 1 evo_ntrl_loop 20 Idle
+pose 1 evo_sp_ntrl_loop 20 Special Idle
+pose 1 evo_guard_loop 20 Guard
+pose 1 evo_walk 14 Walk
+pose 1 evo_run_loop 10 Run
+pose 1 evo_dash_f_loop 8 Dash
+pose 1 evo_step_f 8 Step
+pose 1 evo_atk_da01 12 Attack 1
+pose 1 evo_atk_ex01 12 Attack 2
+pose 1 evo_atk_gr01 12 Attack 3
+pose 1 evo_atk_gr02 12 Attack 4
+pose 1 evo_atk_hi01 12 Attack 5
+pose 1 evo_atk_hi02 12 Attack 6
+pose 1 evo_atk_hi03 12 Attack 7
+pose 1 evo_atk_lo01 12 Attack 8
+pose 1 evo_sp_atk01 14 Special 1
+pose 1 evo_sp_atk02 14 Special 2
+pose 1 !evo_sp_break01_in+evo_sp_break01_out 0 Hakugeki
+pose 1 !evo_ct_sp_break01 0 Kikon Move 1
+pose 1 !evo_ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 1 !evo_ct_sp_break02 0 Kikon Move 2
+pose 1 !evo_ct_sp_break02_maxout 0 Kikon Move 2 (Max)
+pose 1 !evo_ct_guardbreak 0 Guard Break
+pose 1 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 1 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 1 !evo_ct_syunpo_out_just@evo_ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 1 !mg_hit:evo_atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 1 !mg_hit:evo_atk_lo03_d>atk_lo03_d01 130 Quick 3 (Hit)
+pose 1 !mg_hit:evo_atk_lo03_u>atk_lo03_u01 130 Quick 3 (Hit 2)
+pose 1 evo_mg_apose 3 A-Pose
+pose 1 evo_mg_tpose 3 T-Pose
+model playable 11 0 - mg_011 Shuhei Hisagi
+desc Lieutenant of the 9th Division. He wears a 69 tattooed on his cheek after Kensei Muguruma, who saved his life when he was a boy. He dislikes his own Zanpakuto, Kazeshini, because its shape seems made for killing.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 sp_ntrl_loop 20 Special Idle
+pose 0 guard_loop 20 Guard
+pose 0 walk 14 Walk
+pose 0 run_loop 10 Run
+pose 0 dash_f_loop 8 Dash
+pose 0 step_f 8 Step
+pose 0 dam_parry 6 Staggered
+pose 0 atk_da01 12 Attack 1
+pose 0 atk_gr01 12 Attack 2
+pose 0 atk_gr02 12 Attack 3
+pose 0 atk_hi01 12 Attack 4
+pose 0 atk_hi02 12 Attack 5
+pose 0 atk_hi03 12 Attack 6
+pose 0 atk_lo01 12 Attack 7
+pose 0 atk_lo02 12 Attack 8
+pose 0 sp_atk01 14 Special 1
+pose 0 sp_atk02 14 Special 2
+pose 0 !sp_break01_in+sp_break01_out 0 Hakugeki
+pose 0 !ct_sp_break01 0 Kikon Move 1
+pose 0 !ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 0 !ct_guardbreak 0 Guard Break
+pose 0 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 0 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 0 !ct_syunpo_out_just@ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 0 !mg_awaken 0 Awakening
+pose 0 !mg_hit:atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 0 !mg_counter:=0SR@L6/sp_atk02>sp_atk02_1 150 Special 2 (Counter)
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+form 1 0 Awakening
+pose 1 evo_ntrl_loop 20 Idle
+pose 1 evo_sp_ntrl_loop 20 Special Idle
+pose 1 evo_guard_loop 20 Guard
+pose 1 evo_walk 14 Walk
+pose 1 evo_run_loop 10 Run
+pose 1 evo_dash_f_loop 8 Dash
+pose 1 evo_step_f 8 Step
+pose 1 evo_dam_parry 6 Staggered
+pose 1 evo_atk_da01 12 Attack 1
+pose 1 evo_atk_gr01 12 Attack 2
+pose 1 evo_atk_gr02 12 Attack 3
+pose 1 evo_atk_hi01 12 Attack 4
+pose 1 evo_atk_hi02 12 Attack 5
+pose 1 evo_atk_hi03 12 Attack 6
+pose 1 evo_atk_lo01 12 Attack 7
+pose 1 evo_atk_lo02 12 Attack 8
+pose 1 evo_sp_atk01 14 Special 1
+pose 1 evo_sp_atk02 14 Special 2
+pose 1 !evo_sp_break01_in+evo_sp_break01_out 0 Hakugeki
+pose 1 !evo_ct_sp_break01 0 Kikon Move 1
+pose 1 !evo_ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 1 !evo_ct_guardbreak 0 Guard Break
+pose 1 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 1 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 1 !evo_ct_syunpo_out_just@evo_ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 1 !mg_hit:evo_atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 1 !mg_counter:=0SR@L6/evo_sp_atk02>evo_sp_atk02_1 150 Special 2 (Counter)
+pose 1 evo_mg_apose 3 A-Pose
+pose 1 evo_mg_tpose 3 T-Pose
+model playable 12 0 - mg_012 Rangiku Matsumoto
+desc Lieutenant of the 10th Division under Toshiro Hitsugaya. She is relaxed about her duties and fond of sake, and she grew up in Rukongai with Gin Ichimaru. Her Zanpakuto, Haineko, turns its blade into a cloud of ash that cuts.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 sp_ntrl_loop 20 Special Idle
+pose 0 guard_loop 20 Guard
+pose 0 walk 14 Walk
+pose 0 run_loop 10 Run
+pose 0 dash_f_loop 8 Dash
+pose 0 step_f 8 Step
+pose 0 dam_parry 6 Staggered
+pose 0 atk_da01 12 Attack 1
+pose 0 atk_ex01 12 Attack 2
+pose 0 atk_gr01 12 Attack 3
+pose 0 atk_gr02 12 Attack 4
+pose 0 atk_hi01 12 Attack 5
+pose 0 atk_hi02 12 Attack 6
+pose 0 atk_hi03 12 Attack 7
+pose 0 atk_lo01 12 Attack 8
+pose 0 sp_atk01 14 Special 1
+pose 0 sp_atk02 14 Special 2
+pose 0 !sp_break01_in+sp_break01_out 0 Hakugeki
+pose 0 !ct_sp_break01 0 Kikon Move 1
+pose 0 !ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 0 !ct_guardbreak 0 Guard Break
+pose 0 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 0 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 0 !ct_syunpo_out_just@ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 0 !mg_awaken 0 Awakening
+pose 0 !mg_hit:atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 0 !mg_counter:SU@L6/sp_atk01>sp_atk01_1 100 Special 1 (Counter)
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+form 1 0 Awakening
+pose 1 evo_ntrl_loop 20 Idle
+pose 1 evo_sp_ntrl_loop 20 Special Idle
+pose 1 evo_guard_loop 20 Guard
+pose 1 evo_walk 14 Walk
+pose 1 evo_run_loop 10 Run
+pose 1 evo_dash_f_loop 8 Dash
+pose 1 evo_step_f 8 Step
+pose 1 evo_atk_da01 12 Attack 1
+pose 1 evo_atk_ex01 12 Attack 2
+pose 1 evo_atk_gr01 12 Attack 3
+pose 1 evo_atk_gr02 12 Attack 4
+pose 1 evo_atk_hi01 12 Attack 5
+pose 1 evo_atk_hi02 12 Attack 6
+pose 1 evo_atk_hi03 12 Attack 7
+pose 1 evo_atk_lo01 12 Attack 8
+pose 1 evo_sp_atk01 14 Special 1
+pose 1 evo_sp_atk02 14 Special 2
+pose 1 !evo_sp_break01_in+evo_sp_break01_out 0 Hakugeki
+pose 1 !evo_ct_sp_break01 0 Kikon Move 1
+pose 1 !evo_ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 1 !evo_ct_sp_break02 0 Kikon Move 2
+pose 1 !evo_ct_sp_break02_maxout 0 Kikon Move 2 (Max)
+pose 1 !evo_ct_guardbreak 0 Guard Break
+pose 1 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 1 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 1 !evo_ct_syunpo_out_just@evo_ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 1 !mg_hit:evo_atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 1 !mg_counter:SU@L6/evo_sp_atk01>evo_sp_atk01_1 150 Special 1 (Counter)
+pose 1 evo_mg_apose 3 A-Pose
+pose 1 evo_mg_tpose 3 T-Pose
+model playable 13 0 - mg_013 Izuru Kira
+desc Lieutenant of the 3rd Division, who stayed loyal to Gin Ichimaru until the day Gin left Soul Society. His Zanpakuto, Wabisuke, doubles the weight of anything it hits until the enemy can no longer lift their head.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 sp_ntrl_loop 20 Special Idle
+pose 0 guard_loop 20 Guard
+pose 0 walk 14 Walk
+pose 0 run_loop 10 Run
+pose 0 dash_f_loop 8 Dash
+pose 0 step_f 8 Step
+pose 0 dam_parry 6 Staggered
+pose 0 atk_da01 12 Attack 1
+pose 0 atk_ex01 12 Attack 2
+pose 0 atk_ex02 12 Attack 3
+pose 0 atk_gr01 12 Attack 4
+pose 0 atk_gr02 12 Attack 5
+pose 0 atk_hi01 12 Attack 6
+pose 0 atk_hi02 12 Attack 7
+pose 0 atk_hi03 12 Attack 8
+pose 0 sp_atk01 14 Special 1
+pose 0 sp_atk02 14 Special 2
+pose 0 !sp_break01_in+sp_break01_out 0 Hakugeki
+pose 0 !ct_sp_break01 0 Kikon Move 1
+pose 0 !ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 0 !ct_guardbreak 0 Guard Break
+pose 0 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 0 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 0 !ct_syunpo_out_just@ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 0 !mg_awaken 0 Awakening
+pose 0 !mg_hit:atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 0 !mg_counter:=0^U@L3/atk_hi03>atk_hi03_2 100 Flash 3 (Counter)
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+form 1 0 Awakening
+pose 1 evo_ntrl_loop 20 Idle
+pose 1 evo_sp_ntrl_loop 20 Special Idle
+pose 1 evo_guard_loop 20 Guard
+pose 1 evo_walk 14 Walk
+pose 1 evo_run_loop 10 Run
+pose 1 evo_dash_f_loop 8 Dash
+pose 1 evo_step_f 8 Step
+pose 1 evo_atk_da01 12 Attack 1
+pose 1 evo_atk_ex01 12 Attack 2
+pose 1 evo_atk_ex02 12 Attack 3
+pose 1 evo_atk_gr01 12 Attack 4
+pose 1 evo_atk_gr02 12 Attack 5
+pose 1 evo_atk_hi01 12 Attack 6
+pose 1 evo_atk_hi02 12 Attack 7
+pose 1 evo_atk_hi03 12 Attack 8
+pose 1 evo_sp_atk01 14 Special 1
+pose 1 evo_sp_atk02 14 Special 2
+pose 1 !evo_sp_break01_in+evo_sp_break01_out 0 Hakugeki
+pose 1 !evo_ct_sp_break01 0 Kikon Move 1
+pose 1 !evo_ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 1 !evo_ct_guardbreak 0 Guard Break
+pose 1 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 1 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 1 !evo_ct_syunpo_out_just@evo_ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 1 !mg_hit:evo_atk_gr01>atk_gr02 80 Breaker (Hit)
+pose 1 !mg_counter:=0^U@L3/evo_atk_hi03>evo_atk_hi03_2 100 Flash 3 (Counter)
+pose 1 evo_mg_apose 3 A-Pose
+pose 1 evo_mg_tpose 3 T-Pose
+model playable 14 0 - mg_014 Ikkaku Madarame
+desc Third seat of the 11th Division, who lives for a good fight and would rather die than lose one. He kept his Bankai a secret so that he could go on serving under Kenpachi Zaraki instead of being made a captain.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 sp_ntrl_loop 20 Special Idle
+pose 0 guard_loop 20 Guard
+pose 0 walk 14 Walk
+pose 0 run_loop 10 Run
+pose 0 dash_f_loop 8 Dash
+pose 0 step_f 8 Step
+pose 0 dam_parry 6 Staggered
+pose 0 atk_da01 12 Attack 1
+pose 0 atk_ex01 12 Attack 2
+pose 0 atk_gr01 12 Attack 3
+pose 0 atk_gr02 12 Attack 4
+pose 0 atk_hi01 12 Attack 5
+pose 0 atk_hi02 12 Attack 6
+pose 0 atk_hi03 12 Attack 7
+pose 0 atk_lo01 12 Attack 8
+pose 0 sp_atk01 14 Special 1
+pose 0 sp_atk02 14 Special 2
+pose 0 !sp_break01_in+sp_break01_out 0 Hakugeki
+pose 0 !ct_sp_break01 0 Kikon Move 1
+pose 0 !ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 0 !ct_guardbreak 0 Guard Break
+pose 0 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 0 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 0 !ct_syunpo_out_just@ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 0 !mg_awaken 0 Awakening
+pose 0 !mg_hit:atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 0 !mg_counter:R.D@L1/atk_ex01_4>atk_ex01_5 150 Signature (Counter)
+pose 0 !mg_counter:SU.D@L5/sp_atk01_4>sp_atk01_5 150 Special 1 (Counter)
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+form 1 0 Awakening
+pose 1 evo_ntrl_loop 20 Idle
+pose 1 evo_sp_ntrl_loop 20 Special Idle
+pose 1 evo_guard_loop 20 Guard
+pose 1 evo_walk 14 Walk
+pose 1 evo_run_loop 10 Run
+pose 1 evo_dash_f_loop 8 Dash
+pose 1 evo_step_f 8 Step
+pose 1 evo_dam_parry 6 Staggered
+pose 1 evo_atk_da01 12 Attack 1
+pose 1 evo_atk_ex01 12 Attack 2
+pose 1 evo_atk_gr01 12 Attack 3
+pose 1 evo_atk_gr02 12 Attack 4
+pose 1 evo_atk_hi01 12 Attack 5
+pose 1 evo_atk_hi02 12 Attack 6
+pose 1 evo_atk_hi03 12 Attack 7
+pose 1 evo_atk_lo01 12 Attack 8
+pose 1 evo_sp_atk01 14 Special 1
+pose 1 evo_sp_atk02 14 Special 2
+pose 1 !evo_sp_break01_in+evo_sp_break01_out 0 Hakugeki
+pose 1 !evo_ct_sp_break01 0 Kikon Move 1
+pose 1 !evo_ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 1 !evo_ct_sp_break02 0 Kikon Move 2
+pose 1 !evo_ct_sp_break02_maxout 0 Kikon Move 2 (Max)
+pose 1 !evo_ct_guardbreak 0 Guard Break
+pose 1 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 1 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 1 !evo_ct_syunpo_out_just@evo_ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 1 !mg_hit:evo_atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 1 !mg_counter:R.D@L1/evo_atk_ex01_4>evo_atk_ex01_5 150 Signature (Counter)
+pose 1 !mg_counter:SU.D@L5/evo_sp_atk01_4>evo_sp_atk01_5 150 Special 1 (Counter)
+pose 1 evo_mg_apose 3 A-Pose
+pose 1 evo_mg_tpose 3 T-Pose
+model playable 16 0 - mg_016 Genryusai Shigekuni Yamamoto
+desc Captain-Commander of the 13 Court Guard Squads, which he founded more than a thousand years ago, and captain of the 1st Division. His Zanpakuto, Ryujin Jakka, is the oldest and strongest fire-type in Soul Society.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 sp_ntrl_loop 20 Special Idle
+pose 0 guard_loop 20 Guard
+pose 0 walk 14 Walk
+pose 0 run_loop 10 Run
+pose 0 dash_f_loop 8 Dash
+pose 0 step_f 8 Step
+pose 0 dam_parry 6 Staggered
+pose 0 atk_da01 12 Attack 1
+pose 0 atk_ex01 12 Attack 2
+pose 0 atk_ex02 12 Attack 3
+pose 0 atk_gr01 12 Attack 4
+pose 0 atk_gr02 12 Attack 5
+pose 0 atk_hi01 12 Attack 6
+pose 0 atk_hi02 12 Attack 7
+pose 0 atk_hi03 12 Attack 8
+pose 0 sp_atk01 14 Special 1
+pose 0 sp_atk02 14 Special 2
+pose 0 !sp_break01_in+sp_break01_out 0 Hakugeki
+pose 0 !ct_sp_break01 0 Kikon Move 1
+pose 0 !ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 0 !ct_guardbreak 0 Guard Break
+pose 0 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 0 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 0 !ct_syunpo_out_just@ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 0 !mg_awaken 0 Awakening
+pose 0 !mg_hit:atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+form 1 0 Awakening
+pose 1 evo_ntrl_loop 20 Idle
+pose 1 evo_sp_ntrl_loop 20 Special Idle
+pose 1 evo_guard_loop 20 Guard
+pose 1 evo_walk 14 Walk
+pose 1 evo_run_loop 10 Run
+pose 1 evo_dash_f_loop 8 Dash
+pose 1 evo_step_f 8 Step
+pose 1 evo_dam_parry 6 Staggered
+pose 1 evo_atk_da01 12 Attack 1
+pose 1 evo_atk_ex01 12 Attack 2
+pose 1 evo_atk_ex02 12 Attack 3
+pose 1 evo_atk_gr01 12 Attack 4
+pose 1 evo_atk_gr02 12 Attack 5
+pose 1 evo_atk_hi01 12 Attack 6
+pose 1 evo_atk_hi02 12 Attack 7
+pose 1 evo_atk_hi03 12 Attack 8
+pose 1 evo_sp_atk01 14 Special 1
+pose 1 evo_sp_atk02 14 Special 2
+pose 1 !evo_sp_break01_in+evo_sp_break01_out 0 Hakugeki
+pose 1 !evo_ct_sp_break01 0 Kikon Move 1
+pose 1 !evo_ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 1 !evo_ct_sp_break02 0 Kikon Move 2
+pose 1 !evo_ct_sp_break02_maxout 0 Kikon Move 2 (Max)
+pose 1 !evo_ct_guardbreak 0 Guard Break
+pose 1 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 1 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 1 !evo_ct_syunpo_out_just@evo_ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 1 !mg_hit:evo_atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 1 evo_mg_apose 3 A-Pose
+pose 1 evo_mg_tpose 3 T-Pose
+model playable 17 0 - mg_017 Soi Fon
+desc Captain of the 2nd Division and commander of the Stealth Force. She worshipped Yoruichi as a girl and resented her for a century for leaving without a word, until the two made peace after fighting each other. Her Zanpakuto, Suzumebachi, kills anyone it stings twice in the same spot.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 sp_ntrl_loop 20 Special Idle
+pose 0 guard_loop 20 Guard
+pose 0 walk 14 Walk
+pose 0 run_loop 10 Run
+pose 0 dash_f_loop 8 Dash
+pose 0 step_f 8 Step
+pose 0 dam_parry 6 Staggered
+pose 0 atk_da01 12 Attack 1
+pose 0 atk_ex01 12 Attack 2
+pose 0 atk_ex02 12 Attack 3
+pose 0 atk_gr01 12 Attack 4
+pose 0 atk_gr02 12 Attack 5
+pose 0 atk_hi01 12 Attack 6
+pose 0 atk_hi02 12 Attack 7
+pose 0 atk_hi03 12 Attack 8
+pose 0 sp_atk01 14 Special 1
+pose 0 sp_atk02 14 Special 2
+pose 0 !sp_break01_in+sp_break01_out 0 Hakugeki
+pose 0 !ct_sp_break01 0 Kikon Move 1
+pose 0 !ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 0 !ct_guardbreak 0 Guard Break
+pose 0 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 0 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 0 !ct_syunpo_out_just@ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 0 !mg_awaken 0 Awakening
+pose 0 !mg_hit:atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+form 1 0 Awakening
+pose 1 evo_ntrl_loop 20 Idle
+pose 1 evo_sp_ntrl_loop 20 Special Idle
+pose 1 evo_guard_loop 20 Guard
+pose 1 evo_walk 14 Walk
+pose 1 evo_run_loop 10 Run
+pose 1 evo_dash_f_loop 8 Dash
+pose 1 evo_step_f 8 Step
+pose 1 evo_atk_da01 12 Attack 1
+pose 1 evo_atk_ex01 12 Attack 2
+pose 1 evo_atk_ex02 12 Attack 3
+pose 1 evo_atk_gr01 12 Attack 4
+pose 1 evo_atk_gr02 12 Attack 5
+pose 1 evo_atk_hi01 12 Attack 6
+pose 1 evo_atk_hi02 12 Attack 7
+pose 1 evo_atk_hi03 12 Attack 8
+pose 1 evo_sp_atk01 14 Special 1
+pose 1 evo_sp_atk02 14 Special 2
+pose 1 !evo_sp_break01_in+evo_sp_break01_out 0 Hakugeki
+pose 1 !evo_ct_sp_break01 0 Kikon Move 1
+pose 1 !evo_ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 1 !evo_ct_sp_break02 0 Kikon Move 2
+pose 1 !evo_ct_sp_break02_maxout 0 Kikon Move 2 (Max)
+pose 1 !evo_ct_guardbreak 0 Guard Break
+pose 1 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 1 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 1 !evo_ct_syunpo_out_just@evo_ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 1 !mg_hit:evo_atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 1 evo_mg_apose 3 A-Pose
+pose 1 evo_mg_tpose 3 T-Pose
+model playable 18 0 - mg_018 Gin Ichimaru
+desc Captain of the 3rd Division, whose permanent smile makes him impossible to read. He left Soul Society with Aizen, but his real goal was to take back what Aizen stole from Rangiku long ago. His Bankai extends faster than the eye can follow.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 sp_ntrl_loop 20 Special Idle
+pose 0 guard_loop 20 Guard
+pose 0 walk 14 Walk
+pose 0 run_loop 10 Run
+pose 0 dash_f_loop 8 Dash
+pose 0 step_f 8 Step
+pose 0 dam_parry 6 Staggered
+pose 0 atk_da01 12 Attack 1
+pose 0 atk_ex01 12 Attack 2
+pose 0 atk_gr01 12 Attack 3
+pose 0 atk_gr02 12 Attack 4
+pose 0 atk_hi01 12 Attack 5
+pose 0 atk_hi02 12 Attack 6
+pose 0 atk_hi03 12 Attack 7
+pose 0 atk_lo01 12 Attack 8
+pose 0 sp_atk01 14 Special 1
+pose 0 sp_atk02 14 Special 2
+pose 0 !sp_break01_in+sp_break01_out 0 Hakugeki
+pose 0 !ct_sp_break01 0 Kikon Move 1
+pose 0 !ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 0 !ct_guardbreak 0 Guard Break
+pose 0 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 0 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 0 !ct_syunpo_out_just@ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 0 !mg_awaken 0 Awakening
+pose 0 !mg_hit:atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 0 !mg_hit:sp_atk02>sp_atk02_1 130 Special 2 (Hit)
+pose 0 !mg_counter:SU@L20/sp_atk01>sp_atk01_1 150 Special 1 (Counter)
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+form 1 0 Awakening
+pose 1 evo_ntrl_loop 20 Idle
+pose 1 evo_sp_ntrl_loop 20 Special Idle
+pose 1 evo_guard_loop 20 Guard
+pose 1 evo_walk 14 Walk
+pose 1 evo_run_loop 10 Run
+pose 1 evo_dash_f_loop 8 Dash
+pose 1 evo_step_f 8 Step
+pose 1 evo_atk_da01 12 Attack 1
+pose 1 evo_atk_ex01 12 Attack 2
+pose 1 evo_atk_gr01 12 Attack 3
+pose 1 evo_atk_gr02 12 Attack 4
+pose 1 evo_atk_hi01 12 Attack 5
+pose 1 evo_atk_hi02 12 Attack 6
+pose 1 evo_atk_hi03 12 Attack 7
+pose 1 evo_atk_lo01 12 Attack 8
+pose 1 evo_sp_atk01 14 Special 1
+pose 1 evo_sp_atk02 14 Special 2
+pose 1 !evo_sp_break01_in+evo_sp_break01_out 0 Hakugeki
+pose 1 !evo_ct_sp_break01 0 Kikon Move 1
+pose 1 !evo_ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 1 !evo_ct_sp_break02 0 Kikon Move 2
+pose 1 !evo_ct_sp_break02_maxout 0 Kikon Move 2 (Max)
+pose 1 !evo_ct_guardbreak 0 Guard Break
+pose 1 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 1 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 1 !evo_ct_syunpo_out_just@evo_ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 1 !mg_hit:evo_atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 1 !mg_hit:evo_sp_atk02>evo_sp_atk02_1 130 Special 2 (Hit)
+pose 1 !mg_counter:SU@L20/evo_sp_atk01>evo_sp_atk01_1 150 Special 1 (Counter)
+pose 1 evo_mg_apose 3 A-Pose
+pose 1 evo_mg_tpose 3 T-Pose
+model playable 19 0 - mg_019 Retsu Unohana
+desc Captain of the 4th Division, which handles healing and relief work. She speaks softly, and even the 11th Division takes care not to upset her. Long before she became a healer, she was the first Kenpachi.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 sp_ntrl_loop 20 Special Idle
+pose 0 guard_loop 20 Guard
+pose 0 walk 14 Walk
+pose 0 run_loop 10 Run
+pose 0 dash_f_loop 8 Dash
+pose 0 step_f 8 Step
+pose 0 dam_parry 6 Staggered
+pose 0 atk_da01 12 Attack 1
+pose 0 atk_ex01 12 Attack 2
+pose 0 atk_ex02 12 Attack 3
+pose 0 atk_gr01 12 Attack 4
+pose 0 atk_gr02 12 Attack 5
+pose 0 atk_hi01 12 Attack 6
+pose 0 atk_hi02 12 Attack 7
+pose 0 atk_hi03 12 Attack 8
+pose 0 sp_atk01 14 Special 1
+pose 0 sp_atk02 14 Special 2
+pose 0 !sp_break01_in+sp_break01_out 0 Hakugeki
+pose 0 !ct_sp_break01 0 Kikon Move 1
+pose 0 !ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 0 !ct_guardbreak 0 Guard Break
+pose 0 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 0 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 0 !ct_syunpo_out_just@ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 0 !mg_awaken 0 Awakening
+pose 0 !mg_hit:atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 0 !mg_counter:SR@L56/sp_atk02>sp_atk02_1 150 Special 2 (Counter)
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+form 1 0 Awakening
+pose 1 evo_ntrl_loop 20 Idle
+pose 1 evo_sp_ntrl_loop 20 Special Idle
+pose 1 evo_guard_loop 20 Guard
+pose 1 evo_walk 14 Walk
+pose 1 evo_run_loop 10 Run
+pose 1 evo_dash_f_loop 8 Dash
+pose 1 evo_step_f 8 Step
+pose 1 evo_dam_parry 6 Staggered
+pose 1 evo_atk_da01 12 Attack 1
+pose 1 evo_atk_ex01 12 Attack 2
+pose 1 evo_atk_ex02 12 Attack 3
+pose 1 evo_atk_ex03 12 Attack 4
+pose 1 evo_atk_ex04 12 Attack 5
+pose 1 evo_atk_gr01 12 Attack 6
+pose 1 evo_atk_gr02 12 Attack 7
+pose 1 evo_atk_hi01 12 Attack 8
+pose 1 evo_sp_atk01 14 Special 1
+pose 1 evo_sp_atk02 14 Special 2
+pose 1 !evo_sp_break01_in+evo_sp_break01_out 0 Hakugeki
+pose 1 !evo_ct_sp_break01 0 Kikon Move 1
+pose 1 !evo_ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 1 !evo_ct_sp_break02 0 Kikon Move 2
+pose 1 !evo_ct_sp_break02_maxout 0 Kikon Move 2 (Max)
+pose 1 !evo_ct_guardbreak 0 Guard Break
+pose 1 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 1 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 1 !evo_ct_syunpo_out_just@evo_ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 1 !mg_hit:evo_atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 1 !mg_counter:=0SR@L56/evo_sp_atk02>evo_sp_atk02_1 150 Special 2 (Counter)
+pose 1 evo_mg_apose 3 A-Pose
+pose 1 evo_mg_tpose 3 T-Pose
+model playable 20 0 - mg_020 Sosuke Aizen
+desc Former captain of the 5th Division, trusted by nearly everyone until he faked his own death and walked out of Soul Society. Anyone who has seen his Zanpakuto, Kyoka Suigetsu, released will see whatever he wants them to see.
+form 0 0 Base
+form 0 1 Base (Chrysalis)
+pose 0 ntrl_loop 20 Idle
+pose 0 sp_ntrl_loop 20 Special Idle
+pose 0 guard_loop 20 Guard
+pose 0 walk 14 Walk
+pose 0 run_loop 10 Run
+pose 0 dash_f_loop 8 Dash
+pose 0 step_f 8 Step
+pose 0 dam_parry 6 Staggered
+pose 0 atk_da01 12 Attack 1
+pose 0 atk_ex01 12 Attack 2
+pose 0 atk_gr01 12 Attack 3
+pose 0 atk_gr02 12 Attack 4
+pose 0 atk_hi01 12 Attack 5
+pose 0 atk_hi02 12 Attack 6
+pose 0 atk_hi03 12 Attack 7
+pose 0 atk_lo01 12 Attack 8
+pose 0 sp_atk01 14 Special 1
+pose 0 sp_atk02 14 Special 2
+pose 0 !sp_break01_in+sp_break01_out 0 Hakugeki
+pose 0 !ct_sp_break01 0 Kikon Move 1
+pose 0 !ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 0 !ct_guardbreak 0 Guard Break
+pose 0 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 0 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 0 !ct_syunpo_out_just@ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 0 !mg_halfawaken 0 Half-Awakening
+pose 0 !mg_awaken 0 Awakening
+pose 0 !mg_hit:atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 0 !mg_hit:sp_atk02>sp_atk02_1 80 Special 2 (Hit)
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+form 1 0 Awakening
+pose 1 evo_ntrl_loop 20 Idle
+pose 1 evo_sp_ntrl_loop 20 Special Idle
+pose 1 evo_guard_loop 20 Guard
+pose 1 evo_walk 14 Walk
+pose 1 evo_run_loop 10 Run
+pose 1 evo_dash_f_loop 8 Dash
+pose 1 evo_step_f 8 Step
+pose 1 evo_atk_da01 12 Attack 1
+pose 1 evo_atk_ex01 12 Attack 2
+pose 1 evo_atk_gr01 12 Attack 3
+pose 1 evo_atk_gr02 12 Attack 4
+pose 1 evo_atk_hi01 12 Attack 5
+pose 1 evo_atk_hi02 12 Attack 6
+pose 1 evo_atk_hi03 12 Attack 7
+pose 1 evo_atk_lo01 12 Attack 8
+pose 1 evo_sp_atk01 14 Special 1
+pose 1 evo_sp_atk02 14 Special 2
+pose 1 !evo_sp_break01_in+evo_sp_break01_out 0 Hakugeki
+pose 1 !evo_ct_sp_break01 0 Kikon Move 1
+pose 1 !evo_ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 1 !evo_ct_guardbreak 0 Guard Break
+pose 1 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 1 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 1 !evo_ct_syunpo_out_just@evo_ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 1 !mg_reawaken 0 Reawakening
+pose 1 !mg_hit:evo_atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 1 !mg_hit:evo_sp_atk02>evo_sp_atk02_1 130 Special 2 (Hit)
+pose 1 evo_mg_apose 3 A-Pose
+pose 1 evo_mg_tpose 3 T-Pose
+form 2 0 Reawakening
+pose 2 rev_ntrl_loop 20 Idle
+pose 2 rev_sp_ntrl_loop 20 Special Idle
+pose 2 rev_guard_loop 20 Guard
+pose 2 rev_walk 14 Walk
+pose 2 rev_run_loop 10 Run
+pose 2 rev_dash_f_loop 8 Dash
+pose 2 rev_step_f 8 Step
+pose 2 rev_dam_parry 6 Staggered
+pose 2 rev_atk_da01 12 Attack 1
+pose 2 rev_atk_ex01 12 Attack 2
+pose 2 rev_atk_gr01 12 Attack 3
+pose 2 rev_atk_gr02 12 Attack 4
+pose 2 rev_atk_hi01 12 Attack 5
+pose 2 rev_atk_hi02 12 Attack 6
+pose 2 rev_atk_hi03 12 Attack 7
+pose 2 rev_atk_lo01 12 Attack 8
+pose 2 rev_sp_atk01 14 Special 1
+pose 2 rev_sp_atk02 14 Special 2
+pose 2 !rev_sp_break01_in+rev_sp_break01_out 0 Hakugeki
+pose 2 !rev_ct_sp_break01 0 Kikon Move 1
+pose 2 !rev_ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 2 !rev_ct_guardbreak 0 Guard Break
+pose 2 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 2 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 2 !rev_ct_syunpo_out_just@rev_ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 2 !mg_hit:rev_atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 2 !mg_hit:rev_sp_atk02>rev_sp_atk02_1 130 Special 2 (Hit)
+pose 2 !mg_counter:R@L1/rev_atk_ex01>rev_atk_ex01_2 150 Signature (Counter)
+pose 2 rev_mg_apose 3 A-Pose
+pose 2 rev_mg_tpose 3 T-Pose
+model playable 22 0 - mg_022 Byakuya Kuchiki
+desc Captain of the 6th Division and head of the Kuchiki clan, one of the great noble houses. He puts the law above his own feelings, even when it means letting his sister be executed. Senbonzakura breaks his blade into thousands of tiny pink shards.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 sp_ntrl_loop 20 Special Idle
+pose 0 guard_loop 20 Guard
+pose 0 walk 14 Walk
+pose 0 run_loop 10 Run
+pose 0 dash_f_loop 8 Dash
+pose 0 step_f 8 Step
+pose 0 dam_parry 6 Staggered
+pose 0 atk_da01 12 Attack 1
+pose 0 atk_da02 12 Attack 2
+pose 0 atk_ex01 12 Attack 3
+pose 0 atk_ex02 12 Attack 4
+pose 0 atk_ex03 12 Attack 5
+pose 0 atk_ex04 12 Attack 6
+pose 0 atk_ex05 12 Attack 7
+pose 0 atk_ex06 12 Attack 8
+pose 0 sp_atk01 14 Special 1
+pose 0 sp_atk02 14 Special 2
+pose 0 !sp_break01_in+sp_break01_out 0 Hakugeki
+pose 0 !ct_sp_break01 0 Kikon Move 1
+pose 0 !ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 0 !ct_guardbreak 0 Guard Break
+pose 0 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 0 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 0 !ct_syunpo_out_just@ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 0 !mg_awaken 0 Awakening
+pose 0 !mg_hit:atk_gr01>atk_gr03|atk_gr02 130 Breaker (Hit)
+pose 0 !mg_counter:SR@L7/sp_atk02>sp_atk02_1 150 Special 2 (Counter)
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+form 1 0 Awakening
+pose 1 evo_ntrl_loop 20 Idle
+pose 1 evo_sp_ntrl_loop 20 Special Idle
+pose 1 evo_guard_loop 20 Guard
+pose 1 evo_walk 14 Walk
+pose 1 evo_run_loop 10 Run
+pose 1 evo_dash_f_loop 8 Dash
+pose 1 evo_step_f 8 Step
+pose 1 evo_dam_parry 6 Staggered
+pose 1 evo_atk_da01 12 Attack 1
+pose 1 evo_atk_da02 12 Attack 2
+pose 1 evo_atk_ex01 12 Attack 3
+pose 1 evo_atk_ex02 12 Attack 4
+pose 1 evo_atk_ex03 12 Attack 5
+pose 1 evo_atk_ex04 12 Attack 6
+pose 1 evo_atk_gr01 12 Attack 7
+pose 1 evo_atk_gr02 12 Attack 8
+pose 1 evo_sp_atk01 14 Special 1
+pose 1 evo_sp_atk02 14 Special 2
+pose 1 evo_sp_atk03 14 Special 3
+pose 1 !evo_sp_break01_in+evo_sp_break01_out 0 Hakugeki
+pose 1 !evo_ct_sp_break01 0 Kikon Move 1
+pose 1 !evo_ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 1 !evo_ct_sp_break02 0 Kikon Move 2
+pose 1 !evo_ct_sp_break02_maxout 0 Kikon Move 2 (Max)
+pose 1 !evo_ct_guardbreak 0 Guard Break
+pose 1 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 1 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 1 !evo_ct_syunpo_out_just@evo_ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 1 !mg_hit:evo_atk_ex04>evo_atk_ex04_1 130 Signature 4 (Hit)
+pose 1 !mg_hit:evo_atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 1 !mg_hit:evo_atk_gr07>atk_gr02 130 Breaker 7 (Hit)
+pose 1 !mg_hit:evo_sp_atk03 130 Special 3 (Hit)
+pose 1 !mg_counter:+SR@L5/evo_sp_atk02>evo_sp_atk02_1 150 Special 2 (Counter)
+pose 1 evo_mg_apose 3 A-Pose
+pose 1 evo_mg_tpose 3 T-Pose
+model playable 23 0 - mg_023 Sajin Komamura
+desc Captain of the 7th Division, who hid his wolf's head under a helmet until Kenpachi broke it. He owes everything to Yamamoto and repays him with total loyalty. His Bankai calls up an armored giant that moves when he moves.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 sp_ntrl_loop 20 Special Idle
+pose 0 guard_loop 20 Guard
+pose 0 walk 14 Walk
+pose 0 run_loop 10 Run
+pose 0 dash_f_loop 8 Dash
+pose 0 step_f 8 Step
+pose 0 dam_parry 6 Staggered
+pose 0 atk_da01 12 Attack 1
+pose 0 atk_ex01 12 Attack 2
+pose 0 atk_gr01 12 Attack 3
+pose 0 atk_gr02 12 Attack 4
+pose 0 atk_hi01 12 Attack 5
+pose 0 atk_hi02 12 Attack 6
+pose 0 atk_hi03 12 Attack 7
+pose 0 atk_lo01 12 Attack 8
+pose 0 sp_atk01 14 Special 1
+pose 0 sp_atk02 14 Special 2
+pose 0 !sp_break01_in+sp_break01_out 0 Hakugeki
+pose 0 !ct_sp_break01 0 Kikon Move 1
+pose 0 !ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 0 !ct_guardbreak 0 Guard Break
+pose 0 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 0 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 0 !ct_syunpo_out_just@ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 0 !mg_awaken 0 Awakening
+pose 0 !mg_hit:atk_gr01>atk_gr02 80 Breaker (Hit)
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+form 1 0 Bankai
+pose 1 evo_ntrl_loop 20 Idle
+pose 1 evo_sp_ntrl_loop 20 Special Idle
+pose 1 evo_walk 14 Walk
+pose 1 evo_run_loop 10 Run
+pose 1 evo_step_f 8 Step
+pose 1 evo_dam_parry 6 Staggered
+pose 1 evo_atk_da01 12 Attack 1
+pose 1 evo_atk_ex01 12 Attack 2
+pose 1 evo_atk_gr01 12 Attack 3
+pose 1 evo_atk_hi01 12 Attack 4
+pose 1 evo_atk_hi02 12 Attack 5
+pose 1 evo_atk_hi03 12 Attack 6
+pose 1 evo_atk_lo01 12 Attack 7
+pose 1 evo_atk_lo02 12 Attack 8
+pose 1 evo_sp_atk01 14 Special 1
+pose 1 evo_sp_atk02 14 Special 2
+pose 1 !evo_sp_break01_in+evo_sp_break01_out 0 Hakugeki
+pose 1 !evo_ct_sp_break01 0 Kikon Move 1
+pose 1 !evo_ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 1 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 1 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 1 !mg_weaken 0 Weakening
+pose 1 evo_mg_apose 3 A-Pose
+pose 1 evo_mg_tpose 3 T-Pose
+form 2 0 Weakened
+pose 2 rev_ntrl_loop 20 Idle
+pose 2 rev_sp_ntrl_loop 20 Special Idle
+pose 2 rev_guard_loop 20 Guard
+pose 2 rev_walk 14 Walk
+pose 2 rev_run_loop 10 Run
+pose 2 rev_dash_f_loop 8 Dash
+pose 2 rev_step_f 8 Step
+pose 2 rev_dam_parry 6 Staggered
+pose 2 rev_atk_da01 12 Attack 1
+pose 2 rev_atk_ex01 12 Attack 2
+pose 2 rev_atk_gr01 12 Attack 3
+pose 2 rev_atk_gr02 12 Attack 4
+pose 2 rev_atk_gr03 12 Attack 5
+pose 2 rev_atk_hi01 12 Attack 6
+pose 2 rev_atk_hi02 12 Attack 7
+pose 2 rev_atk_hi03 12 Attack 8
+pose 2 rev_sp_atk01 14 Special 1
+pose 2 rev_sp_atk02 14 Special 2
+pose 2 !rev_sp_break01_in+rev_sp_break01_out 0 Hakugeki
+pose 2 !rev_ct_sp_break01 0 Kikon Move 1
+pose 2 !rev_ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 2 !rev_ct_guardbreak 0 Guard Break
+pose 2 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 2 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 2 !rev_ct_syunpo_out_just@rev_ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 2 !mg_hit:rev_atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 2 rev_mg_apose 3 A-Pose
+pose 2 rev_mg_tpose 3 T-Pose
+model playable 24 0 - mg_024 Shunsui Kyoraku
+desc Captain of the 8th Division, who wears a pink flowered kimono over his coat and would rather be drinking. Underneath the laziness is one of the oldest and strongest captains in the 13 Court Guard Squads. He fights with a pair of swords that turn children's games into deadly rules.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 sp_ntrl_loop 20 Special Idle
+pose 0 guard_loop 20 Guard
+pose 0 walk 14 Walk
+pose 0 run_loop 10 Run
+pose 0 dash_f_loop 8 Dash
+pose 0 step_f 8 Step
+pose 0 dam_parry 6 Staggered
+pose 0 atk_da01 12 Attack 1
+pose 0 atk_ex01 12 Attack 2
+pose 0 atk_gr01 12 Attack 3
+pose 0 atk_gr02 12 Attack 4
+pose 0 atk_hi01 12 Attack 5
+pose 0 atk_hi02 12 Attack 6
+pose 0 atk_hi03 12 Attack 7
+pose 0 atk_lo01 12 Attack 8
+pose 0 sp_atk01 14 Special 1
+pose 0 sp_atk02 14 Special 2
+pose 0 !sp_break01_in+sp_break01_out 0 Hakugeki
+pose 0 !ct_sp_break01 0 Kikon Move 1
+pose 0 !ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 0 !ct_guardbreak 0 Guard Break
+pose 0 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 0 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 0 !ct_syunpo_out_just@ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 0 !mg_awaken 0 Awakening
+pose 0 !mg_hit:atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+form 1 0 Awakening
+pose 1 evo_ntrl_loop 20 Idle
+pose 1 evo_sp_ntrl_loop 20 Special Idle
+pose 1 evo_guard_loop 20 Guard
+pose 1 evo_walk 14 Walk
+pose 1 evo_run_loop 10 Run
+pose 1 evo_dash_f_loop 8 Dash
+pose 1 evo_step_f 8 Step
+pose 1 evo_dam_parry 6 Staggered
+pose 1 evo_atk_da01 12 Attack 1
+pose 1 evo_atk_ex01 12 Attack 2
+pose 1 evo_atk_gr01 12 Attack 3
+pose 1 evo_atk_gr02 12 Attack 4
+pose 1 evo_atk_hi01 12 Attack 5
+pose 1 evo_atk_hi02 12 Attack 6
+pose 1 evo_atk_hi03 12 Attack 7
+pose 1 evo_atk_lo01 12 Attack 8
+pose 1 evo_sp_atk01 14 Special 1
+pose 1 evo_sp_atk02 14 Special 2
+pose 1 !evo_sp_break01_in+evo_sp_break01_out 0 Hakugeki
+pose 1 !evo_ct_sp_break01 0 Kikon Move 1
+pose 1 !evo_ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 1 !evo_ct_sp_break02 0 Kikon Move 2
+pose 1 !evo_ct_sp_break02_maxout 0 Kikon Move 2 (Max)
+pose 1 !evo_ct_guardbreak 0 Guard Break
+pose 1 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 1 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 1 !evo_ct_syunpo_out_just@evo_ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 1 !mg_hit:evo_atk_gr01>atk_gr02 80 Breaker (Hit)
+pose 1 evo_mg_apose 3 A-Pose
+pose 1 evo_mg_tpose 3 T-Pose
+model playable 25 0 - mg_025 Kaname Tosen
+desc Captain of the 9th Division, a blind swordsman who talks constantly about justice. A friend of his was killed by her own husband, a Soul Reaper who was never punished, and that loss drove everything he did after. His Bankai traps an enemy in a dome where only Tosen can sense anything.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 sp_ntrl_loop 20 Special Idle
+pose 0 guard_loop 20 Guard
+pose 0 walk 14 Walk
+pose 0 run_loop 10 Run
+pose 0 dash_f_loop 8 Dash
+pose 0 step_f 8 Step
+pose 0 dam_parry 6 Staggered
+pose 0 atk_da01 12 Attack 1
+pose 0 atk_ex01 12 Attack 2
+pose 0 atk_gr01 12 Attack 3
+pose 0 atk_gr02 12 Attack 4
+pose 0 atk_hi01 12 Attack 5
+pose 0 atk_hi02 12 Attack 6
+pose 0 atk_hi03 12 Attack 7
+pose 0 atk_lo01 12 Attack 8
+pose 0 sp_atk01 14 Special 1
+pose 0 sp_atk02 14 Special 2
+pose 0 !sp_break01_in+sp_break01_out 0 Hakugeki
+pose 0 !ct_sp_break01 0 Kikon Move 1
+pose 0 !ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 0 !ct_guardbreak 0 Guard Break
+pose 0 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 0 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 0 !ct_syunpo_out_just@ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 0 !mg_awaken 0 Awakening
+pose 0 !mg_hit:atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 0 !mg_counter:R@L6/atk_ex01>atk_ex01_1 150 Signature (Counter)
+pose 0 !mg_counter:SR@L58/sp_atk02>sp_atk02_2 150 Special 2 (Counter)
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+form 1 0 Awakening
+pose 1 evo_ntrl_loop 20 Idle
+pose 1 evo_sp_ntrl_loop 20 Special Idle
+pose 1 evo_guard_loop 20 Guard
+pose 1 evo_walk 14 Walk
+pose 1 evo_run_loop 10 Run
+pose 1 evo_dash_f_loop 8 Dash
+pose 1 evo_step_f 8 Step
+pose 1 evo_dam_parry 6 Staggered
+pose 1 evo_atk_da01 12 Attack 1
+pose 1 evo_atk_ex01 12 Attack 2
+pose 1 evo_atk_gr01 12 Attack 3
+pose 1 evo_atk_gr02 12 Attack 4
+pose 1 evo_atk_hi01 12 Attack 5
+pose 1 evo_atk_hi02 12 Attack 6
+pose 1 evo_atk_hi03 12 Attack 7
+pose 1 evo_atk_lo01 12 Attack 8
+pose 1 evo_sp_atk01 14 Special 1
+pose 1 evo_sp_atk02 14 Special 2
+pose 1 !evo_sp_break01_in+evo_sp_break01_out 0 Hakugeki
+pose 1 !evo_ct_sp_break01 0 Kikon Move 1
+pose 1 !evo_ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 1 !evo_ct_sp_break02 0 Kikon Move 2
+pose 1 !evo_ct_sp_break02_maxout 0 Kikon Move 2 (Max)
+pose 1 !evo_ct_guardbreak 0 Guard Break
+pose 1 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 1 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 1 !evo_ct_syunpo_out_just@evo_ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 1 !mg_hit:evo_atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 1 !mg_counter:R@L6/evo_atk_ex01>evo_atk_ex01_1 150 Signature (Counter)
+pose 1 !mg_counter:SR@L58/evo_sp_atk02>evo_sp_atk02_2 150 Special 2 (Counter)
+pose 1 evo_mg_apose 3 A-Pose
+pose 1 evo_mg_tpose 3 T-Pose
+model playable 26 0 - mg_026 Toshiro Hitsugaya
+desc Captain of the 10th Division and the youngest captain the 13 Court Guard Squads have ever had. He grew up in the same house as Momo Hinamori and still worries about her. His Zanpakuto, Hyorinmaru, is the strongest ice-type in Soul Society.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 sp_ntrl_loop 20 Special Idle
+pose 0 guard_loop 20 Guard
+pose 0 walk 14 Walk
+pose 0 run_loop 10 Run
+pose 0 dash_f_loop 8 Dash
+pose 0 step_f 8 Step
+pose 0 dam_parry 6 Staggered
+pose 0 atk_da01 12 Attack 1
+pose 0 atk_ex01 12 Attack 2
+pose 0 atk_ex02 12 Attack 3
+pose 0 atk_gr01 12 Attack 4
+pose 0 atk_gr02 12 Attack 5
+pose 0 atk_hi01 12 Attack 6
+pose 0 atk_hi02 12 Attack 7
+pose 0 atk_hi03 12 Attack 8
+pose 0 sp_atk01 14 Special 1
+pose 0 sp_atk02 14 Special 2
+pose 0 !sp_break01_in+sp_break01_out 0 Hakugeki
+pose 0 !ct_sp_break01 0 Kikon Move 1
+pose 0 !ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 0 !ct_guardbreak 0 Guard Break
+pose 0 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 0 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 0 !ct_syunpo_out_just@ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 0 !mg_awaken 0 Awakening
+pose 0 !mg_hit:atk_gr01>atk_gr02 80 Breaker (Hit)
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+form 1 0 Awakening
+pose 1 evo_ntrl_loop 20 Idle
+pose 1 evo_sp_ntrl_loop 20 Special Idle
+pose 1 evo_guard_loop 20 Guard
+pose 1 evo_walk 14 Walk
+pose 1 evo_run_loop 10 Run
+pose 1 evo_dash_f_loop 8 Dash
+pose 1 evo_step_f 8 Step
+pose 1 evo_dam_parry 6 Staggered
+pose 1 evo_atk_da01 12 Attack 1
+pose 1 evo_atk_ex01 12 Attack 2
+pose 1 evo_atk_gr01 12 Attack 3
+pose 1 evo_atk_gr02 12 Attack 4
+pose 1 evo_atk_hi01 12 Attack 5
+pose 1 evo_atk_hi02 12 Attack 6
+pose 1 evo_atk_hi03 12 Attack 7
+pose 1 evo_atk_lo01 12 Attack 8
+pose 1 evo_sp_atk01 14 Special 1
+pose 1 evo_sp_atk02 14 Special 2
+pose 1 !evo_sp_break01_in+evo_sp_break01_out 0 Hakugeki
+pose 1 !evo_ct_sp_break01 0 Kikon Move 1
+pose 1 !evo_ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 1 !evo_ct_sp_break02 0 Kikon Move 2
+pose 1 !evo_ct_sp_break02_maxout 0 Kikon Move 2 (Max)
+pose 1 !evo_ct_guardbreak 0 Guard Break
+pose 1 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 1 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 1 !evo_ct_syunpo_out_just@evo_ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 1 !mg_hit:evo_atk_gr01>atk_gr02 80 Breaker (Hit)
+pose 1 evo_mg_apose 3 A-Pose
+pose 1 evo_mg_tpose 3 T-Pose
+model playable 27 0 - mg_027 Kenpachi Zaraki
+desc Captain of the 11th Division, who earned the name Kenpachi by killing the man who held it in front of the entire squad. He wears bells in his hair so his opponents can find him, since a fight is the only thing he enjoys.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 sp_ntrl_loop 20 Special Idle
+pose 0 guard_loop 20 Guard
+pose 0 walk 14 Walk
+pose 0 run_loop 10 Run
+pose 0 dash_f_loop 8 Dash
+pose 0 step_f 8 Step
+pose 0 dam_parry 6 Staggered
+pose 0 atk_da01 12 Attack 1
+pose 0 atk_ex01 12 Attack 2
+pose 0 atk_gr01 12 Attack 3
+pose 0 atk_gr02 12 Attack 4
+pose 0 atk_hi01 12 Attack 5
+pose 0 atk_hi02 12 Attack 6
+pose 0 atk_hi03 12 Attack 7
+pose 0 atk_lo01 12 Attack 8
+pose 0 sp_atk01 14 Special 1
+pose 0 sp_atk02 14 Special 2
+pose 0 !sp_break01_in+sp_break01_out 0 Hakugeki
+pose 0 !ct_sp_break01 0 Kikon Move 1
+pose 0 !ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 0 !ct_guardbreak 0 Guard Break
+pose 0 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 0 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 0 !ct_syunpo_out_just@ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 0 !mg_awaken 0 Awakening
+pose 0 !mg_hit:atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+form 1 0 Awakening
+pose 1 evo_ntrl_loop 20 Idle
+pose 1 evo_sp_ntrl_loop 20 Special Idle
+pose 1 evo_guard_loop 20 Guard
+pose 1 evo_walk 14 Walk
+pose 1 evo_run_loop 10 Run
+pose 1 evo_dash_f_loop 8 Dash
+pose 1 evo_step_f 8 Step
+pose 1 evo_atk_da01 12 Attack 1
+pose 1 evo_atk_ex01 12 Attack 2
+pose 1 evo_atk_gr01 12 Attack 3
+pose 1 evo_atk_gr02 12 Attack 4
+pose 1 evo_atk_hi01 12 Attack 5
+pose 1 evo_atk_hi02 12 Attack 6
+pose 1 evo_atk_hi03 12 Attack 7
+pose 1 evo_atk_lo01 12 Attack 8
+pose 1 evo_sp_atk01 14 Special 1
+pose 1 evo_sp_atk02 14 Special 2
+pose 1 !evo_sp_break01_in+evo_sp_break01_out 0 Hakugeki
+pose 1 !evo_ct_sp_break01 0 Kikon Move 1
+pose 1 !evo_ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 1 !evo_ct_sp_break02 0 Kikon Move 2
+pose 1 !evo_ct_sp_break02_maxout 0 Kikon Move 2 (Max)
+pose 1 !evo_ct_guardbreak 0 Guard Break
+pose 1 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 1 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 1 !evo_ct_syunpo_out_just@evo_ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 1 !mg_hit:evo_atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 1 !mg_hit:evo_sp_atk02_1_sub>evo_sp_atk02_3_sub 130 Special 2 (Hit)
+pose 1 !mg_hit:evo_sp_atk02_2_sub>evo_sp_atk02_3_sub 130 Special 2 (Hit 2)
+pose 1 evo_mg_apose 3 A-Pose
+pose 1 evo_mg_tpose 3 T-Pose
+model playable 29 0 - mg_029 Mayuri Kurotsuchi
+desc Captain of the 12th Division and head of its research institute. He treats everyone around him as test material, his own lieutenant included. His Bankai is a giant baby-faced creature that breathes poison.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 sp_ntrl_loop 20 Special Idle
+pose 0 guard_loop 20 Guard
+pose 0 walk 14 Walk
+pose 0 run_loop 10 Run
+pose 0 dash_f_loop 8 Dash
+pose 0 step_f 8 Step
+pose 0 dam_parry 6 Staggered
+pose 0 atk_da01 12 Attack 1
+pose 0 atk_ex01 12 Attack 2
+pose 0 atk_gr01 12 Attack 3
+pose 0 atk_gr02 12 Attack 4
+pose 0 atk_hi01 12 Attack 5
+pose 0 atk_hi02 12 Attack 6
+pose 0 atk_hi03 12 Attack 7
+pose 0 atk_lo01 12 Attack 8
+pose 0 sp_atk01 14 Special 1
+pose 0 sp_atk02 14 Special 2
+pose 0 !sp_break01_in+sp_break01_out 0 Hakugeki
+pose 0 !ct_sp_break01 0 Kikon Move 1
+pose 0 !ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 0 !ct_guardbreak 0 Guard Break
+pose 0 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 0 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 0 !ct_syunpo_out_just@ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 0 !mg_awaken 0 Awakening
+pose 0 !mg_hit:atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+form 1 0 Awakening
+pose 1 evo_ntrl_loop 20 Idle
+pose 1 evo_sp_ntrl_loop 20 Special Idle
+pose 1 evo_guard_loop 20 Guard
+pose 1 evo_walk 14 Walk
+pose 1 evo_run_loop 10 Run
+pose 1 evo_dash_f_loop 8 Dash
+pose 1 evo_step_f 8 Step
+pose 1 evo_atk_da01 12 Attack 1
+pose 1 evo_atk_ex01 12 Attack 2
+pose 1 evo_atk_gr01 12 Attack 3
+pose 1 evo_atk_gr02 12 Attack 4
+pose 1 evo_atk_hi01 12 Attack 5
+pose 1 evo_atk_hi02 12 Attack 6
+pose 1 evo_atk_hi03 12 Attack 7
+pose 1 evo_atk_lo01 12 Attack 8
+pose 1 evo_sp_atk01 14 Special 1
+pose 1 evo_sp_atk02 14 Special 2
+pose 1 !evo_sp_break01_in+evo_sp_break01_out 0 Hakugeki
+pose 1 !evo_ct_sp_break01 0 Kikon Move 1
+pose 1 !evo_ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 1 !evo_ct_sp_break02 0 Kikon Move 2
+pose 1 !evo_ct_sp_break02_maxout 0 Kikon Move 2 (Max)
+pose 1 !evo_ct_guardbreak 0 Guard Break
+pose 1 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 1 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 1 !evo_ct_syunpo_out_just@evo_ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 1 !mg_hit:evo_atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 1 evo_mg_apose 3 A-Pose
+pose 1 evo_mg_tpose 3 T-Pose
+model playable 31 0 - mg_031 Kaien Shiba
+keep
+desc Lieutenant of the 13th Division and Rukia's mentor, loved by his squad for his warmth. A Hollow called Metastacia took over his body, and Rukia had to kill him to stop it. His Zanpakuto, Nejibana, is a trident that controls water.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 sp_ntrl_loop 20 Special Idle
+pose 0 guard_loop 20 Guard
+pose 0 walk 14 Walk
+pose 0 run_loop 10 Run
+pose 0 dash_f_loop 8 Dash
+pose 0 step_f 8 Step
+pose 0 dam_parry 6 Staggered
+pose 0 atk_da01 12 Attack 1
+pose 0 atk_ex01 12 Attack 2
+pose 0 atk_gr01 12 Attack 3
+pose 0 atk_gr02 12 Attack 4
+pose 0 atk_hi01 12 Attack 5
+pose 0 atk_hi02 12 Attack 6
+pose 0 atk_hi03 12 Attack 7
+pose 0 atk_lo01 12 Attack 8
+pose 0 sp_atk01 14 Special 1
+pose 0 sp_atk02 14 Special 2
+pose 0 !sp_break01_in+sp_break01_out 0 Hakugeki
+pose 0 !ct_sp_break01 0 Kikon Move 1
+pose 0 !ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 0 !ct_guardbreak 0 Guard Break
+pose 0 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 0 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 0 !ct_syunpo_out_just@ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 0 !mg_awaken 0 Awakening
+pose 0 !mg_hit:atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 0 !mg_hit:sp_atk02>sp_atk02_1 800 Special 2 (Hit)
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+form 1 0 Awakening
+pose 1 evo_ntrl_loop 20 Idle
+pose 1 evo_sp_ntrl_loop 20 Special Idle
+pose 1 evo_guard_loop 20 Guard
+pose 1 evo_walk 14 Walk
+pose 1 evo_run_loop 10 Run
+pose 1 evo_dash_f_loop 8 Dash
+pose 1 evo_step_f 8 Step
+pose 1 evo_atk_da01 12 Attack 1
+pose 1 evo_atk_ex01 12 Attack 2
+pose 1 evo_atk_gr01 12 Attack 3
+pose 1 evo_atk_gr02 12 Attack 4
+pose 1 evo_atk_hi01 12 Attack 5
+pose 1 evo_atk_hi02 12 Attack 6
+pose 1 evo_atk_hi03 12 Attack 7
+pose 1 evo_atk_lo01 12 Attack 8
+pose 1 evo_sp_atk01 14 Special 1
+pose 1 evo_sp_atk02 14 Special 2
+pose 1 !evo_sp_break01_in+evo_sp_break01_out 0 Hakugeki
+pose 1 !evo_ct_sp_break01 0 Kikon Move 1
+pose 1 !evo_ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 1 !evo_ct_sp_break02 0 Kikon Move 2
+pose 1 !evo_ct_sp_break02_maxout 0 Kikon Move 2 (Max)
+pose 1 !evo_ct_guardbreak 0 Guard Break
+pose 1 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 1 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 1 !evo_ct_syunpo_out_just@evo_ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 1 !mg_hit:evo_atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 1 !mg_hit:evo_sp_atk02>sp_atk02_1 800 Special 2 (Hit)
+pose 1 evo_mg_apose 3 A-Pose
+pose 1 evo_mg_tpose 3 T-Pose
+model playable 32 0 - mg_032 Shinji Hirako
+desc Leader of the Visored and former captain of the 5th Division. Aizen's experiments turned him half Hollow a century ago, and he has waited to settle the score ever since. His Zanpakuto, Sakanade, turns an enemy's sense of direction upside down.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 sp_ntrl_loop 20 Special Idle
+pose 0 guard_loop 20 Guard
+pose 0 walk 14 Walk
+pose 0 run_loop 10 Run
+pose 0 dash_f_loop 8 Dash
+pose 0 step_f 8 Step
+pose 0 dam_parry 6 Staggered
+pose 0 atk_da01 12 Attack 1
+pose 0 atk_ex01 12 Attack 2
+pose 0 atk_gr01 12 Attack 3
+pose 0 atk_gr02 12 Attack 4
+pose 0 atk_hi01 12 Attack 5
+pose 0 atk_hi02 12 Attack 6
+pose 0 atk_hi03 12 Attack 7
+pose 0 atk_lo01 12 Attack 8
+pose 0 sp_atk01 14 Special 1
+pose 0 sp_atk02 14 Special 2
+pose 0 !sp_break01_in+sp_break01_out 0 Hakugeki
+pose 0 !ct_sp_break01 0 Kikon Move 1
+pose 0 !ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 0 !ct_guardbreak 0 Guard Break
+pose 0 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 0 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 0 !ct_syunpo_out_just@ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 0 !mg_awaken 0 Awakening
+pose 0 !mg_hit:atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 0 !mg_counter:=0R@L5/atk_ex01>atk_ex01_1 150 Signature (Counter)
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+form 1 0 Awakening
+pose 1 evo_ntrl_loop 20 Idle
+pose 1 evo_sp_ntrl_loop 20 Special Idle
+pose 1 evo_guard_loop 20 Guard
+pose 1 evo_walk 14 Walk
+pose 1 evo_run_loop 10 Run
+pose 1 evo_dash_f_loop 8 Dash
+pose 1 evo_step_f 8 Step
+pose 1 evo_dam_parry 6 Staggered
+pose 1 evo_atk_da01 12 Attack 1
+pose 1 evo_atk_da02 12 Attack 2
+pose 1 evo_atk_ex01 12 Attack 3
+pose 1 evo_atk_gr01 12 Attack 4
+pose 1 evo_atk_gr02 12 Attack 5
+pose 1 evo_atk_hi01 12 Attack 6
+pose 1 evo_atk_hi02 12 Attack 7
+pose 1 evo_atk_hi03 12 Attack 8
+pose 1 evo_sp_atk01 14 Special 1
+pose 1 evo_sp_atk02 14 Special 2
+pose 1 !evo_sp_break01_in+evo_sp_break01_out 0 Hakugeki
+pose 1 !evo_ct_sp_break01 0 Kikon Move 1
+pose 1 !evo_ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 1 !evo_ct_sp_break02 0 Kikon Move 2
+pose 1 !evo_ct_sp_break02_maxout 0 Kikon Move 2 (Max)
+pose 1 !evo_ct_guardbreak 0 Guard Break
+pose 1 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 1 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 1 !evo_ct_syunpo_out_just@evo_ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 1 !mg_hit:evo_atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 1 !mg_counter:=0R@L5/evo_atk_ex01>evo_atk_ex01_1 150 Signature (Counter)
+pose 1 evo_mg_apose 3 A-Pose
+pose 1 evo_mg_tpose 3 T-Pose
+model playable 33 0 - mg_033 Coyote Starrk
+desc The 1st Espada, who would much rather sleep than fight. His power was so strong that weaker Hollows died just by standing near him, so he split his soul in two to have a companion, Lilynette. When he releases, she becomes his guns.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 sp_ntrl_loop 20 Special Idle
+pose 0 guard_loop 20 Guard
+pose 0 walk 14 Walk
+pose 0 run_loop 10 Run
+pose 0 dash_f_loop 8 Dash
+pose 0 step_f 8 Step
+pose 0 dam_parry 6 Staggered
+pose 0 atk_da01 12 Attack 1
+pose 0 atk_dx01 12 Attack 2
+pose 0 atk_gr01 12 Attack 3
+pose 0 atk_gr02 12 Attack 4
+pose 0 atk_hi01 12 Attack 5
+pose 0 atk_hi02 12 Attack 6
+pose 0 atk_hi03 12 Attack 7
+pose 0 atk_lo01 12 Attack 8
+pose 0 sp_atk01 14 Special 1
+pose 0 sp_atk02 14 Special 2
+pose 0 !sp_break01_in+sp_break01_out 0 Hakugeki
+pose 0 !ct_sp_break01 0 Kikon Move 1
+pose 0 !ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 0 !ct_guardbreak 0 Guard Break
+pose 0 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 0 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 0 !ct_syunpo_out_just@ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 0 !mg_awaken 0 Awakening
+pose 0 !mg_hit:atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+form 1 0 Awakening
+pose 1 evo_ntrl_loop 20 Idle
+pose 1 evo_sp_ntrl_loop 20 Special Idle
+pose 1 evo_guard_loop 20 Guard
+pose 1 evo_walk 14 Walk
+pose 1 evo_run_loop 10 Run
+pose 1 evo_dash_f_loop 8 Dash
+pose 1 evo_step_f 8 Step
+pose 1 evo_dam_parry 6 Staggered
+pose 1 evo_atk_da01 12 Attack 1
+pose 1 evo_atk_ex02 12 Attack 2
+pose 1 evo_atk_ex03 12 Attack 3
+pose 1 evo_atk_gr01 12 Attack 4
+pose 1 evo_atk_gr02 12 Attack 5
+pose 1 evo_atk_gr03 12 Attack 6
+pose 1 evo_atk_hi01 12 Attack 7
+pose 1 evo_atk_hi02 12 Attack 8
+pose 1 evo_sp_atk01 14 Special 1
+pose 1 evo_sp_atk02 14 Special 2
+pose 1 !evo_sp_break01_in+evo_sp_break01_out 0 Hakugeki
+pose 1 !evo_ct_sp_break01 0 Kikon Move 1
+pose 1 !evo_ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 1 !evo_ct_sp_break02 0 Kikon Move 2
+pose 1 !evo_ct_sp_break02_maxout 0 Kikon Move 2 (Max)
+pose 1 !evo_ct_guardbreak 0 Guard Break
+pose 1 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 1 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 1 !evo_ct_syunpo_out_just@evo_ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 1 !mg_hit:evo_atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 1 evo_mg_apose 3 A-Pose
+pose 1 evo_mg_tpose 3 T-Pose
+model playable 35 0 - mg_035 Tier Halibel
+desc The 3rd Espada, who keeps the lower half of her face hidden behind her Hollow mask. She looked after her three Fraccion long before Aizen found them, and she fights to keep them safe. Her Resurreccion gives her control over water.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 sp_ntrl_loop 20 Special Idle
+pose 0 guard_loop 20 Guard
+pose 0 walk 14 Walk
+pose 0 run_loop 10 Run
+pose 0 dash_f_loop 8 Dash
+pose 0 step_f 8 Step
+pose 0 dam_parry 6 Staggered
+pose 0 atk_da01 12 Attack 1
+pose 0 atk_ex01 12 Attack 2
+pose 0 atk_ex02 12 Attack 3
+pose 0 atk_gr01 12 Attack 4
+pose 0 atk_gr02 12 Attack 5
+pose 0 atk_hi01 12 Attack 6
+pose 0 atk_hi02 12 Attack 7
+pose 0 atk_hi03 12 Attack 8
+pose 0 sp_atk01 14 Special 1
+pose 0 sp_atk02 14 Special 2
+pose 0 !sp_break01_in+sp_break01_out 0 Hakugeki
+pose 0 !ct_sp_break01 0 Kikon Move 1
+pose 0 !ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 0 !ct_guardbreak 0 Guard Break
+pose 0 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 0 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 0 !ct_syunpo_out_just@ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 0 !mg_awaken 0 Awakening
+pose 0 !mg_hit:atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+form 1 0 Awakening
+pose 1 evo_ntrl_loop 20 Idle
+pose 1 evo_sp_ntrl_loop 20 Special Idle
+pose 1 evo_guard_loop 20 Guard
+pose 1 evo_walk 14 Walk
+pose 1 evo_run_loop 10 Run
+pose 1 evo_dash_f_loop 8 Dash
+pose 1 evo_step_f 8 Step
+pose 1 evo_dam_parry 6 Staggered
+pose 1 evo_atk_da01 12 Attack 1
+pose 1 evo_atk_ex01 12 Attack 2
+pose 1 evo_atk_ex02 12 Attack 3
+pose 1 evo_atk_gr01 12 Attack 4
+pose 1 evo_atk_gr02 12 Attack 5
+pose 1 evo_atk_hi01 12 Attack 6
+pose 1 evo_atk_hi02 12 Attack 7
+pose 1 evo_atk_hi03 12 Attack 8
+pose 1 evo_sp_atk01 14 Special 1
+pose 1 evo_sp_atk02 14 Special 2
+pose 1 !evo_sp_break01_in+evo_sp_break01_out 0 Hakugeki
+pose 1 !evo_ct_sp_break01 0 Kikon Move 1
+pose 1 !evo_ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 1 !evo_ct_sp_break02 0 Kikon Move 2
+pose 1 !evo_ct_sp_break02_maxout 0 Kikon Move 2 (Max)
+pose 1 !evo_ct_guardbreak 0 Guard Break
+pose 1 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 1 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 1 !evo_ct_syunpo_out_just@evo_ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 1 !mg_hit:evo_atk_gr01>atk_gr02 80 Breaker (Hit)
+pose 1 evo_mg_apose 3 A-Pose
+pose 1 evo_mg_tpose 3 T-Pose
+model playable 36 0 - mg_036 Ulquiorra Cifer
+desc The 4th Espada, Aizen's most trusted Arrancar and the one who took Orihime to Hueco Mundo. He sees no value in the heart and cannot understand why Ichigo keeps getting up. He is the only Espada with a second release.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 sp_ntrl_loop 20 Special Idle
+pose 0 guard_loop 20 Guard
+pose 0 walk 14 Walk
+pose 0 run_loop 10 Run
+pose 0 dash_f_loop 8 Dash
+pose 0 step_f 8 Step
+pose 0 dam_parry 6 Staggered
+pose 0 atk_da01 12 Attack 1
+pose 0 atk_ex01 12 Attack 2
+pose 0 atk_gr01 12 Attack 3
+pose 0 atk_gr02 12 Attack 4
+pose 0 atk_hi01 12 Attack 5
+pose 0 atk_hi02 12 Attack 6
+pose 0 atk_hi03 12 Attack 7
+pose 0 atk_lo01 12 Attack 8
+pose 0 sp_atk01 14 Special 1
+pose 0 sp_atk02 14 Special 2
+pose 0 !sp_break01_in+sp_break01_out 0 Hakugeki
+pose 0 !ct_sp_break01 0 Kikon Move 1
+pose 0 !ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 0 !ct_guardbreak 0 Guard Break
+pose 0 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 0 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 0 !ct_syunpo_out_just@ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 0 !mg_awaken 0 Awakening
+pose 0 !mg_hit:atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+form 1 0 Awakening
+pose 1 evo_ntrl_loop 20 Idle
+pose 1 evo_sp_ntrl_loop 20 Special Idle
+pose 1 evo_guard_loop 20 Guard
+pose 1 evo_walk 14 Walk
+pose 1 evo_run_loop 10 Run
+pose 1 evo_dash_f_loop 8 Dash
+pose 1 evo_step_f 8 Step
+pose 1 evo_atk_da01 12 Attack 1
+pose 1 evo_atk_ex01 12 Attack 2
+pose 1 evo_atk_gr01 12 Attack 3
+pose 1 evo_atk_gr02 12 Attack 4
+pose 1 evo_atk_hi01 12 Attack 5
+pose 1 evo_atk_hi02 12 Attack 6
+pose 1 evo_atk_hi03 12 Attack 7
+pose 1 evo_atk_lo01 12 Attack 8
+pose 1 evo_sp_atk01 14 Special 1
+pose 1 evo_sp_atk02 14 Special 2
+pose 1 !evo_sp_break01_in+evo_sp_break01_out 0 Hakugeki
+pose 1 !evo_ct_sp_break01 0 Kikon Move 1
+pose 1 !evo_ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 1 !evo_ct_sp_break02 0 Kikon Move 2
+pose 1 !evo_ct_sp_break02_maxout 0 Kikon Move 2 (Max)
+pose 1 !evo_ct_guardbreak 0 Guard Break
+pose 1 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 1 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 1 !evo_ct_syunpo_out_just@evo_ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 1 !mg_reawaken 0 Reawakening
+pose 1 !mg_hit:evo_atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 1 evo_mg_apose 3 A-Pose
+pose 1 evo_mg_tpose 3 T-Pose
+form 2 0 Reawakening
+pose 2 rev_ntrl_loop 20 Idle
+pose 2 rev_sp_ntrl_loop 20 Special Idle
+pose 2 rev_guard_loop 20 Guard
+pose 2 rev_walk 14 Walk
+pose 2 rev_run_loop 10 Run
+pose 2 rev_dash_f_loop 8 Dash
+pose 2 rev_step_f 8 Step
+pose 2 rev_dam_parry 6 Staggered
+pose 2 rev_atk_da01 12 Attack 1
+pose 2 rev_atk_ex01 12 Attack 2
+pose 2 rev_atk_gr01 12 Attack 3
+pose 2 rev_atk_gr02 12 Attack 4
+pose 2 rev_atk_hi01 12 Attack 5
+pose 2 rev_atk_hi02 12 Attack 6
+pose 2 rev_atk_hi03 12 Attack 7
+pose 2 rev_atk_lo01 12 Attack 8
+pose 2 rev_sp_atk01 14 Special 1
+pose 2 rev_sp_atk02 14 Special 2
+pose 2 !rev_sp_break01_in+rev_sp_break01_out 0 Hakugeki
+pose 2 !rev_ct_sp_break01 0 Kikon Move 1
+pose 2 !rev_ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 2 !rev_ct_sp_break02 0 Kikon Move 2
+pose 2 !rev_ct_sp_break02_maxout 0 Kikon Move 2 (Max)
+pose 2 !rev_ct_guardbreak 0 Guard Break
+pose 2 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 2 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 2 !rev_ct_syunpo_out_just@rev_ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 2 !mg_hit:rev_atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 2 rev_mg_apose 3 A-Pose
+pose 2 rev_mg_tpose 3 T-Pose
+model playable 37 0 - mg_037 Nnoitora Gilga
+desc The 5th Espada, who cannot stand the thought of a woman fighting above him. That grudge led him to ambush Nelliel and leave her with a cracked mask and no memories. He fights with a huge crescent-bladed weapon that has a long chain fixed to the end of its handle.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 sp_ntrl_loop 20 Special Idle
+pose 0 guard_loop 20 Guard
+pose 0 walk 14 Walk
+pose 0 run_loop 10 Run
+pose 0 dash_f_loop 8 Dash
+pose 0 step_f 8 Step
+pose 0 dam_parry 6 Staggered
+pose 0 atk_da01 12 Attack 1
+pose 0 atk_ex01 12 Attack 2
+pose 0 atk_gr01 12 Attack 3
+pose 0 atk_gr02 12 Attack 4
+pose 0 atk_hi01 12 Attack 5
+pose 0 atk_hi02 12 Attack 6
+pose 0 atk_hi03 12 Attack 7
+pose 0 atk_lo01 12 Attack 8
+pose 0 sp_atk01 14 Special 1
+pose 0 sp_atk02 14 Special 2
+pose 0 !sp_break01_in+sp_break01_out 0 Hakugeki
+pose 0 !ct_sp_break01 0 Kikon Move 1
+pose 0 !ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 0 !ct_guardbreak 0 Guard Break
+pose 0 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 0 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 0 !ct_syunpo_out_just@ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 0 !mg_awaken 0 Awakening
+pose 0 !mg_hit:atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 0 !mg_hit:atk_hi03>atk_hi03_1 130 Flash 3 (Hit)
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+form 1 0 Awakening
+pose 1 evo_ntrl_loop 20 Idle
+pose 1 evo_sp_ntrl_loop 20 Special Idle
+pose 1 evo_guard_loop 20 Guard
+pose 1 evo_walk 14 Walk
+pose 1 evo_run_loop 10 Run
+pose 1 evo_dash_f_loop 8 Dash
+pose 1 evo_step_f 8 Step
+pose 1 evo_dam_parry 6 Staggered
+pose 1 evo_atk_da01 12 Attack 1
+pose 1 evo_atk_dx01 12 Attack 2
+pose 1 evo_atk_ex01 12 Attack 3
+pose 1 evo_atk_gr01 12 Attack 4
+pose 1 evo_atk_gr02 12 Attack 5
+pose 1 evo_atk_hi01 12 Attack 6
+pose 1 evo_atk_hi02 12 Attack 7
+pose 1 evo_atk_hi03 12 Attack 8
+pose 1 evo_sp_atk01 14 Special 1
+pose 1 evo_sp_atk02 14 Special 2
+pose 1 !evo_sp_break01_in+evo_sp_break01_out 0 Hakugeki
+pose 1 !evo_ct_sp_break01 0 Kikon Move 1
+pose 1 !evo_ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 1 !evo_ct_sp_break02 0 Kikon Move 2
+pose 1 !evo_ct_sp_break02_maxout 0 Kikon Move 2 (Max)
+pose 1 !evo_ct_guardbreak 0 Guard Break
+pose 1 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 1 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 1 !evo_ct_syunpo_out_just@evo_ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 1 !mg_hit:evo_atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 1 !mg_hit:evo_atk_hi03>atk_hi03_1 130 Flash 3 (Hit)
+pose 1 !mg_counter:=0R~L@L2/evo_atk_ex01>evo_atk_lo01 150 Signature (Counter)
+pose 1 !mg_counter:=0R~U@L2/evo_atk_ex01>evo_atk_hi01 150 Signature (Counter 2)
+pose 1 !mg_counter:=0R~^U@L2/evo_atk_ex01>evo_atk_hi03 150 Signature (Counter 3)
+pose 1 evo_mg_apose 3 A-Pose
+model playable 38 0 - mg_038 Grimmjow Jaegerjaquez
+desc The 6th Espada, a hot-headed Arrancar who wants to crush anyone who looks down on him. After their first fight in Karakura Town, he decided that Ichigo was his to beat. His Resurreccion, Pantera, gives him a cat-like form with claws and blades on his forearms.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 sp_ntrl_loop 20 Special Idle
+pose 0 guard_loop 20 Guard
+pose 0 walk 14 Walk
+pose 0 run_loop 10 Run
+pose 0 dash_f_loop 8 Dash
+pose 0 step_f 8 Step
+pose 0 dam_parry 6 Staggered
+pose 0 atk_da01 12 Attack 1
+pose 0 atk_ex02 12 Attack 2
+pose 0 atk_gr01 12 Attack 3
+pose 0 atk_gr02 12 Attack 4
+pose 0 atk_hi01 12 Attack 5
+pose 0 atk_hi02 12 Attack 6
+pose 0 atk_hi03 12 Attack 7
+pose 0 atk_lo01 12 Attack 8
+pose 0 sp_atk01 14 Special 1
+pose 0 sp_atk02 14 Special 2
+pose 0 !sp_break01_in+sp_break01_out 0 Hakugeki
+pose 0 !ct_sp_break01 0 Kikon Move 1
+pose 0 !ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 0 !ct_guardbreak 0 Guard Break
+pose 0 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 0 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 0 !ct_syunpo_out_just@ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 0 !mg_awaken 0 Awakening
+pose 0 !mg_hit:atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+form 1 0 Awakening
+pose 1 evo_ntrl_loop 20 Idle
+pose 1 evo_sp_ntrl_loop 20 Special Idle
+pose 1 evo_guard_loop 20 Guard
+pose 1 evo_walk 14 Walk
+pose 1 evo_run_loop 10 Run
+pose 1 evo_dash_f_loop 8 Dash
+pose 1 evo_step_f 8 Step
+pose 1 evo_dam_parry 6 Staggered
+pose 1 evo_atk_da01 12 Attack 1
+pose 1 evo_atk_ex02 12 Attack 2
+pose 1 evo_atk_gr01 12 Attack 3
+pose 1 evo_atk_gr02 12 Attack 4
+pose 1 evo_atk_hi01 12 Attack 5
+pose 1 evo_atk_hi02 12 Attack 6
+pose 1 evo_atk_hi03 12 Attack 7
+pose 1 evo_atk_lo01 12 Attack 8
+pose 1 evo_sp_atk01 14 Special 1
+pose 1 evo_sp_atk02 14 Special 2
+pose 1 !evo_sp_break01_in+evo_sp_break01_out 0 Hakugeki
+pose 1 !evo_ct_sp_break01 0 Kikon Move 1
+pose 1 !evo_ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 1 !evo_ct_sp_break02 0 Kikon Move 2
+pose 1 !evo_ct_sp_break02_maxout 0 Kikon Move 2 (Max)
+pose 1 !evo_ct_guardbreak 0 Guard Break
+pose 1 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 1 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 1 !evo_ct_syunpo_out_just@evo_ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 1 !mg_hit:evo_atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 1 !mg_hit:evo_sp_atk01>evo_sp_atk01_1 130 Special 1 (Hit)
+pose 1 evo_mg_apose 3 A-Pose
+pose 1 evo_mg_tpose 3 T-Pose
+model playable 39 0 - mg_039 Szayelaporro Granz
+desc The 8th Espada, a scientist who studies his opponents before he fights them. He eats his own Fraccion to heal his wounds. His Resurreccion lets him make a doll of an enemy and crush its organs one by one.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 sp_ntrl_loop 20 Special Idle
+pose 0 guard_loop 20 Guard
+pose 0 walk 14 Walk
+pose 0 run_loop 10 Run
+pose 0 dash_f_loop 8 Dash
+pose 0 step_f 8 Step
+pose 0 dam_parry 6 Staggered
+pose 0 atk_da01 12 Attack 1
+pose 0 atk_ex01 12 Attack 2
+pose 0 atk_gr01 12 Attack 3
+pose 0 atk_gr02 12 Attack 4
+pose 0 atk_hi01 12 Attack 5
+pose 0 atk_hi02 12 Attack 6
+pose 0 atk_hi03 12 Attack 7
+pose 0 atk_lo01 12 Attack 8
+pose 0 sp_atk01 14 Special 1
+pose 0 sp_atk02 14 Special 2
+pose 0 !sp_break01_in+sp_break01_out 0 Hakugeki
+pose 0 !ct_sp_break01 0 Kikon Move 1
+pose 0 !ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 0 !ct_guardbreak 0 Guard Break
+pose 0 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 0 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 0 !ct_syunpo_out_just@ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 0 !mg_awaken 0 Awakening
+pose 0 !mg_hit:atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 0 !mg_hit:atk_hi03>atk_hi03_1 339 Flash 3 (Hit)
+pose 0 !mg_counter:SU@L5/sp_atk01>sp_atk01_1 150 Special 1 (Counter)
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+form 1 0 Awakening
+pose 1 evo_ntrl_loop 20 Idle
+pose 1 evo_sp_ntrl_loop 20 Special Idle
+pose 1 evo_guard_loop 20 Guard
+pose 1 evo_walk 14 Walk
+pose 1 evo_run_loop 10 Run
+pose 1 evo_dash_f_loop 8 Dash
+pose 1 evo_step_f 8 Step
+pose 1 evo_dam_parry 6 Staggered
+pose 1 evo_atk_da01 12 Attack 1
+pose 1 evo_atk_ex01 12 Attack 2
+pose 1 evo_atk_gr01 12 Attack 3
+pose 1 evo_atk_gr02 12 Attack 4
+pose 1 evo_atk_hi01 12 Attack 5
+pose 1 evo_atk_hi02 12 Attack 6
+pose 1 evo_atk_hi03 12 Attack 7
+pose 1 evo_atk_lo01 12 Attack 8
+pose 1 evo_sp_atk01 14 Special 1
+pose 1 evo_sp_atk02 14 Special 2
+pose 1 !evo_sp_break01_in+evo_sp_break01_out 0 Hakugeki
+pose 1 !evo_ct_sp_break01 0 Kikon Move 1
+pose 1 !evo_ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 1 !evo_ct_sp_break02 0 Kikon Move 2
+pose 1 !evo_ct_sp_break02_maxout 0 Kikon Move 2 (Max)
+pose 1 !evo_ct_guardbreak 0 Guard Break
+pose 1 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 1 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 1 !evo_ct_syunpo_out_just@evo_ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 1 !mg_hit:evo_atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 1 !mg_counter:=0SU@L5/evo_sp_atk01>evo_sp_atk01_1 150 Special 1 (Counter)
+pose 1 !mg_counter:=12SU@L5/evo_sp_atk01>evo_sp_atk01_2 0 Special 1 (Counter 2)
+pose 1 evo_mg_apose 3 A-Pose
+pose 1 evo_mg_tpose 3 T-Pose
+model playable 40 0 - mg_040 Isane Kotetsu
+desc Lieutenant of the 4th Division and Retsu Unohana's right hand. She is nervous and soft-spoken, but she is one of the best healers in Soul Society. Her Zanpakuto is called Itegumo.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 sp_ntrl_loop 20 Special Idle
+pose 0 guard_loop 20 Guard
+pose 0 walk 14 Walk
+pose 0 run_loop 10 Run
+pose 0 dash_f_loop 8 Dash
+pose 0 step_f 8 Step
+pose 0 dam_parry 6 Staggered
+pose 0 atk_da01 12 Attack 1
+pose 0 atk_ex01 12 Attack 2
+pose 0 atk_gr01 12 Attack 3
+pose 0 atk_gr02 12 Attack 4
+pose 0 atk_hi01 12 Attack 5
+pose 0 atk_hi02 12 Attack 6
+pose 0 atk_hi03 12 Attack 7
+pose 0 atk_lo01 12 Attack 8
+pose 0 sp_atk01 14 Special 1
+pose 0 sp_atk02 14 Special 2
+pose 0 !sp_break01_in+sp_break01_out 0 Hakugeki
+pose 0 !ct_sp_break01 0 Kikon Move 1
+pose 0 !ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 0 !ct_guardbreak 0 Guard Break
+pose 0 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 0 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 0 !ct_syunpo_out_just@ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 0 !mg_awaken 0 Awakening
+pose 0 !mg_hit:atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 0 !mg_counter:SU@L6/sp_atk01>sp_atk01_1 150 Special 1 (Counter)
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+form 1 0 Awakening
+pose 1 evo_ntrl_loop 20 Idle
+pose 1 evo_sp_ntrl_loop 20 Special Idle
+pose 1 evo_guard_loop 20 Guard
+pose 1 evo_walk 14 Walk
+pose 1 evo_run_loop 10 Run
+pose 1 evo_dash_f_loop 8 Dash
+pose 1 evo_step_f 8 Step
+pose 1 evo_atk_da01 12 Attack 1
+pose 1 evo_atk_ex01 12 Attack 2
+pose 1 evo_atk_gr01 12 Attack 3
+pose 1 evo_atk_gr02 12 Attack 4
+pose 1 evo_atk_hi01 12 Attack 5
+pose 1 evo_atk_hi02 12 Attack 6
+pose 1 evo_atk_hi03 12 Attack 7
+pose 1 evo_atk_lo01 12 Attack 8
+pose 1 evo_sp_atk01 14 Special 1
+pose 1 evo_sp_atk02 14 Special 2
+pose 1 !evo_sp_break01_in+evo_sp_break01_out 0 Hakugeki
+pose 1 !evo_ct_sp_break01 0 Kikon Move 1
+pose 1 !evo_ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 1 !evo_ct_sp_break02 0 Kikon Move 2
+pose 1 !evo_ct_sp_break02_maxout 0 Kikon Move 2 (Max)
+pose 1 !evo_ct_guardbreak 0 Guard Break
+pose 1 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 1 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 1 !evo_ct_syunpo_out_just@evo_ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 1 !mg_hit:evo_atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 1 !mg_counter:SU@L6/evo_sp_atk01>evo_sp_atk01_1 150 Special 1 (Counter)
+pose 1 evo_mg_apose 3 A-Pose
+pose 1 evo_mg_tpose 3 T-Pose
+model playable 41 0 - mg_041 Aaroniero Arruruerie
+desc The 9th Espada, whose real face is a glass tank holding two small floating heads. He eats other Hollows and takes their powers for his own. He wore Kaien Shiba's face to taunt Rukia when they fought.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 sp_ntrl_loop 20 Special Idle
+pose 0 guard_loop 20 Guard
+pose 0 walk 14 Walk
+pose 0 run_loop 10 Run
+pose 0 dash_f_loop 8 Dash
+pose 0 step_f 8 Step
+pose 0 dam_parry 6 Staggered
+pose 0 atk_da01 12 Attack 1
+pose 0 atk_ex01 12 Attack 2
+pose 0 atk_gr01 12 Attack 3
+pose 0 atk_gr02 12 Attack 4
+pose 0 atk_hi01 12 Attack 5
+pose 0 atk_hi02 12 Attack 6
+pose 0 atk_hi03 12 Attack 7
+pose 0 atk_lo01 12 Attack 8
+pose 0 sp_atk01 14 Special 1
+pose 0 sp_atk02 14 Special 2
+pose 0 !sp_break01_in+sp_break01_out 0 Hakugeki
+pose 0 !ct_sp_break01 0 Kikon Move 1
+pose 0 !ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 0 !ct_guardbreak 0 Guard Break
+pose 0 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 0 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 0 !ct_syunpo_out_just@ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 0 !mg_awaken 0 Awakening
+pose 0 !mg_hit:atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 0 !mg_hit:sp_atk02>sp_atk02_1 800 Special 2 (Hit)
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+form 1 0 Awakening
+pose 1 evo_ntrl_loop 20 Idle
+pose 1 evo_sp_ntrl_loop 20 Special Idle
+pose 1 evo_guard_loop 20 Guard
+pose 1 evo_walk 14 Walk
+pose 1 evo_run_loop 10 Run
+pose 1 evo_dash_f_loop 8 Dash
+pose 1 evo_step_f 8 Step
+pose 1 evo_atk_da01 12 Attack 1
+pose 1 evo_atk_ex01 12 Attack 2
+pose 1 evo_atk_gr01 12 Attack 3
+pose 1 evo_atk_gr02 12 Attack 4
+pose 1 evo_atk_hi01 12 Attack 5
+pose 1 evo_atk_hi02 12 Attack 6
+pose 1 evo_atk_hi03 12 Attack 7
+pose 1 evo_atk_lo01 12 Attack 8
+pose 1 evo_sp_atk01 14 Special 1
+pose 1 evo_sp_atk02 14 Special 2
+pose 1 !evo_sp_break01_in+evo_sp_break01_out 0 Hakugeki
+pose 1 !evo_ct_sp_break01 0 Kikon Move 1
+pose 1 !evo_ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 1 !evo_ct_sp_break02 0 Kikon Move 2
+pose 1 !evo_ct_sp_break02_maxout 0 Kikon Move 2 (Max)
+pose 1 !evo_ct_guardbreak 0 Guard Break
+pose 1 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 1 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 1 !evo_ct_syunpo_out_just@evo_ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 1 !mg_hit:evo_atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 1 !mg_hit:evo_sp_atk02>sp_atk02_1 800 Special 2 (Hit)
+pose 1 evo_mg_apose 3 A-Pose
+pose 1 evo_mg_tpose 3 T-Pose
+model playable 42 0 - mg_042 Nelliel Tu Odelschwanck
+desc Once the 3rd Espada, until Nnoitora cracked her mask and left her as a small child named Nel. When her full power comes back, she is calm and dislikes pointless fighting. Her Resurreccion turns her lower half into a horse and gives her a lance.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 sp_ntrl_loop 20 Special Idle
+pose 0 guard_loop 20 Guard
+pose 0 walk 14 Walk
+pose 0 run_loop 10 Run
+pose 0 dash_f_loop 8 Dash
+pose 0 step_f 8 Step
+pose 0 dam_parry 6 Staggered
+pose 0 atk_da01 12 Attack 1
+pose 0 atk_gr01 12 Attack 2
+pose 0 atk_gr02 12 Attack 3
+pose 0 atk_hi01 12 Attack 4
+pose 0 atk_hi02 12 Attack 5
+pose 0 atk_hi03 12 Attack 6
+pose 0 atk_lo01 12 Attack 7
+pose 0 atk_lo02 12 Attack 8
+pose 0 sp_atk01 14 Special 1
+pose 0 sp_atk02 14 Special 2
+pose 0 !sp_break01_in+sp_break01_out 0 Hakugeki
+pose 0 !ct_sp_break01 0 Kikon Move 1
+pose 0 !ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 0 !ct_guardbreak 0 Guard Break
+pose 0 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 0 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 0 !ct_syunpo_out_just@ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 0 !mg_awaken 0 Awakening
+pose 0 !mg_hit:atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+form 1 0 Awakening
+pose 1 evo_ntrl_loop 20 Idle
+pose 1 evo_sp_ntrl_loop 20 Special Idle
+pose 1 evo_guard_loop 20 Guard
+pose 1 evo_walk 14 Walk
+pose 1 evo_run_loop 10 Run
+pose 1 evo_dash_f_loop 8 Dash
+pose 1 evo_step_f 8 Step
+pose 1 evo_dam_parry 6 Staggered
+pose 1 evo_atk_da01 12 Attack 1
+pose 1 evo_atk_gr01 12 Attack 2
+pose 1 evo_atk_gr02 12 Attack 3
+pose 1 evo_atk_hi01 12 Attack 4
+pose 1 evo_atk_hi02 12 Attack 5
+pose 1 evo_atk_hi03 12 Attack 6
+pose 1 evo_atk_lo01 12 Attack 7
+pose 1 evo_atk_lo02 12 Attack 8
+pose 1 evo_sp_atk01 14 Special 1
+pose 1 evo_sp_atk02 14 Special 2
+pose 1 !evo_sp_break01_in+evo_sp_break01_out 0 Hakugeki
+pose 1 !evo_ct_sp_break01 0 Kikon Move 1
+pose 1 !evo_ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 1 !evo_ct_sp_break02 0 Kikon Move 2
+pose 1 !evo_ct_sp_break02_maxout 0 Kikon Move 2 (Max)
+pose 1 !evo_ct_guardbreak 0 Guard Break
+pose 1 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 1 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 1 !evo_ct_syunpo_out_just@evo_ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 1 !mg_hit:evo_atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 1 evo_mg_apose 3 A-Pose
+pose 1 evo_mg_tpose 3 T-Pose
+model playable 50 0 - mg_050 Ichibe Hyosube
+desc Leader of Squad Zero, the Royal Guard that protects the Soul King. He claims to have named everything in Soul Society, and his power works by taking those names away.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 sp_ntrl_loop 20 Special Idle
+pose 0 guard_loop 20 Guard
+pose 0 walk 14 Walk
+pose 0 run_loop 10 Run
+pose 0 dash_f_loop 8 Dash
+pose 0 step_f 8 Step
+pose 0 dam_parry 6 Staggered
+pose 0 atk_da01 12 Attack 1
+pose 0 atk_ex01 12 Attack 2
+pose 0 atk_ex02 12 Attack 3
+pose 0 atk_ex03 12 Attack 4
+pose 0 atk_ex04 12 Attack 5
+pose 0 atk_gr01 12 Attack 6
+pose 0 atk_gr02 12 Attack 7
+pose 0 atk_hi01 12 Attack 8
+pose 0 sp_atk01 14 Special 1
+pose 0 sp_atk02 14 Special 2
+pose 0 !sp_break01_in+sp_break01_out 0 Hakugeki
+pose 0 !ct_sp_break01 0 Kikon Move 1
+pose 0 !ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 0 !ct_guardbreak 0 Guard Break
+pose 0 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 0 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 0 !ct_syunpo_out_just@ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 0 !mg_awaken 0 Awakening
+pose 0 !mg_hit:atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 0 !mg_counter:=0^R@L5/atk_ex04>atk_ex04_1 150 Signature 4 (Counter)
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+form 1 0 Awakening
+pose 1 evo_ntrl_loop 20 Idle
+pose 1 evo_sp_ntrl_loop 20 Special Idle
+pose 1 evo_guard_loop 20 Guard
+pose 1 evo_walk 14 Walk
+pose 1 evo_run_loop 10 Run
+pose 1 evo_dash_f_loop 8 Dash
+pose 1 evo_step_f 8 Step
+pose 1 evo_dam_parry 6 Staggered
+pose 1 evo_atk_da01 12 Attack 1
+pose 1 evo_atk_ex01 12 Attack 2
+pose 1 evo_atk_ex02 12 Attack 3
+pose 1 evo_atk_ex03 12 Attack 4
+pose 1 evo_atk_ex04 12 Attack 5
+pose 1 evo_atk_gr01 12 Attack 6
+pose 1 evo_atk_gr02 12 Attack 7
+pose 1 evo_atk_hi01 12 Attack 8
+pose 1 evo_sp_atk01 14 Special 1
+pose 1 evo_sp_atk02 14 Special 2
+pose 1 !evo_sp_break01_in+evo_sp_break01_out 0 Hakugeki
+pose 1 !evo_ct_sp_break01 0 Kikon Move 1
+pose 1 !evo_ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 1 !evo_ct_sp_break02 0 Kikon Move 2
+pose 1 !evo_ct_sp_break02_maxout 0 Kikon Move 2 (Max)
+pose 1 !evo_ct_guardbreak 0 Guard Break
+pose 1 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 1 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 1 !evo_ct_syunpo_out_just@evo_ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 1 !mg_hit:evo_atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 1 !mg_counter:=0^R@L5/evo_atk_ex04>evo_atk_ex04_1 220 Signature 4 (Counter)
+pose 1 evo_mg_apose 3 A-Pose
+pose 1 evo_mg_tpose 3 T-Pose
+model playable 51 0 - mg_051 Ichigo Kurosaki (Thousand-Year Blood War)
+desc Ichigo after he learned where his powers really came from. The Royal Guard forged him a new Zangetsu, a large cleaver paired with a shorter blade.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 sp_ntrl_loop 20 Special Idle
+pose 0 guard_loop 20 Guard
+pose 0 walk 14 Walk
+pose 0 run_loop 10 Run
+pose 0 dash_f_loop 8 Dash
+pose 0 step_f 8 Step
+pose 0 dam_parry 6 Staggered
+pose 0 atk_da01 12 Attack 1
+pose 0 atk_ex01 12 Attack 2
+pose 0 atk_gr01 12 Attack 3
+pose 0 atk_gr02 12 Attack 4
+pose 0 atk_hi01 12 Attack 5
+pose 0 atk_hi02 12 Attack 6
+pose 0 atk_hi03 12 Attack 7
+pose 0 atk_lo01 12 Attack 8
+pose 0 sp_atk01 14 Special 1
+pose 0 sp_atk02 14 Special 2
+pose 0 !sp_break01_in+sp_break01_out 0 Hakugeki
+pose 0 !ct_sp_break01 0 Kikon Move 1
+pose 0 !ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 0 !ct_guardbreak 0 Guard Break
+pose 0 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 0 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 0 !ct_syunpo_out_just@ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 0 !mg_awaken 0 Awakening
+pose 0 !mg_hit:atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 0 !mg_hit:sp_atk02>sp_atk02_1 130 Special 2 (Hit)
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+form 1 0 Awakening
+pose 1 evo_ntrl_loop 20 Idle
+pose 1 evo_sp_ntrl_loop 20 Special Idle
+pose 1 evo_guard_loop 20 Guard
+pose 1 evo_walk 14 Walk
+pose 1 evo_run_loop 10 Run
+pose 1 evo_dash_f_loop 8 Dash
+pose 1 evo_step_f 8 Step
+pose 1 evo_dam_parry 6 Staggered
+pose 1 evo_atk_da01 12 Attack 1
+pose 1 evo_atk_ex01 12 Attack 2
+pose 1 evo_atk_gr01 12 Attack 3
+pose 1 evo_atk_gr02 12 Attack 4
+pose 1 evo_atk_hi01 12 Attack 5
+pose 1 evo_atk_hi02 12 Attack 6
+pose 1 evo_atk_hi03 12 Attack 7
+pose 1 evo_atk_lo01 12 Attack 8
+pose 1 evo_sp_atk01 14 Special 1
+pose 1 evo_sp_atk02 14 Special 2
+pose 1 !evo_sp_break01_in+evo_sp_break01_out 0 Hakugeki
+pose 1 !evo_ct_sp_break01 0 Kikon Move 1
+pose 1 !evo_ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 1 !evo_ct_sp_break02 0 Kikon Move 2
+pose 1 !evo_ct_sp_break02_maxout 0 Kikon Move 2 (Max)
+pose 1 !evo_ct_guardbreak 0 Guard Break
+pose 1 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 1 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 1 !evo_ct_syunpo_out_just@evo_ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 1 !mg_hit:evo_atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 1 !mg_hit:evo_sp_atk02>sp_atk02_1 130 Special 2 (Hit)
+pose 1 evo_mg_apose 3 A-Pose
+pose 1 evo_mg_tpose 3 T-Pose
+model playable 52 0 - mg_052 Yhwach
+desc The father of all Quincy and emperor of the Wandenreich. Yamamoto defeated him a thousand years ago, and he has come back to destroy Soul Society. His power, The Almighty, lets him see the future and change it.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 sp_ntrl_loop 20 Special Idle
+pose 0 guard_loop 20 Guard
+pose 0 walk 14 Walk
+pose 0 run_loop 10 Run
+pose 0 dash_f_loop 8 Dash
+pose 0 step_f 8 Step
+pose 0 dam_parry 6 Staggered
+pose 0 atk_da01 12 Attack 1
+pose 0 atk_ex01 12 Attack 2
+pose 0 atk_ex02 12 Attack 3
+pose 0 atk_ex03 12 Attack 4
+pose 0 atk_gr01 12 Attack 5
+pose 0 atk_gr02 12 Attack 6
+pose 0 atk_hi01 12 Attack 7
+pose 0 atk_hi02 12 Attack 8
+pose 0 sp_atk01 14 Special 1
+pose 0 sp_atk02 14 Special 2
+pose 0 !sp_break01_in+sp_break01_out 0 Hakugeki
+pose 0 !ct_sp_break01 0 Kikon Move 1
+pose 0 !ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 0 !ct_guardbreak 0 Guard Break
+pose 0 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 0 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 0 !ct_syunpo_out_just@ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 0 !mg_awaken 0 Awakening
+pose 0 !mg_hit:atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+form 1 0 Awakening
+pose 1 evo_ntrl_loop 20 Idle
+pose 1 evo_sp_ntrl_loop 20 Special Idle
+pose 1 evo_guard_loop 20 Guard
+pose 1 evo_walk 14 Walk
+pose 1 evo_run_loop 10 Run
+pose 1 evo_dash_f_loop 8 Dash
+pose 1 evo_step_f 8 Step
+pose 1 evo_atk_da01 12 Attack 1
+pose 1 evo_atk_ex01 12 Attack 2
+pose 1 evo_atk_ex02 12 Attack 3
+pose 1 evo_atk_ex03 12 Attack 4
+pose 1 evo_atk_gr01 12 Attack 5
+pose 1 evo_atk_gr02 12 Attack 6
+pose 1 evo_atk_hi01 12 Attack 7
+pose 1 evo_atk_hi02 12 Attack 8
+pose 1 evo_sp_atk01 14 Special 1
+pose 1 evo_sp_atk02 14 Special 2
+pose 1 !evo_sp_break01_in+evo_sp_break01_out 0 Hakugeki
+pose 1 !evo_ct_sp_break01 0 Kikon Move 1
+pose 1 !evo_ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 1 !evo_ct_sp_break02 0 Kikon Move 2
+pose 1 !evo_ct_sp_break02_maxout 0 Kikon Move 2 (Max)
+pose 1 !evo_ct_guardbreak 0 Guard Break
+pose 1 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 1 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 1 !evo_ct_syunpo_out_just@evo_ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 1 !mg_reawaken 0 Reawakening
+pose 1 !mg_hit:evo_atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 1 evo_mg_apose 3 A-Pose
+pose 1 evo_mg_tpose 3 T-Pose
+form 2 0 Reawakening
+pose 2 rev_ntrl_loop 20 Idle
+pose 2 rev_sp_ntrl_loop 20 Special Idle
+pose 2 rev_guard_loop 20 Guard
+pose 2 rev_walk 14 Walk
+pose 2 rev_run_loop 10 Run
+pose 2 rev_dash_f_loop 8 Dash
+pose 2 rev_step_f 8 Step
+pose 2 rev_dam_parry 6 Staggered
+pose 2 rev_atk_da01 12 Attack 1
+pose 2 rev_atk_ex01 12 Attack 2
+pose 2 rev_atk_ex02 12 Attack 3
+pose 2 rev_atk_ex03 12 Attack 4
+pose 2 rev_atk_gr01 12 Attack 5
+pose 2 rev_atk_gr02 12 Attack 6
+pose 2 rev_atk_hi01 12 Attack 7
+pose 2 rev_atk_hi02 12 Attack 8
+pose 2 rev_sp_atk01 14 Special 1
+pose 2 rev_sp_atk02 14 Special 2
+pose 2 !rev_sp_break01_in+rev_sp_break01_out 0 Hakugeki
+pose 2 !rev_ct_sp_break01 0 Kikon Move 1
+pose 2 !rev_ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 2 !rev_ct_guardbreak 0 Guard Break
+pose 2 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 2 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 2 !rev_ct_syunpo_out_just@rev_ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 2 !mg_hit:rev_atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 2 rev_mg_apose 3 A-Pose
+pose 2 rev_mg_tpose 3 T-Pose
+model playable 53 0 - mg_053 Ryuken Ishida
+desc Uryu's father and the director of Karakura General Hospital. He gave up the Quincy way for medicine and tells his son it earns him nothing. He is still a far better archer than Uryu.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 sp_ntrl_loop 20 Special Idle
+pose 0 guard_loop 20 Guard
+pose 0 walk 14 Walk
+pose 0 run_loop 10 Run
+pose 0 dash_f_loop 8 Dash
+pose 0 step_f 8 Step
+pose 0 dam_parry 6 Staggered
+pose 0 atk_da01 12 Attack 1
+pose 0 atk_ex01 12 Attack 2
+pose 0 atk_gr01 12 Attack 3
+pose 0 atk_gr02 12 Attack 4
+pose 0 atk_hi01 12 Attack 5
+pose 0 atk_hi02 12 Attack 6
+pose 0 atk_hi03 12 Attack 7
+pose 0 atk_lo01 12 Attack 8
+pose 0 sp_atk01 14 Special 1
+pose 0 sp_atk02 14 Special 2
+pose 0 !sp_break01_in+sp_break01_out 0 Hakugeki
+pose 0 !ct_sp_break01 0 Kikon Move 1
+pose 0 !ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 0 !ct_guardbreak 0 Guard Break
+pose 0 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 0 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 0 !ct_syunpo_out_just@ct_syunpo_out_just_dam 0 Perfect Hoho
+pose 0 !mg_awaken 0 Awakening
+pose 0 !mg_hit:atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 0 !mg_counter:SR@L5/sp_atk02>sp_atk02_1 150 Special 2 (Counter)
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+form 1 0 Awakening
+pose 1 evo_ntrl_loop 20 Idle
+pose 1 evo_sp_ntrl_loop 20 Special Idle
+pose 1 evo_guard_loop 20 Guard
+pose 1 evo_walk 14 Walk
+pose 1 evo_run_loop 10 Run
+pose 1 evo_dash_f_loop 8 Dash
+pose 1 evo_step_f 8 Step
+pose 1 evo_atk_da01 12 Attack 1
+pose 1 evo_atk_ex01 12 Attack 2
+pose 1 evo_atk_gr01 12 Attack 3
+pose 1 evo_atk_gr02 12 Attack 4
+pose 1 evo_atk_hi01 12 Attack 5
+pose 1 evo_atk_hi02 12 Attack 6
+pose 1 evo_atk_hi03 12 Attack 7
+pose 1 evo_atk_lo01 12 Attack 8
+pose 1 evo_sp_atk01 14 Special 1
+pose 1 evo_sp_atk02 14 Special 2
+pose 1 !evo_sp_break01_in+evo_sp_break01_out 0 Hakugeki
+pose 1 !evo_ct_sp_break01 0 Kikon Move 1
+pose 1 !evo_ct_sp_break01_maxout 0 Kikon Move 1 (Max)
+pose 1 !evo_ct_sp_break02 0 Kikon Move 2
+pose 1 !evo_ct_sp_break02_maxout 0 Kikon Move 2 (Max)
+pose 1 !mg_reverse_burst 0 Reverse Action (Burst)
+pose 1 !mg_reverse_chain 0 Reverse Action (Chain)
+pose 1 !mg_hit:evo_atk_gr01>atk_gr02 130 Breaker (Hit)
+pose 1 !mg_counter:SR@L5/evo_sp_atk02>evo_sp_atk02_1 150 Special 2 (Counter)
+pose 1 evo_mg_apose 3 A-Pose
+pose 1 evo_mg_tpose 3 T-Pose
+
+model boss 90 0 - mg_090 Grand Fisher
+frame 1.80 8.50
+desc A Hollow that spent over fifty years hunting spiritually aware people with a lure shaped like a young girl. It killed Ichigo's mother, Masaki, and got away from Ichigo when they fought at her grave.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 run_loop 10 Run
+pose 0 dash_f_loop 8 Dash
+pose 0 step_f 8 Step
+pose 0 dam_stun_loop 20 Stunned
+pose 0 dam_parry 6 Staggered
+pose 0 atk_lo01 12 Attack 1
+pose 0 atk_lo02 12 Attack 2
+pose 0 atk_lo03 12 Attack 3
+pose 0 atk_lo04 12 Attack 4
+pose 0 atk_lo05 12 Attack 5
+pose 0 atk_lo06 12 Attack 6
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+model boss 60 0 - mg_060 Menos Grande
+frame 16 60 25
+desc A giant Hollow formed when hundreds of Hollows eat one another and fuse into a single body. Most are Gillians, the lowest class, with no mind of their own. Uryu's contest with Ichigo drew one into Karakura Town.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 run_loop 10 Run
+pose 0 dash_f_loop 8 Dash
+pose 0 dam_stun_loop 20 Stunned
+pose 0 dam_parry 6 Staggered
+pose 0 atk_lo01 12 Attack 1
+pose 0 atk_lo02 12 Attack 2
+pose 0 atk_lo03 12 Attack 3
+pose 0 atk_lo04 12 Attack 4
+pose 0 atk_lo05 12 Attack 5
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+model boss 84 0 - mg_084 Jidanbo Ikkanzaka
+frame 5.26 19.10
+desc The giant who guards the White Path Gate of the Seireitei, and who says no one has gotten past him in three hundred years. After Ichigo beat him, he kept his word and lifted the gate for him.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 dash_f_loop 8 Dash
+pose 0 dam_stun_loop 20 Stunned
+pose 0 dam_parry 6 Staggered
+pose 0 atk_lo01 12 Attack 1
+pose 0 atk_lo02 12 Attack 2
+pose 0 atk_lo03 12 Attack 3
+pose 0 atk_lo04 12 Attack 4
+pose 0 atk_lo05 12 Attack 5
+pose 0 atk_lo06 12 Attack 6
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+model boss 63 0 - mg_063 ???
+keep
+desc A pale figure with Ichigo's face that lives in his inner world. It fights without holding anything back, and it wants Ichigo's body for itself.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 sp_ntrl_loop 20 Special Idle
+pose 0 guard_loop 20 Guard
+pose 0 walk 14 Walk
+pose 0 run_loop 10 Run
+pose 0 dash_f_loop 8 Dash
+pose 0 step_f 8 Step
+pose 0 dam_parry 6 Staggered
+pose 0 atk_da01 12 Attack 1
+pose 0 atk_ex01 12 Attack 2
+pose 0 atk_ex02 12 Attack 3
+pose 0 atk_gr01 12 Attack 4
+pose 0 atk_gr02 12 Attack 5
+pose 0 atk_hi01 12 Attack 6
+pose 0 atk_hi02 12 Attack 7
+pose 0 atk_hi03 12 Attack 8
+pose 0 sp_atk01 14 Special 1
+pose 0 sp_atk02 14 Special 2
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+model boss 69 0 - mg_069 ??? (Bankai)
+desc The same pale figure, now wearing a white copy of Ichigo's Bankai. It mocks Ichigo for fighting without any instinct to kill.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 sp_ntrl_loop 20 Special Idle
+pose 0 guard_loop 20 Guard
+pose 0 walk 14 Walk
+pose 0 run_loop 10 Run
+pose 0 dash_f_loop 8 Dash
+pose 0 step_f 8 Step
+pose 0 dam_parry 6 Staggered
+pose 0 atk_da01 12 Attack 1
+pose 0 atk_ex01 12 Attack 2
+pose 0 atk_gr01 12 Attack 3
+pose 0 atk_gr02 12 Attack 4
+pose 0 atk_hi01 12 Attack 5
+pose 0 atk_hi02 12 Attack 6
+pose 0 atk_hi03 12 Attack 7
+pose 0 atk_lo01 12 Attack 8
+pose 0 sp_atk01 14 Special 1
+pose 0 sp_atk02 14 Special 2
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+model boss 62 0 - mg_062 Momo Hinamori
+desc Lieutenant of the 5th Division, who looked up to her captain, Sosuke Aizen, more than anyone. She grew up with Toshiro Hitsugaya in Rukongai. Her Zanpakuto, Tobiume, fires balls of flame.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 guard_loop 20 Guard
+pose 0 run_loop 10 Run
+pose 0 dash_f_loop 8 Dash
+pose 0 step_f 8 Step
+pose 0 dam_parry 6 Staggered
+pose 0 atk_gr01 12 Attack 1
+pose 0 atk_gr02 12 Attack 2
+pose 0 atk_hi01 12 Attack 3
+pose 0 atk_hi02 12 Attack 4
+pose 0 atk_hi03 12 Attack 5
+pose 0 sp_atk01 14 Special 1
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+model boss 97 0 - mg_097 Nemu Kurotsuchi
+desc Lieutenant of the 12th Division, made by Mayuri Kurotsuchi rather than born. She obeys every order he gives her, even when he hurts her.
+model boss 15 0 - mg_015 Yumichika Ayasegawa
+desc Fifth seat of the 11th Division and Ikkaku's closest friend, who cares about beauty above almost anything. He hides his Zanpakuto's true power because the rest of his division only respects brute force.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 guard_loop 20 Guard
+pose 0 run_loop 10 Run
+pose 0 dash_f_loop 8 Dash
+pose 0 step_f 8 Step
+pose 0 dam_parry 6 Staggered
+pose 0 atk_gr01 12 Attack 1
+pose 0 atk_gr02 12 Attack 2
+pose 0 atk_hi01 12 Attack 3
+pose 0 atk_hi02 12 Attack 4
+pose 0 atk_hi03 12 Attack 5
+pose 0 sp_atk01 14 Special 1
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+model boss 68 0 - mg_068 Hiyori Sarugaki (Visored)
+desc Former lieutenant of the 12th Division under Kisuke Urahara, and one of the Visored. She has a short temper and kicks first. Aizen's experiment turned her half Hollow along with Shinji and the others a century ago.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 guard_loop 20 Guard
+pose 0 run_loop 10 Run
+pose 0 dash_f_loop 8 Dash
+pose 0 step_f 8 Step
+pose 0 dam_parry 6 Staggered
+pose 0 atk_gr01 12 Attack 1
+pose 0 atk_gr02 12 Attack 2
+pose 0 atk_hi01 12 Attack 3
+pose 0 atk_hi02 12 Attack 4
+pose 0 atk_hi03 12 Attack 5
+pose 0 sp_atk01 14 Special 1
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+model boss 64 0 - mg_064 Ryuken Ishida (Story)
+desc Ryuken in his white hospital coat. When Uryu lost his powers, his father trained him hard enough to get them back, and he did not go easy on him.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 guard_loop 20 Guard
+pose 0 run_loop 10 Run
+pose 0 dash_f_loop 8 Dash
+pose 0 step_f 8 Step
+pose 0 dam_parry 6 Staggered
+pose 0 atk_gr01 12 Attack 1
+pose 0 atk_gr02 12 Attack 2
+pose 0 atk_hi01 12 Attack 3
+pose 0 atk_hi02 12 Attack 4
+pose 0 atk_hi03 12 Attack 5
+pose 0 sp_atk01 14 Special 1
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+model boss 66 0 - mg_066 Di Roy Rinker
+desc One of Grimmjow's Fraccion, who joined his unauthorized raid on Karakura Town. He went after Rukia and died at her hands.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 guard_loop 20 Guard
+pose 0 walk 14 Walk
+pose 0 run_loop 10 Run
+pose 0 dash_f_loop 8 Dash
+pose 0 step_f 8 Step
+pose 0 dam_parry 6 Staggered
+pose 0 atk_gr01 12 Attack 1
+pose 0 atk_gr02 12 Attack 2
+pose 0 atk_hi01 12 Attack 3
+pose 0 atk_hi02 12 Attack 4
+pose 0 atk_hi03 12 Attack 5
+pose 0 sp_atk01 14 Special 1
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+model boss 65 0 - mg_065 Edrad Liones (Resurreccion)
+frame 1.27 4.59
+desc Edrad Liones, one of Grimmjow's Fraccion, after releasing his Resurreccion, Volcanica. His arm becomes armor that explodes with each punch. Ikkaku Madarame beat him in Karakura Town.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 run_loop 10 Run
+pose 0 dash_f_loop 8 Dash
+pose 0 step_f 8 Step
+pose 0 dam_stun_loop 20 Stunned
+pose 0 dam_parry 6 Staggered
+pose 0 atk_lo01 12 Attack 1
+pose 0 atk_lo02 12 Attack 2
+pose 0 atk_lo03 12 Attack 3
+pose 0 atk_lo04 12 Attack 4
+pose 0 atk_lo05 12 Attack 5
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+model boss 87 0 - mg_087 Shawlong Koufang (Resurreccion)
+frame 0.98 3.55
+desc Shawlong Koufang, leader of Grimmjow's Fraccion, in his Resurreccion, Tijereta. His fingers stretch into long blades. He fought Toshiro Hitsugaya in Karakura Town and lost.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 guard_loop 20 Guard
+pose 0 run_loop 10 Run
+pose 0 dash_f_loop 8 Dash
+pose 0 step_f 8 Step
+pose 0 dam_stun_loop 20 Stunned
+pose 0 dam_parry 6 Staggered
+pose 0 atk_gr01 12 Attack 1
+pose 0 atk_gr02 12 Attack 2
+pose 0 atk_hi01 12 Attack 3
+pose 0 atk_hi02 12 Attack 4
+pose 0 atk_hi03 12 Attack 5
+pose 0 atk_lo01 12 Attack 6
+pose 0 atk_lo02 12 Attack 7
+pose 0 atk_lo03 12 Attack 8
+pose 0 sp_atk01 14 Special 1
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+model boss 67 0 - mg_067 Luppi Antenor (Resurreccion)
+frame 2.05 7.45
+desc Luppi Antenor in his Resurreccion, Trepadora, which gives him eight tentacles. He took Grimmjow's place as 6th Espada after Grimmjow lost his arm. Once Orihime healed that arm, Grimmjow killed him.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 run_loop 10 Run
+pose 0 dash_f_loop 8 Dash
+pose 0 step_f 8 Step
+pose 0 dam_stun_loop 20 Stunned
+pose 0 dam_parry 6 Staggered
+pose 0 atk_lo01 12 Attack 1
+pose 0 atk_lo02 12 Attack 2
+pose 0 atk_lo03 12 Attack 3
+pose 0 atk_lo04 12 Attack 4
+pose 0 atk_lo05 12 Attack 5
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+model boss 93 0 - mg_093 Yammy Llargo
+desc The 10th Espada, who came to Karakura Town with Ulquiorra on their first mission. He is huge and violent, and he enjoys hurting anyone weaker than him.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 guard_loop 20 Guard
+pose 0 walk 14 Walk
+pose 0 run_loop 10 Run
+pose 0 dash_f_loop 8 Dash
+pose 0 step_f 8 Step
+pose 0 dam_parry 6 Staggered
+pose 0 atk_gr01 12 Attack 1
+pose 0 atk_gr02 12 Attack 2
+pose 0 atk_hi01 12 Attack 3
+pose 0 atk_hi02 12 Attack 4
+pose 0 atk_hi03 12 Attack 5
+pose 0 sp_atk01 14 Special 1
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+model boss 93 0 - mg_093_res Yammy Llargo (Resurreccion)
+desc Yammy after releasing Ira. He grows into a towering giant with a tail and many elephant-like legs, and his strength keeps rising as he gets angrier.
+frame 13 60
+form 1 0 Resurreccion
+pose 1 mg_apose 3 A-Pose
+model boss 93 0 - mg_093_res2 Yammy Llargo (Resurreccion, Second Form)
+desc Ira keeps feeding on Yammy's anger until he swells into an even bigger, ape-like beast and loses his extra legs. Kenpachi Zaraki and Byakuya Kuchiki fought him together in this form.
+frame 35 140
+form 2 0 Resurreccion (Second Form)
+pose 2 mg_apose 3 A-Pose
+model boss 70 0 - mg_070 Dordoni (Resurreccion)
+desc Dordoni, a former Espada who guards a corridor of Las Noches, in his Resurreccion, Giralda. His legs become whirlwinds shaped like birds. He pushed Ichigo to fight him with everything he had.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 guard_loop 20 Guard
+pose 0 run_loop 10 Run
+pose 0 dash_f_loop 8 Dash
+pose 0 step_f 8 Step
+pose 0 dam_stun_loop 20 Stunned
+pose 0 dam_parry 6 Staggered
+pose 0 atk_lo01 12 Attack 1
+pose 0 atk_lo02 12 Attack 2
+pose 0 atk_lo03 12 Attack 3
+pose 0 atk_lo04 12 Attack 4
+pose 0 atk_lo05 12 Attack 5
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+model boss 72 0 - mg_072 Gantenbainne (Resurreccion)
+frame 1.25 4.98
+desc Gantenbainne Mosqueda, a former Espada, in his Resurreccion, Dragon Rugir. His armored body is built for close fighting. Chad beat him in Las Noches.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 guard_loop 20 Guard
+pose 0 walk 14 Walk
+pose 0 run_loop 10 Run
+pose 0 dash_f_loop 8 Dash
+pose 0 step_f 8 Step
+pose 0 dam_stun_loop 20 Stunned
+pose 0 dam_parry 6 Staggered
+pose 0 atk_lo01 12 Attack 1
+pose 0 atk_lo02 12 Attack 2
+pose 0 atk_lo03 12 Attack 3
+pose 0 atk_lo04 12 Attack 4
+pose 0 atk_lo05 12 Attack 5
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+model boss 71 0 - mg_071 Cirucci Sanderwicci (Resurreccion)
+frame 0.93 10.11
+desc Cirucci Sanderwicci, a former Espada, in her Resurreccion, Golondrina. Her back grows wings made of blades. She fought Uryu in Las Noches.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 dash_f_loop 8 Dash
+pose 0 dam_stun_loop 20 Stunned
+pose 0 dam_parry 6 Staggered
+pose 0 atk_lo01 12 Attack 1
+pose 0 atk_lo02 12 Attack 2
+pose 0 atk_lo04 12 Attack 3
+pose 0 atk_lo05 12 Attack 4
+pose 0 atk_lo06 12 Attack 5
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+model boss 73 0 - mg_073 Zommari Rureaux (Resurreccion)
+desc Zommari Rureaux, the 7th Espada, in his Resurreccion, Brujeria. His body is covered in eyes, and anything they look at falls under his control. Byakuya Kuchiki defeated him.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 run_loop 10 Run
+pose 0 dash_f_loop 8 Dash
+pose 0 step_f 8 Step
+pose 0 dam_stun_loop 20 Stunned
+pose 0 dam_parry 6 Staggered
+pose 0 atk_lo01 12 Attack 1
+pose 0 atk_lo02 12 Attack 2
+pose 0 atk_lo03 12 Attack 3
+pose 0 atk_lo04 12 Attack 4
+pose 0 atk_lo05 12 Attack 5
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+model boss 75 0 - mg_075 Rudbornn Chelute
+desc Leader of the Exequias, the squad that carries out executions inside Las Noches. His Resurreccion, Arbol, grows the skull-masked soldiers who serve under him.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 guard_loop 20 Guard
+pose 0 run_loop 10 Run
+pose 0 dash_f_loop 8 Dash
+pose 0 step_f 8 Step
+pose 0 dam_parry 6 Staggered
+pose 0 atk_hi01 12 Attack 1
+pose 0 atk_hi02 12 Attack 2
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+model boss 85 0 - mg_085 Abirama Redder (Resurreccion)
+keep
+desc Abirama Redder, one of Barragan's Fraccion, in his Resurreccion, Aguila. He gains red wings and fires feathers like spears. Izuru Kira beat him in the fake Karakura Town.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 guard_loop 20 Guard
+pose 0 run_loop 10 Run
+pose 0 dash_f_loop 8 Dash
+pose 0 step_f 8 Step
+pose 0 dam_stun_loop 20 Stunned
+pose 0 dam_parry 6 Staggered
+pose 0 atk_lo01 12 Attack 1
+pose 0 atk_lo02 12 Attack 2
+pose 0 atk_lo03 12 Attack 3
+pose 0 atk_lo04 12 Attack 4
+pose 0 atk_lo05 12 Attack 5
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+model boss 79 0 - mg_079 Ayon
+frame 4.94 17.92 4.2
+desc A beast that Tier Halibel's three Fraccion made by tearing off their own left arms. It has no mind and attacks whatever is near it. Yamamoto finished it off.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 dam_stun_loop 20 Stunned
+pose 0 dam_parry 6 Staggered
+pose 0 atk_lo01 12 Attack 1
+pose 0 atk_lo02 12 Attack 2
+pose 0 atk_lo03 12 Attack 3
+pose 0 atk_lo04 12 Attack 4
+pose 0 atk_lo05 12 Attack 5
+pose 0 atk_lo06 12 Attack 6
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+model boss 91 0 - mg_091 Barragan Luisenbarn (Resurreccion)
+desc Barragan Luisenbarn, the 2nd Espada, who ruled Hueco Mundo as its king before Aizen took his throne. His Resurreccion, Arrogante, makes him a robed skeleton whose touch ages anything into dust.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 dash_f_loop 8 Dash
+pose 0 dam_stun_loop 20 Stunned
+pose 0 dam_parry 6 Staggered
+pose 0 atk_lo01 12 Attack 1
+pose 0 atk_lo02 12 Attack 2
+pose 0 atk_lo03 12 Attack 3
+pose 0 atk_lo04 12 Attack 4
+pose 0 atk_lo05 12 Attack 5
+pose 0 atk_lo06 12 Attack 6
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+model boss 80 0 - mg_080 Kaname Tosen (Resurreccion)
+frame 8.75 31.77 5.7
+desc Kaname Tosen after he took the Hollow powers Aizen offered him. His Resurreccion turns him into a winged insect and gives him sight for the first time in his life. He fought Hisagi and Komamura in the fake Karakura Town.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 dam_stun_loop 20 Stunned
+pose 0 dam_parry 6 Staggered
+pose 0 atk_lo01 12 Attack 1
+pose 0 atk_lo02 12 Attack 2
+pose 0 atk_lo03 12 Attack 3
+pose 0 atk_lo04 12 Attack 4
+pose 0 atk_lo05 12 Attack 5
+pose 0 atk_lo06 12 Attack 6
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+model boss 83 0 - mg_083 Zangetsu (Final Getsuga)
+desc A figure in a white version of Zangetsu's long coat, with the pale face of Ichigo's inner Hollow. It is the part of Ichigo's power that truly carries the name Zangetsu.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 guard_loop 20 Guard
+pose 0 walk 14 Walk
+pose 0 run_loop 10 Run
+pose 0 dash_f_loop 8 Dash
+pose 0 step_f 8 Step
+pose 0 dam_parry 6 Staggered
+pose 0 atk_ex01 12 Attack 1
+pose 0 atk_gr01 12 Attack 2
+pose 0 atk_gr02 12 Attack 3
+pose 0 atk_hi01 12 Attack 4
+pose 0 atk_hi02 12 Attack 5
+pose 0 atk_hi03 12 Attack 6
+pose 0 atk_lo01 12 Attack 7
+pose 0 sp_atk01 14 Special 1
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+model boss 21 0 - mg_021 Sosuke Aizen (Transcended)
+desc Aizen after the Hogyoku fused with his body. Each time the fight pushes him past a limit, it changes him again, until he looks nothing like a Soul Reaper.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 guard_loop 20 Guard
+pose 0 walk 14 Walk
+pose 0 run_loop 10 Run
+pose 0 dash_f_loop 8 Dash
+pose 0 step_f 8 Step
+pose 0 dam_parry 6 Staggered
+pose 0 atk_da01 12 Attack 1
+pose 0 atk_ex01 12 Attack 2
+pose 0 atk_gr01 12 Attack 3
+pose 0 atk_gr02 12 Attack 4
+pose 0 atk_hi01 12 Attack 5
+pose 0 atk_hi02 12 Attack 6
+pose 0 atk_hi03 12 Attack 7
+pose 0 atk_lo01 12 Attack 8
+pose 0 sp_atk01 14 Special 1
+pose 0 sp_atk02 14 Special 2
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+
+model boss 55 0 - mg_055 Fishbone D
+frame 3.44 12.49
+desc The first Hollow Ichigo ever fought. It broke into the Kurosaki house on the night Rukia gave him her powers.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 walk 14 Walk
+pose 0 run_loop 10 Run
+pose 0 dash_f_loop 8 Dash
+pose 0 step_f 8 Step
+pose 0 dam_stun_loop 20 Stunned
+pose 0 dam_parry 6 Staggered
+pose 0 atk_lo01 12 Attack 1
+pose 0 atk_lo02 12 Attack 2
+pose 0 atk_lo03 12 Attack 3
+pose 0 atk_lo04 12 Attack 4
+pose 0 atk_lo05 12 Attack 5
+pose 0 atk_lo06 12 Attack 6
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+model boss 56 0 - mg_056 Shrieker
+frame 2.52 9.15
+desc A serial killer when he was alive, who kept tormenting the ghost of a boy he had murdered. After Ichigo beat him, the Gates of Hell opened and pulled him in.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 run_loop 10 Run
+pose 0 dash_f_loop 8 Dash
+pose 0 dam_stun_loop 20 Stunned
+pose 0 dam_parry 6 Staggered
+pose 0 atk_lo01 12 Attack 1
+pose 0 atk_lo02 12 Attack 2
+pose 0 atk_lo03 12 Attack 3
+pose 0 atk_lo04 12 Attack 4
+pose 0 atk_lo05 12 Attack 5
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+model boss 57 0 - mg_057 Blade Ripper
+frame 3.15 11.42
+desc A pale Hollow that crouches low and slashes with the long blades on its hands. Like every Hollow, it hunts souls to fill the hole where its heart used to be.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 run_loop 10 Run
+pose 0 dash_f_loop 8 Dash
+pose 0 step_f 8 Step
+pose 0 dam_stun_loop 20 Stunned
+pose 0 dam_parry 6 Staggered
+pose 0 atk_lo01 12 Attack 1
+pose 0 atk_lo02 12 Attack 2
+pose 0 atk_lo03 12 Attack 3
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+model boss 58 0 - mg_058 Hexipodas
+frame 1.41 5.36
+desc A Hollow with a long white mask and six legs, shaped like a giant insect. It attacked a child's ghost in a Karakura Town park, and Ichigo purified it with a stab through the mask.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 run_loop 10 Run
+pose 0 dash_f_loop 8 Dash
+pose 0 dam_stun_loop 20 Stunned
+pose 0 dam_parry 6 Staggered
+pose 0 atk_lo01 12 Attack 1
+pose 0 atk_lo02 12 Attack 2
+pose 0 atk_lo04 12 Attack 3
+pose 0 mg_apose 3 A-Pose
+model boss 94 0 - mg_094 Exequias Arrancar
+desc One of the skull-masked soldiers Rudbornn creates with his Resurreccion. The Exequias hunt intruders and deserters in Las Noches, and they will kill other Arrancar if ordered to.
+model boss 127 0 - mg_127 Soul Reaper
+desc A rank-and-file member of the 13 Court Guard Squads. Soul Reapers send lost souls on to Soul Society and cut down Hollows before they can feed.
+model boss 128 0 - mg_128 Soul Reaper (Officer)
+desc A seated officer of the 13 Court Guard Squads. Seats are handed out by fighting strength, and officers lead the ordinary members of their squad.
+
+model boss 13 6 - mg_npc_ad023 Soul Reaper (Female)
+desc A female member of the 13 Court Guard Squads in the standard black uniform. Like every Soul Reaper, she carries a Zanpakuto and answers to her squad's captain.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 walk 20 Walk
+pose 0 run_loop 20 Run
+pose 0 dash_f_loop 20 Dash
+pose 0 dam_parry 20 Staggered
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+model npc 36 4 - mg_npc_ad037 Choe Neng Poww
+keep
+desc One of Barragan's Fraccion, a huge, quiet Arrancar. His Resurreccion makes him grow into a giant many times his size. Komamura beat him in the fake Karakura Town.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 walk 20 Walk
+pose 0 run_loop 20 Run
+pose 0 dash_f_loop 20 Dash
+pose 0 dam_parry 20 Staggered
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+model npc 5 9 - mg_npc_ad010 Cirucci Sanderwicci
+desc A former Espada who was demoted and now guards a corridor of Las Noches. She is vain and bitter about losing her rank.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 walk 20 Walk
+pose 0 run_loop 20 Run
+pose 0 dash_f_loop 20 Dash
+pose 0 dam_parry 20 Staggered
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+model npc 35 7 - mg_npc_en023 Cyan Sung-Sun
+desc One of Halibel's Fraccion. She hides her mouth behind a long sleeve and picks at the other two with quiet insults.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 walk 20 Walk
+pose 0 run_loop 20 Run
+pose 0 dash_f_loop 20 Dash
+pose 0 dam_parry 20 Staggered
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+model npc 10 10 - mg_npc_ad008 Dondochakka Birstanne
+desc One of Nel's self-appointed brothers, a big clumsy Arrancar with a kind heart. He talks like a gangster and bursts into tears whenever Nel is in danger.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 walk 20 Walk
+pose 0 run_loop 20 Run
+pose 0 dash_f_loop 20 Dash
+pose 0 dam_parry 20 Staggered
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+model npc 35 6 - mg_npc_ad009 Dordoni Alessandro Del Socaccio
+desc A former Espada who guards a corridor of Las Noches. He loves a dramatic entrance and wanted Ichigo to fight him at full strength.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 walk 20 Walk
+pose 0 run_loop 20 Run
+pose 0 dash_f_loop 20 Dash
+pose 0 dam_parry 20 Staggered
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+model npc 36 10 - mg_npc_ad004 Edrad Liones
+desc One of Grimmjow's Fraccion before his release. He is proud and short-tempered, and he fights with his fists.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 walk 20 Walk
+pose 0 run_loop 20 Run
+pose 0 dash_f_loop 20 Dash
+pose 0 dam_parry 20 Staggered
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+model npc 36 5 - mg_npc_en021 Emilou Apacci
+desc One of Halibel's Fraccion, quick to anger and always arguing with the other two. She has a horn on her forehead and rings on her wrists that she can throw.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 walk 20 Walk
+pose 0 run_loop 20 Run
+pose 0 dash_f_loop 20 Dash
+pose 0 dam_parry 20 Staggered
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+model npc 12 6 - mg_npc_en022 Franceska Mila Rose
+desc One of Halibel's Fraccion, who relies on raw strength. She and Apacci argue about almost everything.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 walk 20 Walk
+pose 0 run_loop 20 Run
+pose 0 dash_f_loop 20 Dash
+pose 0 dam_parry 20 Staggered
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+model npc 11 3 - mg_npc_ad026 Ganju Shiba
+desc Kukaku Shiba's younger brother, who runs a gang in Rukongai and rides a giant boar named Bonnie. He hated Soul Reapers until he helped Ichigo break into the Seireitei.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 walk 20 Walk
+pose 0 run_loop 20 Run
+pose 0 dash_f_loop 20 Dash
+pose 0 dam_parry 20 Staggered
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+model npc 36 6 - mg_npc_ad011 Gantenbainne Mosqueda
+desc A former Espada who guards a corridor of Las Noches. He is honorable and fights up close with a pair of punch daggers, and he asked Chad for a fair fight.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 walk 20 Walk
+pose 0 run_loop 20 Run
+pose 0 dash_f_loop 20 Dash
+pose 0 dam_parry 20 Staggered
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+model npc 15 3 - mg_npc_ad035 Grand Fisher (Arrancar)
+keep
+desc Grand Fisher after Aizen turned him into an Arrancar. He came back to Karakura Town looking for Ichigo and found Isshin Kurosaki instead.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 run_loop 20 Run
+pose 0 dash_f_loop 20 Dash
+pose 0 dam_parry 20 Staggered
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+model npc 36 11 - mg_npc_sp004 Hachigen Ushoda
+desc Former lieutenant of the Kido Corps and one of the Visored. He is a gentle giant and the group's expert in barriers.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 walk 20 Walk
+pose 0 run_loop 20 Run
+pose 0 dash_f_loop 20 Dash
+pose 0 dam_parry 20 Staggered
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+model npc 13 5 - mg_npc_ad002 Hanataro Yamada
+desc Seventh seat of the 4th Division, a timid healer that the other squads push around. He risked his own life to help Ichigo's group rescue Rukia.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 walk 20 Walk
+pose 0 run_loop 20 Run
+pose 0 dash_f_loop 20 Dash
+pose 0 dam_parry 20 Staggered
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+model npc 19 6 - mg_npc_ad030 Jushiro Ukitake
+desc Captain of the 13th Division, kind to everyone and loved by his squad. He has been sick for most of his life. His Zanpakuto is a pair of blades joined by a rope.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 walk 20 Walk
+pose 0 run_loop 20 Run
+pose 0 dash_f_loop 20 Dash
+pose 0 dam_parry 20 Staggered
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+model npc 15 8 - mg_npc_ad000 Kon
+desc A mod soul built to fight Hollows, who was supposed to be destroyed until Ichigo saved him. He now lives in a stuffed lion and takes over Ichigo's body whenever Ichigo leaves it to fight.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 run_loop 20 Run
+pose 0 dash_f_loop 20 Dash
+pose 0 dam_parry 20 Staggered
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+model npc 15 4 - mg_npc_ad038 Kukkapuro
+desc Yammy's pet dog in Hueco Mundo. It looks like a puppy, but it is a Hollow.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 run_loop 20 Run
+pose 0 dash_f_loop 20 Dash
+pose 0 dam_parry 20 Staggered
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+model npc 15 6 - mg_npc_ad032 Lumina
+desc One of Szayelaporro Granz's Fraccion, a round, childlike Arrancar. Szayelaporro keeps them as food and eats one whenever he needs to heal.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 run_loop 20 Run
+pose 0 dash_f_loop 20 Dash
+pose 0 dam_parry 20 Staggered
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+model npc 36 8 - mg_npc_ad005 Luppi Antenor
+desc Luppi Antenor before his release. He is cruel and childish, and he took Grimmjow's place as 6th Espada while Grimmjow was missing an arm.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 walk 20 Walk
+pose 0 run_loop 20 Run
+pose 0 dash_f_loop 20 Dash
+pose 0 dam_parry 20 Staggered
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+model npc 13 10 - mg_npc_sp005 Marechiyo Omaeda
+desc Lieutenant of the 2nd Division under Soi Fon. He was born into a rich noble family and is rarely without a snack, but he is tougher than he looks.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 walk 20 Walk
+pose 0 run_loop 20 Run
+pose 0 dash_f_loop 20 Dash
+pose 0 dam_parry 20 Staggered
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+model npc 15 10 - mg_npc_ad027 Masaki Kurosaki (Lure)
+desc The lure on Grand Fisher's head, shaped like Ichigo's late mother, Masaki Kurosaki. When Ichigo found the Hollow at her grave, it wore her face to make him hesitate.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 run_loop 20 Run
+pose 0 dash_f_loop 20 Dash
+pose 0 dam_parry 20 Staggered
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+model npc 13 7 - mg_npc_ad025 Nanao Ise
+desc Lieutenant of the 8th Division, who keeps her lazy captain, Shunsui Kyoraku, in line. She takes her work seriously and is highly skilled at Kido.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 walk 20 Walk
+pose 0 run_loop 20 Run
+pose 0 dash_f_loop 20 Dash
+pose 0 dam_parry 20 Staggered
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+model npc 13 11 - mg_npc_ad006 Nel Tu
+desc Nelliel as Ichigo first met her in Hueco Mundo, a tiny Arrancar who lost her memory along with her power. She plays an endless game of tag with her brothers, Pesche and Dondochakka.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 walk 20 Walk
+pose 0 run_loop 20 Run
+pose 0 dash_f_loop 20 Dash
+pose 0 dam_parry 20 Staggered
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+model npc 42 6 - mg_npc_ad028 Orihime Inoue
+desc Ichigo's classmate at Karakura High School. Her power, the Shun Shun Rikka, lives in her hairpins as six tiny fairies. She can heal wounds and put up shields with them.
+outfit 6 School Uniform
+outfit 7 School Uniform (Cardigan)
+outfit 8 School Uniform (Summer)
+outfit 9 Casual
+outfit 10 Soul Society
+outfit 11 Hueco Mundo
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 walk 20 Walk
+pose 0 run_loop 20 Run
+pose 0 dash_f_loop 20 Dash
+pose 0 dam_parry 20 Staggered
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+model npc 15 1 - mg_npc_ad007 Pesche Guatiche
+desc One of Nel's self-appointed brothers, a loud Arrancar who calls himself a warrior. He wears a bug-like mask and lives in the desert of Hueco Mundo with Nel and Dondochakka.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 run_loop 20 Run
+pose 0 dash_f_loop 20 Dash
+pose 0 dam_parry 20 Staggered
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+model npc 36 3 - mg_npc_ad036 Shawlong Koufang
+desc Leader of Grimmjow's Fraccion before his release. He stays calm and polite, even in the middle of a fight.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 walk 20 Walk
+pose 0 run_loop 20 Run
+pose 0 dash_f_loop 20 Dash
+pose 0 dam_parry 20 Staggered
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+model npc 5 8 - mg_npc_ad042 Stealth Force Member
+desc A masked agent of the Stealth Force, the covert force led by the 2nd Division's captain. Its agents also act as messengers, and one of them brought word of Aizen's death.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 walk 20 Walk
+pose 0 run_loop 20 Run
+pose 0 dash_f_loop 20 Dash
+pose 0 dam_parry 20 Staggered
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+model npc 5 10 - mg_npc_ad017 Tensa Zangetsu
+desc The spirit of Ichigo's Bankai, a young man in a ragged black coat. Ichigo met him in this form while training in the Dangai for the Final Getsugatensho.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 walk 20 Walk
+pose 0 run_loop 20 Run
+pose 0 dash_f_loop 20 Dash
+pose 0 dam_parry 20 Staggered
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+model npc 13 9 - mg_npc_en034 Tetsuzaemon Iba
+desc Lieutenant of the 7th Division under Sajin Komamura. He never takes off his sunglasses, and he still fights like the member of the 11th Division he used to be.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 walk 20 Walk
+pose 0 run_loop 20 Run
+pose 0 dash_f_loop 20 Dash
+pose 0 dam_parry 20 Staggered
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+model npc 15 5 - mg_npc_ad033 Verona
+desc One of Szayelaporro Granz's Fraccion, a round, childlike Arrancar. Szayelaporro keeps them as food and eats one whenever he needs to heal.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 run_loop 20 Run
+pose 0 dash_f_loop 20 Dash
+pose 0 dam_parry 20 Staggered
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+model npc 36 7 - mg_npc_ad016 Wonderweiss Margela
+desc An Arrancar Aizen created who cannot speak. He was made for a single purpose, to seal Yamamoto's flames.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 walk 20 Walk
+pose 0 run_loop 20 Run
+pose 0 dash_f_loop 20 Dash
+pose 0 dam_parry 20 Staggered
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+model npc 15 2 - mg_npc_en026 Wonderweiss Margela (Resurreccion)
+keep
+desc Wonderweiss in his Resurreccion, Extinguir. His body swells to hold the flames of Ryujin Jakka, which he takes from Yamamoto.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 run_loop 20 Run
+pose 0 dash_f_loop 20 Dash
+pose 0 dam_parry 20 Staggered
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+model npc 13 8 - mg_npc_sp002 Yachiru Kusajishi
+desc Lieutenant of the 11th Division, a small girl who rides on Kenpachi Zaraki's shoulder. She gives everyone a nickname and gets lost constantly.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 walk 20 Walk
+pose 0 run_loop 20 Run
+pose 0 dash_f_loop 20 Dash
+pose 0 dam_parry 20 Staggered
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+model npc 15 9 - mg_npc_ad001 Yoruichi (Cat)
+desc Yoruichi Shihoin in the black cat form she lived in for a century. She speaks with a deep man's voice, and she led Ichigo's group into Soul Society.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 run_loop 20 Run
+pose 0 dash_f_loop 20 Dash
+pose 0 dam_parry 20 Staggered
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+model npc 15 7 - mg_npc_ad003 Zabimaru
+desc The spirit of Renji Abarai's Zanpakuto. It takes the form of a great white ape with a snake for a tail.
+form 0 0 Base
+pose 0 mg_apose 3 Stand
+model npc 5 11 - mg_npc_ad018 ??? (Fully-Hollowfied)
+desc The pale figure from Ichigo's inner world once its Hollowfication is complete. A horned mask covers its head, and it wears a white copy of Ichigo's Bankai coat.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 walk 20 Walk
+pose 0 run_loop 20 Run
+pose 0 dash_f_loop 20 Dash
+pose 0 dam_parry 20 Staggered
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose
+model npc 36 9 - mg_npc_ad012 Zommari Rureaux
+desc The 7th Espada before his release. He is calm and devoted to Aizen, and his Sonido is so fast that he appears to split into several copies.
+form 0 0 Base
+pose 0 ntrl_loop 20 Idle
+pose 0 walk 20 Walk
+pose 0 run_loop 20 Run
+pose 0 dash_f_loop 20 Dash
+pose 0 dam_parry 20 Staggered
+pose 0 mg_apose 3 A-Pose
+pose 0 mg_tpose 3 T-Pose

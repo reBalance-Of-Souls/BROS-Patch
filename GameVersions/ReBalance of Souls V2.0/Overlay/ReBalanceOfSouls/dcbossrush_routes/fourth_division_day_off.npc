@@ -1,0 +1,202 @@
+# An ADVENTURE event's story nodes -- The Fourth Division's Day Off (the Swimsuit event, 2026 script).
+# The format is dcbossrush_npc.txt's (npc / spot, art, image, line, say, music, bgm, exit, desc).
+# A speaker@look is drawn in that sprite: pl019@swimsuit = spr_retsu_unohana_swimsuit,
+# emilou_apache@swimsuit and momo_hinamori@swimsuit likewise (dcbossrush 0.18.1).
+
+npc 19 soul A Day Off
+bg soul_reapers_room
+desc The war is over, and the Fourth Division's Lieutenant has not taken a single day off.
+bgm bgm_adv_0040
+say - |  | After the war was finally over and Aizen defeated, Captain Unohana noticed how much Isane had been working. She never took a day off and was always the first to arrive at the clinic. That's why Retsu decided to surprise her Lieutenant.
+say pl040 | Isane Kotetsu | You wanted to talk to me, Captain Unohana?
+say pl019 | Retsu Unohana | Yes. I wanted to ask you when your last free day was. You know, to relax both physically and mentally.
+say pl040 | Isane Kotetsu | I'm not sure, I can't remember. But you don't need to worry, I don't need a free day. Working in the 4th squad and helping people in need makes me happy.
+say pl019 | Retsu Unohana | I know, but everyone needs a day off once in a while. This is why I planned for the both of us to visit the beach in the world of the living.
+say pl040 | Isane Kotetsu | Captain Unohana, I really don't- Wait. Did you just say you're coming with me?
+say pl019 | Retsu Unohana | I just said that everyone needs a day off once in a while and that also includes captains.
+say pl040 | Isane Kotetsu | But who is going to take care of-
+say pl019 | Retsu Unohana | Isane. It is only for today. We don't have many patients currently and all of our other squad members are excellent healers as well. Iemura is going to take care of everything while we're gone.
+say pl040 | Isane Kotetsu | You're right, maybe I do need a break. Sometimes I feel like we're the only healers in the squad. Thanks a lot, Captain Unohana. I really appreciate that- Wait, did you say today?!
+
+npc 19 soul The Men's Association
+bg seireitei_walkway
+desc On the way to the Senkaimon, Lieutenant Iba overhears where they are going.
+art tetsuzaemon_iba
+bgm bgm_adv_0170
+say pl019 | Retsu Unohana | I heard the beaches in the human realm are very warm and refreshing. I can't wait to visit them myself, I never did before.
+say pl040 | Isane Kotetsu | This will be a first for me, too. But... don't we need a swimsuit when we're going there?
+say pl019 | Retsu Unohana | Of course we do. That's why we need to go shopping first, before actually going to the beach.
+say tetsuzaemon_iba | Tetsuzaemon Iba | The beach?!
+say pl040 | Isane Kotetsu | Lieutenant Iba?
+say tetsuzaemon_iba | Tetsuzaemon Iba | Captain Unohana, excuse me, but did I hear that right that you're planning to visit the beach?!
+say pl019 | Retsu Unohana | We are on our way right now.
+say tetsuzaemon_iba | Tetsuzaemon Iba | You're going right now?!
+say pl013 | Izuru Kira | Does this mean our trip will be canceled?
+say pl011 | Shuhei Hisagi | We were looking forward to this...
+say pl040 | Isane Kotetsu | Captain Unohana...
+say pl019 | Retsu Unohana | Lieutenant Iba, I'm sure you can still visit the beach tomorrow.
+say tetsuzaemon_iba | Tetsuzaemon Iba | With all due respect, Captain Unohana. But the Shinigami Men's Association has planned this for weeks now and we can't just change our plans.
+say pl040 | Isane Kotetsu | Maybe we should-
+say pl019 | Retsu Unohana | Unfortunately, we can't just change our plans either.
+exit Kira and Hisagi step into the road. Isane stands at her Captain's side.
+
+npc 12 soul The Women's Association
+bg seireitei_walkway
+desc The men have given up the road. Then somebody else hears about the beach.
+bgm bgm_adv_0360
+say pl019 | Retsu Unohana | We would like to go to the human world now.
+say tetsuzaemon_iba | Tetsuzaemon Iba | Ugh...
+say pl013 | Izuru Kira | Why does the women's association always win in the end...?
+say pl011 | Shuhei Hisagi | I wanted to try surfing, when visiting the beach.
+say - | ??? | Beach?!
+say pl040 | Isane Kotetsu | Oh no.
+say pl012 | Rangiku Matsumoto | Did somebody say that the women's association is going to the beach?! I had no idea! Let me grab my swimsuit.
+say pl019 | Retsu Unohana | They are not, Lieutenant Matsumoto. Only Isane and I are going.
+say tetsuzaemon_iba | Tetsuzaemon Iba | Only you two?
+say pl012 | Rangiku Matsumoto | What?! Why aren't we all going to the beach?! Nemu was excited!
+say nemu_kurotsuchi | Nemu Kurotsuchi | I just arrived. What was I excited for?
+say pl012 | Rangiku Matsumoto | The beach!
+say nemu_kurotsuchi | Nemu Kurotsuchi | I am not interested in the beach.
+say pl012 | Rangiku Matsumoto | You make this so much harder, you have no idea.
+say pl019 | Retsu Unohana | To make one thing clear, since apparently half the Soul Society is here now. I'm going to visit the beach in the human world with Isane, and nobody else, today.
+say pl019 | Retsu Unohana | And I don't want any troublemaker ruining a relaxing day for the two of us, after we both have worked our hardest in these last couple of weeks. Did all of you understand this?
+say tetsuzaemon_iba | Tetsuzaemon Iba | I'm sorry, Captain Unohana. We will find another date.
+say pl013 | Izuru Kira | I would probably get a sunburn anyway...
+say pl012 | Rangiku Matsumoto | ...
+say pl012 | Rangiku Matsumoto | I also worked my hardest in these last couple of weeks.
+say nemu_kurotsuchi | Nemu Kurotsuchi | You worked?
+say pl019 | Retsu Unohana | You are not coming with us, Matsumoto.
+say pl012 | Rangiku Matsumoto | That's not fair! This is a betrayal to the women's association! We will not stand for this!
+exit Rangiku and Nemu stand in the way of the Senkaimon.
+
+npc 12 soul Not Today
+bg seireitei_walkway
+desc Rangiku has lost the argument. She is already making new plans.
+bgm bgm_adv_0150
+say pl012 | Rangiku Matsumoto | I can't believe you take this away from me.
+say pl019 | Retsu Unohana | I never said the women's association couldn't go to the beach in the future. Just not today.
+say pl012 | Rangiku Matsumoto | So what you're saying is... We can go tomorrow!
+say nemu_kurotsuchi | Nemu Kurotsuchi | I have time tomorrow.
+say pl012 | Rangiku Matsumoto | Perfect! Let me tell the others, I can't wait to finally wear my beach outfit!
+say tetsuzaemon_iba | Tetsuzaemon Iba | But... we wanted to-
+say pl013 | Izuru Kira | Maybe next week would be a better idea...
+say pl019 | Retsu Unohana | I think we are clear now. Come with me, Isane. It is time to buy something appropriate for the beach.
+say pl040 | Isane Kotetsu | Right behind you!
+
+npc 26 living The World of the Living
+bg karakura_side_street
+desc A shop in the World of the Living, and a familiar face waiting outside it.
+bgm bgm_adv_0030
+say - |  | After taking a trip to a nearby store, both Isane and Unohana found something they liked. While waiting in line to buy their new outfits, the Lieutenant asks her Captain something.
+say pl040 | Isane Kotetsu | Is there a reason why we had to go to the beach today?
+say pl019 | Retsu Unohana | Why do you ask that?
+say pl040 | Isane Kotetsu | Because you were so serious when the others were trying to take today for themselves. We could've just gone another day.
+say pl019 | Retsu Unohana | The difference between them and us is simple. While I'm sure that every one of them looked forward to this, they were mostly still going for their enjoyment.
+say pl019 | Retsu Unohana | With you on the other hand, I can tell that you need this. I never see you doing something for yourself, so it was on me to make you accept this free day. And I wouldn't let you wait a single day longer.
+say pl040 | Isane Kotetsu | Even if I didn't ask for this...?
+say pl019 | Retsu Unohana | Even if you didn't ask for this.
+say pl040 | Isane Kotetsu | ...
+say pl040 | Isane Kotetsu | Thank you.
+music bgm_adv_0360
+say - |  | After buying their new swimsuits, both of them left the shop to make their way to the beach. However, they didn't expect a familiar face outside of the shop.
+say pl040 | Isane Kotetsu | ...
+say pl019 | Retsu Unohana | ...
+say pl026 | Toshiro Hitsugaya | Captain Unohana, Lieutenant Kotetsu. I didn't expect to see you two here.
+say pl019 | Retsu Unohana | We didn't expect to see you two either, Captain Hitsugaya.
+say pl012 | Rangiku Matsumoto | ...
+say pl012 | Rangiku Matsumoto | I think the Hollows are drawing nearer, we should hurry, Captain!
+say pl026 | Toshiro Hitsugaya | What are you talking about? I can't sense a single presence of a Hollow around here.
+say pl019 | Retsu Unohana | Did your Lieutenant tell you anything about a Hollow at the human world's beach?
+say pl012 | Rangiku Matsumoto | Its scream is so loud, it's paralyzing! Cover your ears, before it reaches you, Captain!
+say pl026 | Toshiro Hitsugaya | Oh, is that why you're here?
+say pl019 | Retsu Unohana | No, but Matsumoto still came here for the same reason that we did. We just bought our new swimsuits to take a relaxing day off of work.
+say pl026 | Toshiro Hitsugaya | Swimsuits? Wait a minute... Matsumoto!
+say pl012 | Rangiku Matsumoto | ...
+say pl012 | Rangiku Matsumoto | Come on, it's just one day!
+exit Rangiku is not giving up her day at the beach. Toshiro sides with Unohana and Isane.
+
+npc 35 living The Beach
+bg beach
+desc The beach in the World of the Living. Somebody else got here first.
+art retsu_unohana_swimsuit
+bgm bgm_adv_0340
+say pl040 | Isane Kotetsu | I can't believe we're actually here. Until now, it felt more like a mission. But the refreshing wind in my hair, that smell of sea water in my nose... I think I am finally ready for my day off.
+say pl019@swimsuit | Retsu Unohana | I'm happy to hear that.
+say pl040 | Isane Kotetsu | What a beautiful swimsuit!
+say pl019@swimsuit | Retsu Unohana | Thank you, Isane. You should go ahead and change your clothes as well.
+say pl040 | Isane Kotetsu | I will-
+music bgm_adv_0170
+say - | ??? | Hey, who are they?!
+say pl040 | Isane Kotetsu | Hm?
+say emilou_apache@swimsuit | Apache | Isn't that one wearing Shinigami clothes?
+say mila_rose | Mila Rose | Are they trying to take the beach away from us or something?
+say sun-sun | Sun-Sun | You're acting like the beach belongs to us.
+say pl040 | Isane Kotetsu | Those are Arrancar.
+say pl019@swimsuit | Retsu Unohana | Don't worry, Isane.
+say emilou_apache@swimsuit | Apache | She should worry, because we are not going to leave!
+say pl035 | Tier Halibel | What is the matter here?
+say pl019@swimsuit | Retsu Unohana | Oh, it's you.
+say pl035 | Tier Halibel | Hm?
+say pl019@swimsuit | Retsu Unohana | I was there when Ichigo Kurosaki fought Aizen. And I saw you there, too. I'm glad your wounds were all properly healed.
+say pl035 | Tier Halibel | I see.
+say pl040 | Isane Kotetsu | May I ask why a bunch of Arrancar decided to visit the human world...?
+say mila_rose | Mila Rose | Are you saying we can't just go to the beach?!
+say emilou_apache@swimsuit | Apache | We wanted Lady Halibel to have a relaxing day off, now that we're finally free!
+say sun-sun | Sun-Sun | That's not true. It's just the two of you who wanted to go here and Lady Halibel allowed us.
+say mila_rose | Mila Rose and Apache | Shut up!
+say pl019@swimsuit | Retsu Unohana | Unfortunately we are also here to have a day off, after weeks of hard work.
+say pl040 | Isane Kotetsu | I mean, as long as there is no fighting, I wouldn't mind if we aren't alone.
+say sun-sun | Sun-Sun | Then one of us needs to go, because these two idiots are loud enough that you could most likely hear them in the Soul Society, too.
+say emilou_apache@swimsuit | Apache | Then they're going!
+say mila_rose | Mila Rose | Yeah, we're not moving!
+say pl019@swimsuit | Retsu Unohana | Hmm... what about a deal?
+say pl035 | Tier Halibel | A deal?
+say pl019@swimsuit | Retsu Unohana | Both of us draw a line in the sand with our swords. We will then try to push each other over their own line. The winner gets to stay here for the rest of the day. How does that sound?
+say pl035 | Tier Halibel | So you're challenging me, Shinigami.
+say pl019@swimsuit | Retsu Unohana | To a friendly competition.
+say pl040 | Isane Kotetsu | Captain Unohana...
+say emilou_apache@swimsuit | Apache | As if Lady Halibel would lose!
+say mila_rose | Mila Rose | I'll go ahead and inflate the swim ring already!
+say pl035 | Tier Halibel | I accept it.
+say pl019@swimsuit | Retsu Unohana | Very well then.
+say sun-sun | Sun-Sun | I can't believe Lady Halibel is going so far for this. But then again, there is no way she would lose.
+exit Two lines are drawn in the sand.
+
+npc 35 living A Friendly Competition
+bg coast
+desc The match is over. Halibel was the one pushed over her line.
+bgm bgm_adv_0340
+say pl019@swimsuit | Retsu Unohana | You're very strong.
+say pl035 | Tier Halibel | So are you, but I noticed that you were holding back.
+say pl019@swimsuit | Retsu Unohana | I think we both did. This was just for settling a debate anyway, wasn't it?
+say pl035 | Tier Halibel | Indeed.
+say emilou_apache@swimsuit | Apache | Ah, man. I can't believe we have to leave now...
+say mila_rose | Mila Rose | Hey, everyone! Both the swim ring and even the volleyball are ready to use. Lady Halibel and me against the both of you!
+say sun-sun | Sun-Sun | Pack it up, idiot. You didn't even notice Lady Halibel lost.
+say mila_rose | Mila Rose | What?!
+say pl035 | Tier Halibel | I'm sorry to have disappointed you, but I will keep my word.
+say emilou_apache@swimsuit | Apache | You could never disappoint us!
+say sun-sun | Sun-Sun | Exactly, it's rather the other way around.
+say pl035 | Tier Halibel | We will return here on another day. Until then, I bid you farewell, Shinigami.
+say pl019@swimsuit | Retsu Unohana | Take care, Tier Halibel.
+
+npc 40 living Next Time
+bg seaside
+desc The beach is theirs. The day off can finally begin.
+bgm bgm_adv_0280
+say pl019@swimsuit | Retsu Unohana | Looks like we can finally relax.
+say pl040 | Isane Kotetsu | It seems like it. Thank you, Captain Unohana.
+say pl019@swimsuit | Retsu Unohana | I told you already, you don't have to thank me.
+say pl040 | Isane Kotetsu | But I think... It would be fun to be here with everyone else, too.
+say pl019@swimsuit | Retsu Unohana | Hm?
+say pl040 | Isane Kotetsu | I-I mean the next time we are going here.
+say pl019@swimsuit | Retsu Unohana | Next time, huh.
+say pl040 | Isane Kotetsu | Did I say something wrong?
+say pl019@swimsuit | Retsu Unohana | Not at all. I'm just happy that you're already thinking about another day off. I also think it would be fun with others, too.
+say pl040 | Isane Kotetsu | I'm already looking forward to it.
+say pl019@swimsuit | Retsu Unohana | Now go and change your clothes already, before the sun sets.
+say pl040 | Isane Kotetsu | R-right!
+say - |  | Isane instantly ran into the nearest locker room. Unohana couldn't hold back a chuckle.
+say pl019@swimsuit | Retsu Unohana | Time to actually start our day off.
+say momo_hinamori@swimsuit | Momo Hinamori | Yeah!
+say pl019@swimsuit | Retsu Unohana | ???

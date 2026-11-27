@@ -1,0 +1,126 @@
+# An ADVENTURE event's story nodes -- written by DataChakka's Events Builder.
+# The format is dcbossrush_npc.txt's (npc / spot, art, image, line, exit, desc, a | ..., b | ...).
+
+spot soul scroll Memories of the Lichtreich
+bg shatten_beireich_silbern_view
+image img_screenshot_2026_10_25_at_23_04_43.jpg
+desc 1000 years ago, Yhwach holds council in the Silbern palace of the Lichtreich empire with a familiar face... The commander of Squad Zero, Ichibei Hyosubei.
+say - |  | 1000 years ago, Lichtreich Empire, Silbern Castle
+say = | Yhwach | To which do I owe this... Pleasure; commander of Squad Zero?
+say - | Ichibei Hyosubei | Yhwach... It's been a while. I see your empire is proving... Fruitful.
+say - | Yhwach | Enough of this meaningless chatter. What is your purpose for meeting today?
+say - | Ichibei Hyosubei | I'll be frank - I'm here with an ultimatum. As Balancer of the Three Worlds comprised of the Soul Society, Hueco Mundo, and the World of the Living...
+say - | Ichibei Hyosubei | ...My request is that you simply let the Soul Reapers worry about the state of the world, and you simply enjoy the prosperity of your empire.
+show img_screenshot_2026_10_25_at_23_05_02.jpg
+say - | Yhwach | ...What a pathetic deception.
+say - | Ichibei Hyosubei | Hm..?
+show img_screenshot_2026_10_25_at_23_05_22.jpg
+say - | Yhwach | You treat me as if I am a newborn babe. I am not so naive. You tell me to enjoy the fruits of my empire, but how may I when my people suffer so..?
+say - | Yhwach | Who amongst us souls established that arcane order of life and death? It was not I, monk.
+say - | Yhwach | I feel them. I feel the anguished cries of every single Quincy soul that returns to me. Where, in these accursed three worlds, may we find peace, if not even in death?
+show img_screenshot_2026_10_25_at_23_07_40.jpg
+say - | Yhwach | Answer me, monk!
+
+spot soul scroll Sleight of Hand, Sleight of Truth
+bg shatten_beireich_silbern_view
+image img_screenshot_2026_10_25_at_23_08_21.jpg
+desc After their brief confrontation, Ichibei reveals his ace-in-the-hole; the Left Arm of the Soul King.
+say = | Ichibei Hyosubei | Hmph!
+say = | Yhwach | That's..!
+show img_screenshot_2026_10_25_at_23_08_51.jpg
+say = | Yhwach | ...That accursed Left Arm..?!
+say = | Yhwach | (Father... So this is how they've 'respected' your sacrifice...)
+say = | Yhwach | (What a despicable move to play... Ichibei Hyosubei..!! Do you have no shame?!)
+show img_screenshot_2026_10_25_at_23_09_12.jpg
+say = | Yhwach | (First, you appear in the realm my Father created... Given the gift of life... And then you, and those sinful Soul Reapers take to butchering Him as thanks..?!)
+say = | Yhwach | (My memories filled only with the cries of my Father. His cries as you, and those detestable Five Noble Houses plucked away His limbs, His powers, His agency..!!)
+show img_screenshot_2026_10_25_at_23_08_51.jpg
+say = | Yhwach | (Adnyeus. My Father. I will not stand idly by as your corpse is paraded as an invisible flag for the Soul Society. And for what?! To hold the balance of life and death intact?!)
+say = | Yhwach | (Such a system would never be allowed to exist under your rule, Father. I know how the Soul Reapers deceived you. I know how they have orchestrated this new 'order' to simply prop up a barrier obsficating their own ineptitude.)
+show img_screenshot_2026_10_25_at_23_10_27.jpg
+say = | Yhwach | Accursed monk! Return to me what is rightfully mine!
+say = | Ichibei Hyosubei | Foolish little Quincy. We, together with the Soul King, maintain this fragile balance that keeps the Three Worlds in flux. It is not an act of subservience or subjugation. It is a co-existance.
+say = | Yhwach | Ridiculous! I told you I can see all, Ichibei Hyosubei!!
+say = | Ichibei Hyosubei | Do not say my name so lightly, child. Those eyes of yours are for sure troublesome...
+show img_screenshot_2026_10_25_at_23_10_54.jpg
+say = | Ichibei Hyosubei | ...But they can never see through the Soul King!
+show img_screenshot_2026_10_25_at_23_11_08.jpg
+say - |  | Suddenly, Ichibei Hyosubei's arm swells to gigantic proportions, rupturing into a swarm of black and white; birthed is the dormant entity that was held within his left arm; the Left Arm of the Soul King itself.
+say - | Yhwach | Tch!!
+say - | Yhwach | (My powers... Why did my eyes not foresee this..?!)
+say - | Ichibei Hyosubei | It is as I said, Yhwach. Your eyes cannot anticipate that which is borne from the Soul King.
+show img_screenshot_2026_10_25_at_23_11_34.jpg
+say - | Ichibei Hyosubei | You'd do well to remember this transgression, child. Your eyes will remain forever closed until the day you die.
+
+spot soul scroll Embers
+bg seireitei_ablaze
+image img_screenshot_2026_10_26_at_11_59_31.jpg
+desc After his encounter with Ichibei Hyosubei, Yhwach mounts an assault on the Seireitei... However...
+say - |  | 1000 Years Ago, Seireitei
+show img_screenshot_2026_10_26_at_11_59_53.jpg
+say = | Soul Reaper | All units, Quincy activity detected in Sector 9!! Be advised, the enemy army's leader, Yhwach, is present!
+show img_screenshot_2026_10_26_at_12_00_04.jpg
+say - | Yhwach | My brothers and sisters. It is time for us to raze this accursed Soul Society... Leave no quarter untouched.
+say - | Yhwach | (I remember... This is from that fateful day...)
+say - | Yhwach | (The day I'd come to regret; not out of desire, or intent, but due to my own foolishness.)
+say - | Yhwach | (My own foolishness for not restraining my assault on the Soul Society until I had recovered my eyes.)
+show img_screenshot_2026_10_26_at_12_00_20.jpg
+say - | Yhwach | (...And those accursed Soul Reapers - Nothing more than a band of criminals, with no idea of the thing that they're guarding with their lives... They stood there, fearlessly, against my army of Quincy brethren.)
+show img_screenshot_2026_10_26_at_12_00_35.jpg
+say - | Yhwach | (To say that it was a slaughter would be a disservice.)
+show img_screenshot_2026_10_26_at_12_00_44.jpg
+say - | Yhwach | (As we marched through the Seireitei, my men were dismantled with ruthless precision, one after another.)
+show img_screenshot_2026_10_26_at_12_00_55.jpg
+say - | Yhwach | (These criminals, with nought more than an inkling of organization, victorious against an entire army of the Quincy Lichtreich's elite...)
+show img_screenshot_2026_10_26_at_12_01_07.jpg
+say - | Yhwach | (If you had broached the idea to me beforehand, I would have spat in your face.)
+show img_screenshot_2026_10_26_at_12_01_17.jpg
+say - | Yhwach | (Little did I know that this reality would come to pass indeed. A reality I could not foresee.)
+show img_screenshot_2026_10_26_at_12_01_28.jpg
+say - | Yhwach | (And all thanks to that damned Ichibei Hyosubei sealing my eyes with the Left Arm of the Soul King... If I had but a fraction of my true power...)
+show img_screenshot_2026_10_26_at_12_01_41.jpg
+say - | Yhwach | (...Then to say that this day would have ended very differently would be no lie.)
+show img_screenshot_2026_10_26_at_12_01_53.jpg
+say - | Yhwach | (As the fires raged, my men bled, and their corpses littered the streets of the Seireitei...)
+show img_screenshot_2026_10_26_at_12_02_04_2.jpg
+say - | Yhwach | (All I could do is eliminate whom I could. My planning, my tactics, my retreats...)
+show img_screenshot_2026_10_26_at_12_02_14.jpg
+say - | Yhwach | (All of it was rendered obsolete by a batch of thugs twirling swords like children with sticks.)
+show img_screenshot_2026_10_26_at_12_02_24.jpg
+say - | Yhwach | (Yet amongst this humiliation, it was not fear, nor embarrassment I felt. No...)
+show img_screenshot_2026_10_26_at_12_02_43.jpg
+say - | Yhwach | (What I felt raging inside of me was my own fire. My own soul, set ablaze; ablaze with hatred. Ablaze with pain. Ablaze with rage. Rage at this detestable world, propped up on the proverbial heels of my Father's corpse.)
+show img_screenshot_2026_10_26_at_12_03_03.jpg
+say - | Yhwach | (And the one standing in my way; the one who would strike me down... Was him. Shigekuni Genryusai Yamamoto.)
+say - | Shigekuni Genryusai Yamamoto | Yhwach. Surrender. It is over now. Your army has fallen. Your brothers and sisters lie at our feet. Your pride has been shattered, and your lofty goal of ravaging the Soul Society has been left in tatters.
+say - | Shigekuni Genryusai Yamamoto | Although, I should warn you.
+show img_screenshot_2026_10_26_at_12_03_27.jpg
+say - | Shigekuni Genryusai Yamamoto | ...Surrender will not guarantee your life. Both your surrender and your resistance will result in your death. I will make sure of that personally.
+show img_screenshot_2026_10_26_at_12_03_49.jpg
+say - | Shigekuni Genryusai Yamamoto | ...So what will it be, Yhwach..? Will your flame burn brightly for a mere second? Or will it peter out into nothing more than embers?
+
+npc - soul Genesis
+bg seireitei_ablaze
+image img_screenshot_2026_10_26_at_12_04_41.jpg
+desc Yhwach faced off against Shigekuni Genryusai Yamamoto, and failed... He will not allow this failure to define him again.
+say = | Yhwach | ...
+say = | Yhwach | ...Gh..!!
+show img_screenshot_2026_10_26_at_12_05_01.jpg
+say = | Sasakibe Chijiro | Sir! I have him pinned! Kill this monster posthaste!!
+say = | Shigekuni Genryusai Yamamoto | Yhwach. I must commend you for putting up at least a fraction of what could be defined as a 'retaliation'... Now...
+show img_screenshot_2026_10_26_at_12_04_50.jpg
+say = | Shigekuni Genryusai Yamamoto | ...Farewell.
+show -
+say - |  | ...
+show img_screenshot_2026_10_25_at_23_13_02.jpg
+scene royal_palace
+say - | Jugram Hashwalth | Sir...
+say - | Yhwach | Hm? Do not pay me any mind, Hashwalth.
+say - | Jugram Hashwalth | Apologies, Your Majesty. I was simply mirroring your repulsion upon gazing upon this tomb.
+say - | Jugram Hashwalth | Indeed, it is as despicable as you've recounted.
+say - | Yhwach | Never again.
+say - | Uryu Ishida | Your Majesty..?
+show img_screenshot_2026_10_25_at_23_13_36.jpg
+say - | Yhwach | Never again will I allow my own lack of foresight cloud my judgement. Never again will I allow anyone to avert my gaze.
+say - | Yhwach | Come Hashwalth. Uryu. It is time for us to put an end to this farce.
+say - | Yhwach | The end of the world is nigh. And the birth of Wahrwelt awaits.

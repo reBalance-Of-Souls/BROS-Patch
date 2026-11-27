@@ -1,0 +1,27 @@
+# An ADVENTURE event's route -- written by DataChakka's Events Builder.
+# realm, then one node per pin: node <row> <column> fight|story key=value ... [name=<rest>]
+realm soul
+node 1 0 story story=0
+node 2 0 fight chara=128 stage=37 konpaku=2 atk=90 form=0 cpu=1 effects=no_awaken name=Rowdy Senior
+node 3 0 story story=1
+node 4 0 story story=2
+node 5 0 fight chara=19 stage=43 konpaku=6 atk=100 form=0 cpu=4 effects=no_awaken+foe_no_awaken name=Retsu Unohana
+node 6 0 story story=3
+node 7 0 story story=4
+node 8 0 fight chara=0 stage=33 konpaku=6 atk=100 form=0 cpu=5 name=Ichigo Kurosaki
+node 9 0 story story=5
+node 10 0 fight chara=20 cos=cos_02 stage=41 konpaku=6 atk=100 form=0 cpu=6 effects=foe_sturdy+foe_iron_guard+foe_no_awaken name=Sosuke Aizen
+node 11 0 story story=6
+node 12 0 fight chara=97 stage=36 konpaku=6 atk=100 form=0 cpu=4 name=Nemu Kurotsuchi
+node 13 0 story story=7
+node 14 0 fight chara=62 stage=36 konpaku=6 atk=100 form=0 cpu=5 name=Momo Hinamori
+node 15 0 story story=8
+node 16 0 fight chara=12 stage=36 konpaku=6 atk=100 form=0 cpu=6 name=Rangiku Matsumoto
+node 17 0 story story=9
+node 18 0 fight chara=22 stage=36 konpaku=6 atk=100 form=0 cpu=7 effects=foe_evo name=Byakuya Kuchiki
+node 19 0 story story=10
+node 20 0 story story=11
+node 21 0 fight chara=19 stage=38 konpaku=6 atk=100 form=0 cpu=8 effects=foe_sublimation name=Shadow of Retsu Unohana
+node 22 0 story story=12
+node 23 0 fight chara=27 stage=38 konpaku=6 atk=100 form=0 cpu=9 effects=foe_sublimation name=Shadow of Kenpachi Zaraki
+node 24 0 story story=13

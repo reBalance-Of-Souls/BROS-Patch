@@ -1,0 +1,24 @@
+# An ADVENTURE event's route -- Happy Holloween! (the Halloween event, 2026 script).
+# realm, then one node per pin: node <row> <column> fight|story key=value ... [name=<rest>]
+# stages: 31 Seireitei Pathway (Evening), 36 Plaza, 43 Barracks (Night)
+# effects: foe_no_awaken seals the HOLLOW's Awakening (no foe_ prefix = the player's own)
+# with=<chara>[,<chara>]: a group fight's other foes (the Hollows grow 1, 2, 3), same form and Konpaku (dcbossrush 0.18.8)
+realm soul
+node 1 0 story story=0
+node 2 0 story story=1
+node 3 0 fight chara=55 stage=31 konpaku=2 atk=90 form=0 cpu=2 effects=foe_no_awaken name=Hollow
+node 4 0 story story=2
+node 5 0 fight chara=97 stage=36 konpaku=6 atk=95 form=0 cpu=4 name=Nemu Kurotsuchi
+node 6 0 story story=3
+node 7 0 fight chara=56 with=55 stage=31 konpaku=2 atk=95 form=0 cpu=3 effects=foe_no_awaken name=Hollows
+node 8 0 story story=4
+node 9 0 fight chara=10 cos=cos_06 stage=31 konpaku=6 atk=100 form=0 cpu=5 name=Rukia Kuchiki (Holloween)
+node 10 0 story story=5
+node 11 0 fight chara=57 with=55,56 stage=43 konpaku=3 atk=100 form=0 cpu=4 effects=foe_no_awaken name=Hollows
+node 12 0 story story=6
+node 13 0 fight chara=7 cos=cos_07 stage=43 konpaku=6 atk=100 form=1 cpu=6 name=Yoruichi Shihoin (Holloween)
+node 14 0 story story=7
+node 15 0 fight chara=12 cos=cos_05 stage=43 konpaku=7 atk=105 form=1 cpu=6 name=Rangiku Matsumoto (Holloween)
+node 16 0 story story=8
+node 17 0 fight chara=29 cos=cos_02 stage=43 konpaku=9 atk=105 form=0 cpu=7 ally=12 ally_cos=cos_05 ally_kon=3 ally_cpu=6 name=Mayuri Kurotsuchi
+node 18 0 story story=9

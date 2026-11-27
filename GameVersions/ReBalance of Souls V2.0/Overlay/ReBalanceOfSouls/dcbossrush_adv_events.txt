@@ -1,0 +1,90 @@
+# ADVENTURE's EVENTS -- read by dcbossrush.dll (0.17.37+). Written by DataChakka's Events Builder.
+# Each Event is a predetermined Adventure route with a story of its own; clearing its final
+# pin unlocks its reward. Every event is listed in game; `active 1` ones are tagged ACTIVE.
+# Never delete an old event: set it to active 0, so a player who missed it can still play it.
+#
+#   event <name>        active 1|0        length <pins>      reward <text>
+#   art <file in dcbossrush_map/>         period <text>      desc <text>
+#   chara plNNN <costume>                 the fighter it is played as (skips character select)
+#   realm soul|hueco|living               its realm (no way in)
+#   route <id>          dcbossrush_routes/<id>.txt (its map) and <id>.npc (its story nodes)
+#   unlock costume plNNN <place>          a costume locked until it is cleared (dcreborn 0.32.0+)
+#   unlock reborn plNNN                   a Reborn whose every outfit is locked until then
+
+
+event The Fourth Division's Lieutenant
+active 1
+length 24
+reward Reborn Character: Isane Kotetsu
+unlock reborn pl040
+chara pl040 0
+realm soul
+art event_isane.jpg
+period Limited time -- Rebalance V1.7
+desc From a nervous Academy student to captain of the Fourth Division; walk Isane Kotetsu's road, from her training, to meeting Captain Unohana, stopping the Ryoka, joining the Soul Reaper's Women's Association, and the day she finally takes up her Captain's haori...
+route isane_fourth_lieutenant
+
+event Toshiro Hitsugaya's First Holloween
+active 1
+length 18
+reward Costumes: Rukia, Yoruichi and Rangiku (Halloween)
+unlock costume pl010 6
+unlock costume pl007 6
+unlock costume pl012 5
+chara pl026 0
+realm soul
+art event_holloween.jpg
+period Halloween -- Rebalance V1.7
+desc Pumpkins on every doorstep, cobwebs across the Seireitei, Hollows inside the walls -- and a Lieutenant who has invented a holiday. Captain Hitsugaya just wants Matsumoto back at her desk. To get there, he'll have to get through a Holloween party...
+route holloween_seireitei
+
+event One Thousand Years Ago
+active 0
+length 6
+reward Costume: Yhwach (1000 Years Ago)
+unlock costume pl052 2
+unlock costume pl052 3
+chara pl052 2
+dlc 3203780 Yhwach
+realm living
+art event_yhwach_1000ya.jpg
+period Limited time -- Rebalance V1.6
+desc A thousand years before the Thousand-Year Blood War, the Quincy king first marched on Soul Society. Before that fateful day, however, Yhwach is met by a certain Soul Reaper...
+route one_thousand_years_ago
+
+event The Ceaseless Hunger
+active 1
+length 12
+reward Reborn Character: Aaroniero Arruruerie
+unlock reborn pl041
+chara pl041 0
+realm hueco
+art event_aaroniero.jpg
+period Limited time: Rebalance V2.0
+desc A Gillian that never stopped eating, a face it stole from a dead Lieutenant, and a palace kept dark on purpose... Follow the Ninth Espada from the Forest of Menos to the night a Soul Reaper walked into his hall looking for the remains of a dead man...
+route aaroniero_ninth_palace
+
+event A Doctor's Condition
+active 1
+length 13
+reward Reborn Character: Ryuken Ishida
+unlock reborn pl053
+chara pl053 0
+realm living
+art event_ryuken.jpg
+period Limited time: Rebalance V2.0
+desc Ryuken Ishida says there's no money in being a Quincy. Follow the director of Karakura General Hospital from the night Masaki Kurosaki saved a Soul Reaper, to the night he gives his son his powers back, on one condition...
+route ryuken_doctors_condition
+event The Fourth Division's Day Off
+active 1
+length 12
+reward Costumes: Unohana's two Swimsuits
+unlock costume pl019 2
+unlock costume pl019 4
+chara pl019 0
+dlc 3203760 Retsu
+realm soul
+art event_fourth_division_day_off.jpg
+period Limited time: Rebalance V2.0
+desc The war is over, and Isane Kotetsu still has not taken a single day off. Captain Unohana has planned one for her: a trip to the beach in the World of the Living. Getting there means getting past half of the Seireitei first...
+route fourth_division_day_off

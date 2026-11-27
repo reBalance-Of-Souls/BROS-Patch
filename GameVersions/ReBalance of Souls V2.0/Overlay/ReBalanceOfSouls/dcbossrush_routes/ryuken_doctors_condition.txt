@@ -1,0 +1,16 @@
+# An ADVENTURE event's route -- written by DataChakka's Events Builder.
+# realm, then one node per pin: node <row> <column> fight|story key=value ... [name=<rest>]
+realm living
+node 1 0 story story=0
+node 2 0 fight chara=55 stage=4 konpaku=2 atk=90 form=0 cpu=2 effects=no_awaken name=Hollow
+node 3 0 story story=1
+node 4 0 story story=2
+node 5 0 story story=3
+node 6 0 story story=4
+node 7 0 fight chara=60 stage=2 konpaku=3 atk=100 form=0 cpu=4 effects=no_awaken name=Menos Grande
+node 8 0 story story=5
+node 9 0 story story=6
+node 10 0 fight chara=3 stage=10 konpaku=6 atk=100 form=0 cpu=5 name=Uryu Ishida
+node 11 0 story story=7
+node 12 0 fight chara=3 stage=10 konpaku=6 atk=105 form=0 cpu=7 effects=foe_evo name=Uryu Ishida
+node 13 0 story story=8

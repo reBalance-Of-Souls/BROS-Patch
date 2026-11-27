@@ -1,0 +1,10 @@
+# dcbossrush.dll: every `stock` file (size, FNV-1a 64) must be the one the
+# card was built from, then each `serve` file answers that path tail.
+stock ui\script\scene\Mission.bin 9679 1b892718a0a4c286
+stock 00HIGH\ui\ui_Mission_mdl.cat 31254551 e6f04ae4912307f8
+stock 00HIGH\ui\swap\mission_tex.cat 655038 cbcf47de76823d97
+stock 01MIDDLE\ui\ui_Mission_mdl.cat 10408812 2224ae8ffcc8cb5f
+stock 01MIDDLE\ui\swap\mission_tex.cat 272410 0ace16ad5a9a07d4
+serve ui\script\scene\mission.bin dcbossrush_Mission.bin
+serve ui\ui_mission_mdl.cat dcbossrush_Mission_mdl.cat
+serve ui\swap\mission_tex.cat dcbossrush_mission_tex.cat

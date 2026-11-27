@@ -1,0 +1,8 @@
+# dckeys -- TEST switch only. A trackpad has no side buttons, so each line makes a
+# keyboard key (a DirectInput scan code) act as Mouse 4 / Mouse 5 everywhere the
+# plugin reads them: binding in Custom Input Settings, battle, and the PAUSE key.
+# Ship this file without active lines.
+#   0x1A = [    0x1B = ]    0x4F = numpad 1    0x50 = numpad 2
+#
+# test_mouse4 0x1A
+# test_mouse5 0x1B

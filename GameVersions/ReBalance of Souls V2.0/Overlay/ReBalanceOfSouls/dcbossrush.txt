@@ -1,0 +1,564 @@
+# dcbossrush.txt -- Boss Rush (Missions), read at game start.
+#
+# boss <chara id> <costume|-> <stage> <form> <konpaku> <atk%> <breaks>   # name (story node)
+#   chara id   pl000-pl054 = 0-54, en000 = 55 (so enNNN = 55+NNN)
+#   costume    a costume row name (cos_05, awk_01, ura_01) or - for the default
+#   stage      index into the game's Mission stage table (bg000_00 = 0 ... bg004_03 = 53)
+#   form       0 base, 1 awakened, 2 reawakened -- the story's transform_enemy
+#   konpaku    the boss's Konpaku (the story's value; the plugin never goes below 9)
+#   atk%       attack multiplier x100 (story en_atk_rate)
+#   breaks     story en_breaknum (0 = default)
+# Order is fight order: story order, Monster Aizen last. Delete a line to drop a fight.
+# The CPU level ramps from ai_start to ai_end across the list (0-indexed: Lv4 = 3, Lv9 = 8).
+ai_start 3
+ai_end 8
+player_konpaku_mult 2
+# Rewards. A loss pays loss_sp_per * k * k Soul Points, k = bosses beaten.
+# A clear pays clear_exp EXP and clear_sp Soul Points. Soul Crystal bonuses still multiply both.
+loss_sp_per 300
+clear_exp 120000
+clear_sp 1000000
+# Until the Missions screen has its own Boss Rush card, picking this difficulty card
+# (0 = Lv1, 1 = Lv2, 2 = Lv3) starts Boss Rush instead. -1 = off.
+test_card -1
+
+boss 55  -      2  0 9  100 0   # Fishbone D (en000 nd_00_000_0020_02, bg000_02)
+boss 57  -      1  0 9  100 0   # Blade Ripper (en002 nd_00_000_0040_05, bg000_01)
+boss 56  -      2  0 9  100 0   # Shrieker (en001 nd_00_000_0050_02, bg000_02)
+boss 90  -      4  0 9  100 0   # Grand Fisher (en035 nd_00_000_0060_02, bg000_04)
+boss 58  -      1  0 9  100 0   # Hexipodas (en003 nd_00_000_0070_02, bg000_01)
+boss 84  -      28 0 9  100 0   # Jidanbo (en029 nd_01_000_0020_01, bg002_00)
+boss 63  -      49 0 9  120 0   # Inner Hollow (Zangetsu training) (en008 nd_01_000_0100_01, bg003_05)
+boss 62  -      39 0 9  100 0   # Momo Hinamori (en007 nd_01_001_0030_01, bg002_11)
+boss 97  -      36 0 9  100 0   # Nemu Kurotsuchi (sp001 nd_03_001_0160_02, bg002_08 -- Mayuri's Secret Story)
+boss 15  -      36 0 9  100 0   # Yumichika Ayasegawa (pl015 nd_02_002_0030_01, bg002_08)
+boss 60  -      1  0 9  130 0   # Menos Grande (en005 nd_01_001_0140_01, bg000_01)
+boss 93  -      3  0 9  130 0   # Yammy (en038 nd_02_000_0050_01, bg000_03)
+boss 66  -      2  0 9  120 0   # Di Roy (en011 nd_02_000_0080_01, bg000_02)
+boss 65  -      2  0 9  110 0   # Edrad (Resurreccion) (en010 nd_02_000_0090_01, bg000_02)
+boss 87  -      13 0 9  100 0   # Shawlong (Resurreccion) (en032 nd_02_000_0100_01, bg000_13)
+boss 68  -      7  0 9  100 0   # Hiyori Sarugaki (en013 nd_02_000_0130_01, bg000_07)
+boss 69  -      49 0 9  100 0   # Inner Hollow (Visored training) (en014 nd_02_000_0140_01, bg003_05)
+boss 64  -      10 0 9  150 1   # Ryuken Ishida (en009 nd_02_000_0170_01, bg000_10)
+boss 67  -      3  0 9  130 0   # Luppi (Resurreccion) (en012 nd_02_000_0250_01, bg000_03)
+boss 70  -      18 0 9  100 0   # Dordoni (Resurreccion) (en015 nd_03_000_0060_01, bg001_03)
+boss 72  -      19 0 9  100 0   # Gantenbainne (Resurreccion) (en017 nd_03_000_0070_01, bg001_04)
+boss 71  -      20 0 9  100 0   # Cirucci (Resurreccion) (en016 nd_03_000_0080_01, bg001_05)
+boss 73  -      22 0 9  100 1   # Zommari (Resurreccion) (en018 nd_03_000_0200_01, bg001_07)
+boss 75  -      16 0 9  100 0   # Rudbornn (en020 nd_03_000_0250_01, bg001_01)
+boss 85  -      44 0 9  100 0   # Abirama (Resurreccion) (en030 nd_04_000_0040_01, bg003_00)
+boss 91  -      46 0 9  100 0   # Barragan (Resurreccion) (en036 nd_04_000_0070_01, bg003_02)
+boss 79  -      46 0 9  100 0   # Ayon (en024 nd_04_000_0080_01, bg003_02)
+boss 80  -      44 0 9  150 0   # Kaname Tosen (Resurreccion) (en025 nd_04_000_0180_03, bg003_00)
+boss 83  -      14 0 9  100 0   # Zangetsu (Final Getsuga training) (en028 nd_04_000_0300_01, bg000_14)
+boss 21  -      48 0 20 150 3   # Monster Aizen (pl021 nd_04_000_0340_01, bg003_04)
+# 30 bosses
+
+# ============================================================================
+# EXTRA MISSION -- the cut "EX MISSION" mode, brought back (dcbossrush 0.6.0+).
+# On the Missions screen it is the EXTRA MISSION card, beside Boss Rush on the
+# bottom row; Left / Right on it choose LEVEL 1 / 2 / 3. A run climbs the ranks -- Enemy,
+# Seat Officer, Lieutenant, Captain -- to a BOSS. Before every fight comes the
+# Choose Your Opponent screen (ex_choices cards of that rank; Left / Right,
+# Confirm), then battle prep to slot Spirit Talismans (L1 / R1 there reopens the
+# opponent screen). Health carries from fight to fight.
+#
+# ex_level <1-3> <fights> <ai_start> <ai_end> <clear_exp> <clear_sp>
+#   the CPU level ramps ai_start -> ai_end over the run (0-indexed: Lv4 = 3, Lv9 = 8)
+ex_level 1 5 3 6  60000  250000
+ex_level 2 7 4 7  90000  500000
+ex_level 3 9 5 8 150000 1000000
+# ex_tier <rank 0-4> <enemy konpaku> <atk%>   (0 Enemy, 1 Seat Officer, 2 Lieutenant, 3 Captain, 4 BOSS)
+ex_tier 0 3 100
+ex_tier 1 4 105
+ex_tier 2 5 110
+ex_tier 3 6 120
+ex_tier 4 9 130
+# each level above Lv1 adds this much attack% and Konpaku to every opponent
+ex_level_atk 10
+ex_level_konpaku 1
+# 0.18.25: ex_level_extra <level> <foe Konpaku +> <foe attack% +> <foe Reishi %> <rank +> <pair fight %>
+#   on top of the above, per Level: more Konpaku and attack on every foe (map fights, offers and the
+#   encounters' fights), foe Reishi (100 = the game's own), the fights before the boss one rank higher,
+#   and a share of the map's fights pair fights (a second foe of the rank below, at once). LEVEL 3 is
+#   harder through these, not the CPU: the wave CPU levels above Lv.5 are dcreborn's Lv.6-X, whose
+#   always-attack tuning is why they barely guard (Lv3 stays at Lv.6 -> Lv.9, as before).
+ex_level_extra 1 0 0 100 0 0
+ex_level_extra 2 0 0 100 0 0
+ex_level_extra 3 2 10 115 1 25
+# 0.18.25: ENDLESS, the Adventure card right of Events (ex_endless_card 0 hides it). Segments of
+# <rows> fights ending on a BOSS, one after another until the player falls, at LEVEL 3's strength;
+# each segment cleared adds to every foe from then on:
+# ex_endless <rows> <foe Konpaku +> <foe attack% +> <CPU +> <foe Reishi% +> <pair fight% +>
+ex_endless 7 1 8 0 5 10
+ex_endless_card 1
+# 0.18.30 (Venx, 2026-11-22: "disable 6 Stock Damage or higher for Adventure mode ... 5 Konpaku is good
+# enough for any character in this environment"): the most Konpaku one hit takes in an Adventure fight,
+# either side -- Unohana's 7, Yamamoto's / Kenpachi's / Ichibe's 6, an attack rate's round-up. 0 = off.
+ex_konpaku_cap 5
+# 0.19.0 (the user, 2026-11-23: multi-foe fights "natively", every foe on the field, lock-on and target switching
+# kept): the foe you are engaged with is always the game's own 2P -- the one whose Kikon lands on you when it
+# breaks your Reishi, the one your Kikon takes when you break it; each foe is KO'd the game's own way, the last
+# one wins the fight. 0 = the 0.18 rules (Kikon only on the last foe, foes dropping without one).
+ex_group_native 1
+# frames after a fallen foe's finishing Kikon before it leaves the field and the fight goes on (0.19.3: 20, a third of
+# a second -- "Dead hollows take too long to disappear")
+ex_group_ko_frames 20
+# 0.18.30 (Ora, 2026-11-22: "Slight colouring would already go a long way"): each realm's colour on its map.
+# 0.19.20 (Joe: "The accent changes color, but the background stays white"): the colour is the map's ACCENTS
+# (its hue at the navy's lightness for rims, links, text and the slash; at the sky's for the glow), the paper
+# stays white. ex_realm_tint <realm> <RRGGBB> <alpha %>  (0 Hueco Mundo, 1 Soul Society, 2 the World of the
+# Living, 3 the Schatten Bereich; alpha 0 = the navy, as every other screen). The alpha's strength is no longer used.
+ex_realm_tint 0 3FA35A 11
+# 0.19.24 (Joe, 2026-11-25: "change Soul Society's accent color to red, instead of yellow"): D93A3A (was F2C230).
+ex_realm_tint 1 D93A3A 11
+ex_realm_tint 2 4A90D9 9
+ex_realm_tint 3 8A5CD6 10
+
+# 0.18.19: foes start Awakened / in Kikon Channel past this share of the map (percent of the rows;
+# the boss row = 100), per Level; and never below the form the player carries in.
+# ex_foe_rise <level 1-3> <awakened %> <kikon channel %>
+ex_foe_rise 1 50 85
+ex_foe_rise 2 35 70
+ex_foe_rise 3 20 55
+ex_foe_match_player 1
+ex_choices 3
+# 0.9.0 THE MAP: a run starts by choosing a way in -- a Garganta (Hueco Mundo), a Senkaimon
+# (Soul Society) or a Shadow Portal (the World of the Living) -- then climbs a map of <fights>
+# rows of 2-3 nodes to one BOSS; each step offers the nodes the last one links to. A node is a
+# fight or an NPC (dialogue on the cards: lore, a trade, a buff or a debuff).
+#   ex_map_foreign <%>  a fight node in another realm: shown as that realm's portal, no name and
+#                       no drop; winning it takes the player into that realm
+#   ex_map_npc <%>      0.18.21: a node (from the second row to the one before the boss) being a
+#                       character encounter rather than a fight -- 50 = Encounters and Fights tied.
+#                       The first row and the boss are always fights; one pin per character a map
+#   ex_map_npc_min <n>  0.18.20: rows sure to hold an encounter
+#   ex_map_spots <%>    a path with a flavor spot (a Location) on it (0.13.0; dcbossrush_spots.txt) --
+#                       met on the way to the node beyond, free: no step taken. 0.18.21: 75, so
+#                       Locations are the common find, above Encounters and Fights
+#   ex_map_spots_max <n> 0.18.21: Locations between two rows, at most (was a fixed 2)
+#   ex_far <konpaku> <atk%> <cpu>  how much harder a far fight is (it also always drops a Soul
+#                       Crystal and an item)
+# ex_map_overlay 1: the run's map, the ways in and the NPC scenes are drawn over the game from
+# dcbossrush_map/ beside the DLL (mk_map_art.py); 0 = the opponent cards only
+ex_map_overlay 1
+ex_map_foreign 25
+ex_map_npc 50
+ex_map_npc_min 1
+ex_map_spots 75
+ex_map_spots_max 6
+ex_far 1 15 1
+# LEVEL 2 opens when LEVEL 1 is cleared, LEVEL 3 when LEVEL 2 is (kept offline in
+# dcbossrush_records.txt beside the plugin). 1 opens every LEVEL from the start.
+ex_unlock_all 0
+# every won fight drops one random Spirit Talisman into this run's pool; the next battle
+# prep lists it, and a slotted talisman is spent on that fight. 0 = off.
+ex_talisman_per_win 1
+# The run's drops are the ONLY items an EX run can use: battle prep offers the talismans
+# this run has won (not your inventory), and the battle equips the Soul Crystals this run
+# has won (not your loadout). Nothing is added to your inventory; it all goes when the run
+# ends. Every win drops a talisman; a Soul Crystal drops with this chance (%), and always
+# from a BOSS.
+ex_crystal_chance 35
+# ALLY TALISMANS (0.18.18 as Ally Crystals; 0.18.24 real talismans): a win can drop an Ally Talisman
+# ("Ally Talisman - <name>") with this chance (%): a playable foe drops its own, any other foe a random
+# character's (never yours or one you have). Battle prep's Talisman Slots list them with the run's other
+# talismans; a slotted one brings that character into THAT fight at your side (Konpaku ex_ally_konpaku,
+# CPU level ex_ally_cpu 1-10; two at most) and is used up as the fight starts. They are talisman items
+# 100-140 in Script/Item.cat (dcbossrush's mk_ally_talismans.py). DLC characters drop only for players
+# who own that DLC.
+# 0.18.22 (Ora, 2026-11-19: "still probably too high a drop rate"): 25 -> 10
+ex_ally_chance 10
+ex_ally_konpaku 3
+ex_ally_cpu 7
+# RUN SEEDS (0.18.18): a run's map (route, foes, drops) comes from its seed, Level and way in alone, so
+# the same three give every player the same route. The seed shows bottom left of Adventure's screens;
+# the run menu's Enter Seed (at the way in) sets one. ex_seed <8 hex characters> starts EVERY new run
+# on that seed (0: a random seed each run).
+ex_seed 0
+# EX items, used the moment they drop, for the next fight: a win drops one with this chance
+# (%); ex_heal_share (%) of them are Restoration Talismans (the next fight starts at full
+# HP), the rest Konpaku Shards (+1 Konpaku, and +1 to the run's Konpaku limit).
+ex_item_chance 30
+ex_heal_share 50
+# ex_start_konpaku <level> <n>: the player's Konpaku at the start of a run, and the run's
+# Konpaku limit in every fight (raised by Konpaku Shards). 0 = the game's own, and then the
+# run's limit is the character's own plus what the run added (Shards, encounters): "full
+# Konpaku" for the Max Konpaku crystals is that limit (0.18.25).
+# 0.18.25 (Ora / the user, 2026-11-21): LEVEL 3 no longer starts on 1 Konpaku (was 3 1).
+ex_start_konpaku 1 0
+ex_start_konpaku 2 0
+ex_start_konpaku 3 0
+ex_player_konpaku_mult 1
+# a loss pays ex_loss_sp_per * fights won * level Soul Points
+ex_loss_sp_per 400
+# stages an opponent without its own is fought on (Mission stage table indices)
+# 0.18.30 (Ora, 2026-11-22: "Dordoni (maybe its the map as a whole) is stuck on the cirucci Map until he does
+# certain moves"): 20 (Las Noches, Tiled Arena, bg001_05) is Cirucci's alone (ex_foe_stages 71 20 below) --
+# out of this list and Hueco Mundo's
+ex_stages 1 2 3 4 7 10 13 16 18 19 22 28 36 39 44 46
+# (8, 9 and 34 are left out: bg000_08 / bg000_09 / bg002_06 were never shipped -- the
+# plugin drops any stage with no map on disk anyway)
+# ex_world <name> <Mission stage table indices>: a foe's home world -- every offer draws a
+# random map from the whole category (0-14 Karakura Town, 15-27 Hueco Mundo, 28-43 the
+# Seireitei, 44-48 Fake Karakura, 49 the Inner World, 50-53 test rooms / Schatten aliases)
+ex_world karakura  0 1 2 3 4 5 6 7 10 11 12 13 44 45 46 47 48
+ex_world hueco     15 16 17 18 19 21 22 23 24 25 26 27
+ex_world seireitei 28 29 30 31 32 33 35 36 37 38 39 40 41 42 43
+# the Schatten Bereich's stages are not in the Missions stage table, so two of its unused
+# test-room rows (50 demo space, 51 giant chara space) are pointed at them for EX fights
+ex_stage_alias 50 bg005_02   # [Schatten Bereich] Imaginary Arena
+# ex_stage_alias 51 bg005_06  # [Schatten Bereich] Zentraler Platz -- removed from the game (2026-10-18)
+ex_world schatten  50
+# Hollow Ichigo's world: its card is ringed by Karakura Town, and (2026-10-26) he is fought on
+# Karakura's stages -- no Adventure fight is held on 14 Inner World Flooded, 49 Inner World,
+# 50 (unaliased) Wasteland, 52 Grid Stage or the 51 / 53 test rooms
+ex_world inner     0 1 2 3 4 5 6 7 10 11 12 13 44 45 46 47 48
+# 0.17.62: ex_foe_stages <chara id> <stage indices> -- a foe fought only on these maps, whatever
+# drew its stage. Menos Grande cannot be beaten off the maps Story mode stands him on:
+# 1 Karakura Intersection (Day), 3 Karakura Forest Park (Day), 25 Hueco Mundo Desert, 46 Fake Karakura
+ex_foe_stages 60 1 3 25 46
+# Cirucci Sanderwicci needs her own room from Story mode: 20 Las Noches, Tiled Arena (bg001_05)
+ex_foe_stages 71 20
+# Kaname Tosen (Resurreccion) fights only on his Story map: 44 Fake Karakura, Tenkaiketchu Pillar (bg003_00)
+ex_foe_stages 80 44
+# 0.18.25 (the user, 2026-11-21: Barragan "disappeared into the ceiling"): Barragan only on his Story
+# map, 46 Fake Karakura (bg003_02, nd_04_000_0070_01) or the Menos arena, 25 Hueco Mundo Desert
+# (bg001_10) -- the Resurreccion (91) and the roster Barragan (30); also as a group foe or an ally
+ex_foe_stages 91 46 25
+ex_foe_stages 30 46 25
+# 0.18.25: Sosuke Aizen (Transcended), a Story-only boss, on his Story map: 48 Fake Karakura,
+# the decisive battlefield (bg003_04, nd_04_000_0340_01), as Boss Rush fights him
+ex_foe_stages 21 48
+# 0.18.27: ex_name <chara id> <name> -- a fighter's shown name, for an id no boss / ex_pool / sa_foe line names
+# (an unnamed one is called "Opponent"). Isshin (82, en027) is two encounters' NPC.
+ex_name 82 Isshin Kurosaki
+# 0.15.2: ex_desc <chara id> <text> -- the fight's description on the EX map (the lit pin's
+# lore, bottom right). One line per foe; a foe in several realms shares it.
+ex_desc 55 A Hollow drifts over the rooftops, trailing a thin spine of bone like a lure. It has been feeding on the weak for a long time, and it smells you before it sees you.
+ex_desc 56 The air thins to a whine that sets your teeth on edge. Somewhere above, a Hollow with a voice like breaking glass is already laughing at you.
+ex_desc 57 Long, curved blades scrape the ground ahead, leaving pale scars in the stone. The Hollow that carries them moves like it has never once been made to stop.
+ex_desc 58 Six legs click in the dark, too many and too fast. A Hollow skitters out of the shadows, its mask tilted as if it is deciding where to bite first.
+ex_desc 90 A lure sways in the gloom, wearing a face you almost recognise. Grand Fisher has hunted spirits for fifty years by baiting them with what they love most.
+ex_desc 0 A Substitute Soul Reaper in a black robe, his cleaver of a sword resting on one shoulder. He scowls, but he looks ready to fight anyone who stands in his way.
+ex_desc 3 A Quincy in pristine white raises his bow of light without a word. Every arrow he looses is a quiet judgement, and he never seems to miss twice.
+ex_desc 4 A towering, quiet young man flexes an arm sheathed in black and red armour. He doesn't want this fight, which only makes his fists hit harder.
+ex_desc 10 A Soul Reaper of the Thirteenth Division draws a blade as white as fresh snow. The air drops several degrees as she settles into her stance.
+ex_desc 34 A girl with gentle eyes stands behind a shimmering shield of light. Her six flower pins hum, ready to reject anything that tries to harm her friends.
+ex_desc 14 A bald Soul Reaper of the Eleventh Division spins his spear and grins. To him, this is not a duty but the best part of the day.
+ex_desc 84 A giant blocks the gate, his axes as tall as houses. Jidanbo has never let an intruder pass, and he is not about to start with you.
+ex_desc 66 A wiry Arrancar with an eyepatch and a short temper cracks his knuckles. Di Roy has something to prove, and you look like an easy place to prove it.
+ex_desc 70 A flamboyant Arrancar strikes a pose, his voice echoing across the dunes. Dordoni insists you show him your very best, then makes it clear he intends to break it.
+ex_desc 71 A former Espada spreads wings of blades and twirls a bladed yo-yo on its chain. Cirucci finds you terribly ugly, and wants the fight over quickly.
+ex_desc 67 A slender Arrancar in a stolen rank smiles down at you. Luppi's tentacles uncoil lazily, as if your struggle is the entertainment he has been waiting for.
+ex_desc 85 A feathered Arrancar circles overhead with a war cry. Abirama fights for the glory of his master, and announces it with every swoop.
+ex_desc 87 A composed Arrancar with long braided hair flexes the blades on his fingers. Shawlong leads his Fraccion with cold precision and expects you to fall in line.
+ex_desc 8 A Lieutenant with crimson hair and tattooed brows lets his segmented blade snake through the air. Renji fights loud, and he fights to get stronger.
+ex_desc 11 A Lieutenant with a tattooed 69 across his cheek lifts a scythe of twin hooks. Shuhei hates his own Zanpakuto's shape, and that is what makes him dangerous.
+ex_desc 12 A Lieutenant with a lazy smile lets her blade crumble into a cloud of ash. Rangiku can turn the air itself into a thousand tiny cuts.
+ex_desc 13 A gloomy Lieutenant raises a blade bent like a hook. Every strike Izuru lands makes your limbs heavier, until you can no longer lift them.
+ex_desc 62 A Lieutenant of the Fifth Division holds her sword with trembling resolve. Momo's Zanpakuto spits fire, and her loyalty runs deeper than her doubts.
+ex_desc 1 The robe has narrowed to a long black coat and the blade to a thin black sword. Ichigo's Bankai is faster than your eyes can follow.
+ex_desc 64 A tall Quincy in a doctor's white coat adjusts his glasses. Ryuken does not waste arrows, and he does not waste words either.
+ex_desc 6 A shopkeeper in a striped hat fans himself and smiles. Kisuke always has a plan, and the cane at his side is not a cane.
+ex_desc 7 A woman in a backless uniform stretches, and then she is behind you. Yoruichi, the Flash Goddess, fights faster than anyone you've ever seen.
+ex_desc 17 The Captain of the Second Division slips from the shadows, a gold stinger on her finger. Soi Fon only needs to strike the same place twice.
+ex_desc 18 A Captain with narrowed eyes and an unnerving smile rests a hand on his short sword. Gin's blade can reach you from much farther away than it looks.
+ex_desc 19 The Captain of the Fourth Division smiles kindly, her braid laid across her chest. Retsu heals the 13 Court Guard Squads, and long ago she was the one they feared.
+ex_desc 22 A nobleman in a white scarf regards you coldly. Byakuya's blade scatters into a storm of cherry blossoms, and every petal is a blade.
+ex_desc 23 A towering Captain in a helmet and armour draws his sword. Behind Sajin, a giant armoured warrior rises, mirroring his every swing.
+ex_desc 24 A Captain in a flowered pink haori tips his straw hat and sighs. Shunsui would rather not fight, but his games are deadly when he does.
+ex_desc 25 A blind Captain with a calm voice speaks of justice. Kaname's Bankai can steal your sight, your hearing and your sense of where he is.
+ex_desc 26 The youngest Captain's breath turns to frost. Toshiro commands the strongest ice-type Zanpakuto there is, and dragons of ice answer his call.
+ex_desc 27 A towering Captain with bells in his spiked hair grins wider than anyone should. Kenpachi just wants a fight that lasts.
+ex_desc 29 A painted Captain cackles behind a golden mask. Mayuri sees you as a specimen, and his blade's poison is only the first of his experiments.
+ex_desc 31 A cheerful Lieutenant with a trident-like blade waves you over. Kaien's Zanpakuto calls up the tide, and he fights with a smile right to the end.
+ex_desc 32 A Visored with a wide grin and a straight blonde bob twirls his sword. Shinji's Shikai flips the world upside down until you can't tell left from right.
+ex_desc 33 The Primera Espada yawns and draws two pistols of spirit energy. Starrk is lonely, sleepy and the strongest of them all.
+ex_desc 35 The Tercera Espada lowers the collar that hides her face. Tier Halibel cuts with waves of boiling water and asks nothing more of you than to fall.
+ex_desc 36 The Cuatro Espada watches you with green, tear-streaked eyes. Ulquiorra embodies nihilism, and he will show you despair.
+ex_desc 37 A towering Espada with a crescent-shaped weapon looms over you. Nnoitora's skin is the hardest of all the Espada, and he wants to prove he is the strongest.
+ex_desc 38 The Sexta Espada cracks his neck and grins. Grimmjow fights only to be the king, and he will tear down anything in his way.
+ex_desc 39 The Octava Espada smiles and adjusts his glasses. Szayelaporro has already studied you, and in his lab there is no such thing as a fair fight.
+ex_desc 42 A former Espada with a cracked skull mask settles into a calm stance. Nelliel fights with honour, and her lance strikes like a falling star.
+ex_desc 16 The Head Captain plants his cane, and it bursts into flame. Yamamoto has led the 13 Court Guard Squads for a thousand years, and his fire burns everything.
+ex_desc 20 A soft-spoken man in white smiles at you as if you were a child. Aizen has seen every move you will make, and his illusion has already begun.
+ex_desc 21 What was once Aizen has become something else entirely, a mass of wings and eyes. He does not even look at you as he speaks.
+ex_desc 2 Ichigo's hair has grown long and black, and the air around him stops moving. This is the final Getsugatensho, and there will be nothing after it.
+ex_desc 5 An old man in a black coat stands on a sideways skyscraper in the rain. Zangetsu asks why you fight, and he will not let you pass without an answer.
+ex_desc 50 A cheerful monk with a bald head and a bushy beard picks his teeth with a calligraphy brush. Ichibe named everything in Soul Society, and he can take a name away.
+ex_desc 51 Ichigo stands in a torn black coat, his two blades shining. He has learned the truth of his blood, and he fights with all of it.
+ex_desc 52 The Quincy Emperor regards you from a throne of shadow. Yhwach can see the future, and in every version of it he has already won.
+ex_desc 60 A colossal figure in a white cloak rises from the sand, a long nose on its mask. A Menos Grande, made from countless Hollows devouring one another.
+ex_desc 65 An Arrancar with a mane of hair and arms like pillars cracks the ground. Edrad's fists explode with every hit, and he won't stop until something gives.
+ex_desc 93 A massive Arrancar picks his ear and yawns. Yammy grows larger with every hit you land, and his rage only feeds him.
+ex_desc 75 An Arrancar with a skull-shaped mask raises his staff. Rudbornn commands an army of Exequias that rises again and again from the sand.
+ex_desc 63 A Hollow mask grows across Ichigo's face, and his eyes turn gold. The voice that speaks is his and not his, and it wants your blood.
+ex_desc 73 An Arrancar with a blank expression and eyes painted across his body speaks of love. Zommari's gaze can claim any limb it lands on.
+ex_desc 69 The Hollow inside Ichigo wears his Bankai like a stolen coat. Fast, white and laughing, it has wanted to fight on its own terms for a very long time.
+ex_desc 91 An old Arrancar king lounges on a throne of bone. Barragan's touch rots everything, and all that lives must one day kneel before decay.
+
+# ex_art <chara id> <mission_tex entry>: the opponent card's art, built by mk_opp_art.py into
+# dcbossrush_mission_tex.cat -- the foe ringed by its home world; roster fighters from the
+# game's own full-body render, standing in front of it. A fighter without a line shows the
+# game's mono portrait (playable) or the EX emblem.
+ex_art 0 ex_opp_000
+ex_art 1 ex_opp_001
+ex_art 2 ex_opp_002
+ex_art 3 ex_opp_003
+ex_art 4 ex_opp_004
+ex_art 5 ex_opp_005
+ex_art 6 ex_opp_006
+ex_art 7 ex_opp_007
+ex_art 8 ex_opp_008
+ex_art 10 ex_opp_010
+ex_art 11 ex_opp_011
+ex_art 12 ex_opp_012
+ex_art 13 ex_opp_013
+ex_art 14 ex_opp_014
+ex_art 16 ex_opp_016
+ex_art 17 ex_opp_017
+ex_art 18 ex_opp_018
+ex_art 19 ex_opp_019
+ex_art 20 ex_opp_020
+ex_art 21 ex_opp_021
+ex_art 22 ex_opp_022
+ex_art 23 ex_opp_023
+ex_art 24 ex_opp_024
+ex_art 25 ex_opp_025
+ex_art 26 ex_opp_026
+ex_art 27 ex_opp_027
+ex_art 29 ex_opp_029
+ex_art 31 ex_opp_031
+ex_art 32 ex_opp_032
+ex_art 33 ex_opp_033
+ex_art 34 ex_opp_034
+ex_art 35 ex_opp_035
+ex_art 36 ex_opp_036
+ex_art 37 ex_opp_037
+ex_art 38 ex_opp_038
+ex_art 39 ex_opp_039
+ex_art 42 ex_opp_042
+ex_art 50 ex_opp_050
+ex_art 51 ex_opp_051
+ex_art 52 ex_opp_052
+ex_art 55 ex_opp_055
+ex_art 56 ex_opp_056
+ex_art 57 ex_opp_057
+ex_art 58 ex_opp_058
+ex_art 60 ex_opp_060
+ex_art 62 ex_opp_062
+ex_art 63 ex_opp_063
+ex_art 64 ex_opp_064
+ex_art 65 ex_opp_065
+ex_art 66 ex_opp_066
+ex_art 67 ex_opp_067
+ex_art 69 ex_opp_069
+ex_art 70 ex_opp_070
+ex_art 71 ex_opp_071
+ex_art 73 ex_opp_073
+ex_art 75 ex_opp_075
+ex_art 84 ex_opp_084
+ex_art 85 ex_opp_085
+ex_art 87 ex_opp_087
+ex_art 90 ex_opp_090
+ex_art 91 ex_opp_091
+ex_art 93 ex_opp_093
+# a card per extra world, for foes fought in more than one: ex_art <id> <tex> <world>
+ex_art 90 ex_opp_090_hueco hueco
+ex_art 51 ex_opp_051_karakura karakura
+ex_art 51 ex_opp_051_seireitei seireitei
+# ex_pool <rank> <chara id> <costume|-> <form> <stage index | world | world+world.. | -1 any>   # name
+ex_pool 0 55  - 0 karakura+hueco                  # Fishbone D
+ex_pool 0 56  - 0 karakura+hueco                  # Shrieker
+ex_pool 0 57  - 0 karakura+hueco                  # Blade Ripper
+ex_pool 0 58  - 0 karakura+hueco                  # Hexipodas
+ex_pool 0 90  - 0 karakura+hueco                  # Grand Fisher
+ex_pool 0 0   - 0 karakura    # Ichigo Kurosaki
+ex_pool 0 3   - 0 karakura    # Uryu Ishida
+ex_pool 0 4   - 0 karakura    # Yasutora Sado
+ex_pool 0 10  - 0 seireitei   # Rukia Kuchiki
+ex_pool 1 14  - 0 seireitei   # Ikkaku Madarame
+ex_pool 1 84  - 0 seireitei   # Jidanbo Ikkanzaka
+ex_pool 1 66  - 0 karakura    # Di Roy Rinker
+ex_pool 1 70  - 0 hueco       # Dordoni
+ex_pool 1 71  - 0 hueco       # Cirucci Sanderwicci
+ex_pool 1 67  - 0 karakura    # Luppi Antenor
+ex_pool 1 85  - 0 karakura    # Abirama Redder
+ex_pool 1 87  - 0 karakura    # Shawlong Koufang
+ex_pool 2 8   - 0 seireitei   # Renji Abarai
+ex_pool 2 11  - 0 seireitei   # Shuhei Hisagi
+ex_pool 2 12  - 0 seireitei   # Rangiku Matsumoto
+ex_pool 2 13  - 0 seireitei   # Izuru Kira
+ex_pool 2 62  - 0 seireitei   # Momo Hinamori
+ex_pool 2 1   - 0 karakura    # Ichigo Kurosaki (Bankai)
+ex_pool 2 64  - 0 karakura    # Ryuken Ishida
+ex_pool 3 6   - 0 karakura    # Kisuke Urahara
+ex_pool 3 7   - 0 karakura    # Yoruichi Shihoin
+ex_pool 3 17  - 0 seireitei   # Soi Fon
+ex_pool 3 18  - 0 seireitei   # Gin Ichimaru
+ex_pool 3 19  - 0 seireitei   # Retsu Unohana
+ex_pool 3 22  - 0 seireitei   # Byakuya Kuchiki
+ex_pool 3 23  - 0 seireitei   # Sajin Komamura
+ex_pool 3 24  - 0 seireitei   # Shunsui Kyoraku
+ex_pool 3 25  - 0 seireitei   # Kaname Tosen
+ex_pool 3 26  - 0 seireitei   # Toshiro Hitsugaya
+ex_pool 3 27  - 0 seireitei   # Kenpachi Zaraki
+ex_pool 3 29  - 0 seireitei   # Mayuri Kurotsuchi
+ex_pool 3 31  - 0 seireitei   # Kaien Shiba
+ex_pool 3 32  - 0 karakura    # Shinji Hirako
+ex_pool 3 33  - 0 hueco       # Coyote Starrk
+ex_pool 3 35  - 0 hueco       # Tier Halibel
+ex_pool 3 36  - 0 hueco       # Ulquiorra Cifer
+ex_pool 3 37  - 0 hueco       # Nnoitora Gilga
+ex_pool 3 38  - 0 hueco       # Grimmjow Jaegerjaquez
+ex_pool 3 39  - 0 hueco       # Szayelaporro Granz
+ex_pool 3 42  - 0 hueco       # Nelliel Tu Odelschwanck
+ex_pool 4 16  - 0 karakura    # Genryusai Shigekuni Yamamoto
+ex_pool 4 20  - 0 karakura    # Sosuke Aizen
+ex_pool 4 21  - 0 karakura   # Sosuke Aizen (Monster)
+ex_pool 4 2   - 0 karakura    # Ichigo Kurosaki (Final Getsugatensho)
+ex_pool 4 5   - 0 karakura    # Zangetsu
+ex_pool 4 50  - 0 seireitei   # Ichibe Hyosube
+ex_pool 4 51  - 0 schatten+karakura+seireitei     # Ichigo Kurosaki (Thousand-Year Blood War)
+ex_pool 4 52  - 0 schatten    # Yhwach
+# (0.7.1) the foes from the opponent-card art, joining the climb
+ex_pool 0 60  - 0 hueco      # Menos Grande
+ex_pool 1 65  - 0 karakura   # Edrad Liones
+ex_pool 2 93  - 0 karakura   # Yammy Llargo
+ex_pool 2 75  - 0 hueco      # Rudbornn Chelute
+ex_pool 2 63  - 0 inner          # Ichigo Kurosaki (Hollow)
+ex_pool 3 73  - 0 karakura   # Zommari Rureaux
+ex_pool 3 69  - 0 inner          # Ichigo Kurosaki (Hollow, Bankai)
+ex_pool 4 91  - 0 karakura   # Barragan Luisenbarn
+
+# ============================================================================
+# TIME ATTACK (was SPEED ATTACK; dcbossrush 0.17.15, renamed 0.18.16) -- the Missions screen's card beside Boss Rush.
+# A course is its foes one after another at one CPU level; the clock is the run's
+# battle time (fighter updates, 60 a second, from each fight's first frame to the
+# foe's KO), and each course keeps its best time and who set it (dcbossrush_records.txt).
+# Health, Konpaku and the gauges carry from fight to fight, as in Missions. No Spirit
+# Talismans, no Soul Crystals, no saving.
+#
+# sa_ai <0-9>            the CPU level (0-indexed: Lv9 = 8)
+# sa_clear_exp / sa_clear_sp   what a clear pays (a loss pays nothing)
+# sa_course <name>       starts a course; its sa_foe lines follow, in fight order
+# sa_foe <chara id> <costume|-> <form> <konpaku> <world | stage index> [base]   # name
+#   base: the foe stays in its base form -- no Fighting Spirit, so no Awakening
+# sa_face <chara id> <roster pl id>   the course screen draws this foe with that face
+sa_ai 8
+sa_clear_exp 20000
+sa_clear_sp 50000
+
+sa_course Captains
+sa_foe 16 - 0 9 seireitei   # Genryusai Shigekuni Yamamoto
+sa_foe 17 - 0 9 seireitei   # Soi Fon
+sa_foe 18 - 0 9 seireitei   # Gin Ichimaru
+sa_foe 19 - 0 9 seireitei   # Retsu Unohana
+sa_foe 20 - 0 9 seireitei   # Sosuke Aizen
+sa_foe 22 - 0 9 seireitei   # Byakuya Kuchiki
+sa_foe 23 - 0 9 seireitei   # Sajin Komamura
+sa_foe 24 - 0 9 seireitei   # Shunsui Kyoraku
+sa_foe 25 - 0 9 seireitei   # Kaname Tosen
+sa_foe 26 - 0 9 seireitei   # Toshiro Hitsugaya
+sa_foe 27 - 0 9 seireitei   # Kenpachi Zaraki
+sa_foe 29 - 0 9 seireitei   # Mayuri Kurotsuchi
+sa_foe 50 - 0 9 seireitei   # Ichibe Hyosube
+
+sa_course Soul Society
+sa_foe 14 - 0 9 seireitei   # Ikkaku Madarame
+sa_foe 15 - 0 9 seireitei   # Yumichika Ayasegawa
+sa_foe 40 - 0 9 seireitei   # Isane Kotetsu
+sa_foe 13 - 0 9 seireitei   # Izuru Kira
+sa_foe 11 - 0 9 seireitei   # Shuhei Hisagi
+sa_foe 62 - 0 9 seireitei   # Momo Hinamori
+sa_foe 97 - 0 9 seireitei   # Nemu Kurotsuchi
+sa_foe 10 - 0 9 seireitei   # Rukia Kuchiki
+sa_foe 12 - 0 9 seireitei   # Rangiku Matsumoto
+sa_foe 8  - 0 9 seireitei   # Renji Abarai
+sa_foe 31 - 0 9 seireitei   # Kaien Shiba
+
+sa_course Espada
+sa_foe 33 - 0 9 hueco       # Coyote Starrk
+sa_foe 91 - 0 9 hueco       # Barragan Luisenbarn
+sa_foe 35 - 0 9 hueco       # Tier Halibel
+sa_foe 36 - 0 9 hueco       # Ulquiorra Cifer
+sa_foe 37 - 0 9 hueco       # Nnoitora Gilga
+sa_foe 38 - 0 9 hueco       # Grimmjow Jaegerjaquez
+sa_foe 73 - 0 9 hueco       # Zommari Rureaux
+sa_foe 39 - 0 9 hueco       # Szayelaporro Granz
+sa_foe 41 - 0 9 hueco       # Aaroniero Arruruerie
+sa_foe 93 - 0 9 hueco       # Yammy Llargo
+sa_foe 42 - 0 9 hueco       # Nelliel Tu Odelschwanck
+
+sa_course World of the Living
+sa_foe 0  - 0 9 karakura    # Ichigo Kurosaki
+sa_foe 4  - 0 9 karakura    # Yasutora Sado
+sa_foe 3  - 0 9 karakura    # Uryu Ishida
+sa_foe 1  - 0 9 karakura    # Ichigo Kurosaki (Bankai)
+sa_foe 64 - 0 9 karakura    # Ryuken Ishida
+sa_foe 7  - 0 9 karakura    # Yoruichi Shihoin
+sa_foe 63 - 0 9 inner       # ??? (Shikai)
+sa_foe 68 - 0 9 karakura    # Hiyori Sarugaki
+sa_foe 32 - 0 9 karakura    # Shinji Hirako
+sa_foe 69 - 0 9 inner       # ??? (Bankai)
+sa_foe 2  - 0 9 karakura    # Ichigo Kurosaki (The Final Getsugatensho)
+sa_foe 6  - 0 9 karakura    # Kisuke Urahara
+sa_foe 51 - 0 9 karakura    # Ichigo Kurosaki (Thousand-Year Blood War)
+sa_face 64 53               # Ryuken: his roster face
+
+sa_course Ichigo's Journey
+sa_foe 55 - 0 9 karakura    # Fishbone D
+sa_foe 58 - 0 9 karakura    # Hexapodus
+sa_foe 56 - 0 9 karakura    # Shrieker
+sa_foe 90 - 0 9 karakura    # Grand Fisher
+sa_foe 60 - 0 9 karakura    # Menos Grande
+sa_foe 8  - 0 9 karakura    # Renji Abarai
+sa_foe 84 - 0 9 seireitei   # Jidanbo Ikkanzaka
+sa_foe 14 - 0 9 seireitei   # Ikkaku Madarame
+sa_foe 27 - 0 9 seireitei   # Kenpachi Zaraki
+sa_foe 22 - 0 9 seireitei   # Byakuya Kuchiki
+sa_foe 93 - 0 9 karakura base   # Yammy Llargo
+sa_foe 70 - 0 9 hueco       # Dordoni Alessandro Del Socaccio
+sa_foe 38 - 0 9 hueco       # Grimmjow Jaegerjaquez
+sa_foe 36 - 0 9 hueco       # Ulquiorra Cifer
+sa_foe 18 - 0 9 karakura    # Gin Ichimaru
+sa_foe 20 - 0 9 karakura    # Sosuke Aizen
+sa_foe 21 - 0 9 karakura    # Sosuke Aizen (Transcended)
+
+sa_course The Five Special War Threats
+sa_foe 51 - 0 9 karakura    # Ichigo Kurosaki (Thousand-Year Blood War Arc)
+sa_foe 50 - 0 9 seireitei   # Ichibe Hyosube
+sa_foe 27 - 0 9 seireitei   # Kenpachi Zaraki
+sa_foe 6  - 0 9 karakura    # Kisuke Urahara
+sa_foe 20 - 0 9 karakura    # Sosuke Aizen
+
+# 0.17.104 SURVIVAL step 1 test: the Boss Rush card plays as a Survival test (0 = off)
+surv_test 0
+surv_n 3
+surv_kon 1
+surv_time 600
+surv_respawn 4
+surv_stage 46
+# surv_foes <7 ids>: the extra foes' pool -- unset, the built-in Fishbone D / Bladeripper / Shrieker / Hexipodas mix
+# (0.17.116: '71 71 ...' here made every foe Fishbone D, Cirucci being swapped for him since 0.17.113)
+# 0.17.117 SURVIVAL's boss: one per run (Grand Fisher, Dordoni or Gantenbainne), hidden until a random time --
+# surv_boss_wait <first min> <first max> <again min> <again max> seconds; 5 Konpaku, 3 points; surv_boss 0 = no boss
+surv_boss 1
+surv_boss_wait 40 100 60 150
+
+# 0.17.121 ADVENTURE dialogue blips: 0..100 (0 = off); each speaker's pitch is in dcbossrush_voices.txt
+blip_volume 35
+
+# 0.17.122 ADVENTURE encounter music: while an encounter / event pin is on screen its music plays (the pin's
+# `bgm`, a line's `music`), else these defaults; leaving it, the game's own music comes back. Every track and its
+# title: dcbossrush_bgm.txt. bgm_on 0 = the menu music throughout; a track of none = no change.
+bgm_on 1
+bgm_realm hueco bgm_adv_0050      # Blowin' in the Sand
+bgm_realm soul bgm_adv_0080       # City of Reapers
+bgm_realm living bgm_adv_0020     # Karakura Days
+bgm_realm schatten bgm_adv_0110   # Forbidden Boundary
+# bgm_spot <track>                # locations (narrated spots); unset = their realm's
+
+# 0.18.16: SURVIVAL on the Missions screen (hidden by default; 1 = show the card again)
+survival_missions 0

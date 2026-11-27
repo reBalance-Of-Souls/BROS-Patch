@@ -1,0 +1,562 @@
+# EXTRA MISSION flavor spots, read beside dcbossrush.dll.
+#
+# A flavor spot is a small point on the path between fights: a place, an object or
+# a minor encounter. Passing one costs no step. Each visit draws one of the spot's
+# lines, then ONE card from its Choice A pool and ONE from its Choice B pool, so
+# every a/b line must make sense against every line of the spot.
+#
+#   spot <realm: hueco | soul | living | any, or several joined with a comma: living,soul> <icon> <name>
+#        (0.19.24; a name past about 26 characters wraps on the map)
+#   desc <the pin's description: the map's bottom-right text and the Location screen> (0.14.0)
+#   image <the Location screen's picture, in dcbossrush_map/> (0.14.0)
+#   portal <hueco | soul | living> <the way in's description on the first screen> (0.14.0)
+#   line <narration, second person, present tense> (one is picked each visit)
+#   exit <closing narration after the outcome> (one is picked)
+#   a | <chance %> | <effect> | <effect if it fails> | <card title> | <what it does> | <text on success> | <text on failure>
+#   b | ... the same, for the Choice B pool
+#   c | ... the same, for a third card (0.19.24: realm travel) -- dealt beside A and B where the
+#       location has c lines; a card that travels to the realm the player is already in is never dealt
+#
+# Every spot needs at least one a line and one b line (16 max each; 0.19.24: was 3 each, by habit).
+# chance 100 = a sure thing (its failure fields are ignored: use none and -).
+# Below 100 is a gamble: the header marks it GAMBLE with its chance.
+# Narration is not auto-quoted: put speech in straight double quotes yourself.
+#
+# icons: sand cave nest camp crate skull grave sword tree ruin storm rift tea medic
+#        lab dojo shrine spring fire scroll sewer house school ghost chain bar
+#        pillar candy book moon
+#
+# effects (join several with + : mend+tali):
+#   none      nothing
+#   heal      the next fight starts at full HP
+#   mend / mend_big     recover 25% / 50% Reishi (HP) now
+#   bleed / bleed_big   lose 15% / 30% Reishi now (never kills)
+#   kon       +1 Konpaku (and +1 to the run's Konpaku limit)
+#   kon_down  -1 Konpaku
+#   tali      +1 Spirit Talisman for this run       tali2   +2 talismans
+#   lose_tali lose one of this run's talismans
+#   crys      +1 Soul Crystal for this run          lose_crys  lose one Soul Crystal
+#   healtali  full HP and +1 talisman
+#   sample    +1 Konpaku, but every later foe +10% attack
+#   trade     one of this run's talismans for a Soul Crystal
+#   cpudown   the next foe's CPU level -2           cpuup   the next foe's CPU level +2
+#   ward      the next foe -1 Konpaku               hurt    the next foe +1 Konpaku
+#   atkdown   the next foe -15% attack              atkup   the next foe +15% attack
+#   curse     the next foe +1 Konpaku and +20% attack
+#   0.19.24 (Bleach_Location_Events_All_33):
+#   mend:<n> / bleed:<n>        recover / lose n% Reishi now (mend:40, bleed:20; bleed never kills)
+#   atkdown:<n> / atkup:<n>     the next foe -n% / +n% attack (atkdown:25)
+#   travel_hueco / travel_soul / travel_living   into that realm: the road ahead is redrawn as
+#               that realm's once the location is done (a c card; never in an event's own route)
+#   flask       the next time Reishi falls under 40% in a fight, +20% (once; the run keeps it)
+#   Several of one: hurt+hurt+hurt = the next foe +3 Konpaku; kon+kon = +2 Konpaku.
+#
+# BATTLE effects work here too -- every one in dcbossrush_npc.txt (fs_full, swift,
+# sturdy, foe_strong, foe_no_awaken, foe_evo, foe_sublimation, foe_spirit_drive,
+# foe_unblockable, unblockable, foe_no_spirit, no_spirit, demote, inverted, venom ...), with run: and foe_ in front as described there.
+#
+# BATTLE effects act inside the next fight -- or, with run: in front, every fight
+# for the rest of the run. foe_ in front puts it on your opponent instead
+# (foe_poison, run:foe_slow).
+#   fs_full / fs_half / fs_empty   start with full / half / no Fighting Spirit
+#   no_awaken          Fighting Spirit locked at 0: no Awakening, no Reawakening
+#   frail / wounded    start at 50% / 75% Reishi (HP)
+#   reishi_cap / reishi_cap_half   Reishi can't go above 75% / 50%
+#   regen / regen_big  Reishi recovers through the fight
+#   poison / poison_big   Reishi drains through the fight (never kills)
+#   swift / slow       move speed +20% / -20%
+#   haste / sluggish   action (attack) speed +12% / -12%
+#   strong / weak      damage dealt +20% / -20%
+#   sturdy / fragile   damage taken -20% / +20%
+#   glass              damage dealt AND taken +30%
+#   berserk            full Fighting Spirit, damage taken +25%, guard at 40%
+#   rev_full / rev_empty   start with a full / empty Reverse gauge
+#   no_reverse         Reverse actions sealed
+#   iron_guard / brittle_guard   guard never wears down / starts at 40%
+#   0.19.24:
+#   fs_up:<n> / fs_down:<n>      start with n% more / less Fighting Spirit (of the gauge it is on)
+#   fs_gain:<n>                  Fighting Spirit gained +n%
+#   guard_dmg:<n>                your attacks wear the foe's guard n% faster
+#   sp_strong (:<n>)             SP moves (sp_atk / sp_overatk / sp_step_atk) deal +20% (+n%)
+#   Any percentage takes a number: strong:8 (+8% damage dealt), fragile:15, slow:15, weak:15,
+#   regen:1 (1% of max Reishi a second), and regen / poison a time in seconds too: poison:1:40 =
+#   lose 1% a second for the first 40 seconds. run: and foe_ go in front as before (run:strong:8).
+# Card titles show on the card: about 22 characters fit one line; a longer one takes two (0.19.24).
+
+# ============================================================================
+# HUECO MUNDO
+# ============================================================================
+
+portal hueco A mysterious tear in space shaped like a maw of rectangular teeth. The Garganta connects to Hueco Mundo, realm of the Hollows. There, the law of the world is 'eat or be eaten'. Expect no mercy amongst the dunes of crystalline sand, for its obelisks and towers are now long-abandoned.
+portal soul Twin doors of polished wood slide apart on a road of light. The Senkaimon leads to Soul Society, home of the 13 Court Guard Squads, where order is kept by the sword and every noble house remembers every slight.
+portal living A seam opens in the shadow of an ordinary street. Beyond it lies the World of the Living and the town of Karakura, where spirits gather more thickly than anywhere else, and so do those who hunt them.
+
+spot hueco tree Forest of Menos
+desc An area below the surface of Hueco Mundo's desert where ordinary Hollows hide from the Arrancar. Large, silvery quartz trees extend towards the surface, giving the place its name.
+image scn_forest_of_menos.jpg
+line You see Hollows living in fear of being devoured, cowering behind trees.
+line The lighting makes you wary. Behind every tree could be a Hollow, ready to attack you.
+exit You find a shaft of grey light and climb a tree back up towards the eternal desert.
+exit It takes some time to get back up, but you're just happy to see the moon again.
+a | 50 | kon | curse | Hunt a Gillian | GAMBLE: +1 Konpaku, or the pack answers (next foe +1 Konpaku, +20% attack). | You fell a Gillian among the trees. +1 Konpaku. | The Gillian you tried to kill escapes and alerts the others to your presence. Next foe: +1 Konpaku, +20% attack.
+a | 65 | strong:30 | bleed:20 | Consume a Hollow | GAMBLE: Damage dealt +30% next fight, or it sickens you (lose 20% Reishi). | It's disgusting. Hollow reishi floods in and enhances your body, partially Hollowfying you for a short while. You make sure Mayuri never learns of this. Damage dealt +30% next fight. | The Hollow reiatsu in your body violently lashes out at your own Reishi. -20% Reishi.
+a | 100 | foe_sluggish | none | Leave a decoy scent | The next foe's action speed -12%. | The Menos follow the scent. Your next opponent follows them to nowhere. This should leave them exhausted. Next foe: -12% action speed. | -
+b | 100 | none | none | Listen to the Menos | You hold your breath. Somewhere above the dead trees, a thousand voices argue inside a single throat... | Inside every Gillian, hundreds of Hollows fight for one mind. Most lose. The rare winner becomes an Adjuchas. | -
+b | 100 | mend | none | Hide among the roots | Recover 25% Reishi. | You sleep in a hollow root. No Hollow dares to step out of its own hideout, granting you a short rest. +25% Reishi. | -
+b | 65 | tali | none | Search the trees | GAMBLE: +1 talisman, or only bones. | You're surprised to find a Shinigami talisman here. +1 Spirit Talisman. | Nothing, nothing, and even more nothing.
+
+spot hueco ruin Las Noches Walls
+desc The enormous white hallways within the walls of Las Noches stretch as far as the eye can see. It's a rare sight of order and civilisation in the chaotic realm of the Hollows.
+image scn_las_noches_hallway.jpg
+line You find yourself wandering the seemingly endless white corridors of Las Noches. You're starting to wonder whether you're in a time loop.
+line The palace's size is even more apparent from the inside. You've been walking for what feels like hours, yet you still haven't reached the other side of the wall.
+exit You eventually find your way through the corridors and continue towards your destination.
+exit Finally, you can see the light at the end of the tunnel. It might be from a false sun, but it's appreciated nonetheless.
+a | 40 | crys | lose_tali | Search an Espada's quarters | GAMBLE: +1 Soul Crystal, or a trap costs you a Spirit Talisman. | Among the Espada's possessions, you discover a Soul Crystal. You make a run for it before they return. +1 Soul Crystal. | You accidentally trigger a trap. One of your talismans burns up as it saves your life. -1 Spirit Talisman.
+a | 100 | foe_brittle_guard | none | Train against a pillar | The next foe's guard starts at 40%. | The enormous pillars supporting the walls of Las Noches provide excellent opportunities to practise breaking through an opponent's defences. Next foe's guard starts at 40%. | -
+a | 100 | tali | none | Search a room | +1 Spirit Talisman. | You find an unattended room. Among the scattered equipment, you discover a talisman. +1 Spirit Talisman. | -
+b | 100 | mend | none | Rest in an empty room | Recover 25% Reishi. | You find a quiet room along the corridors. It's surprisingly comfortable, allowing you to rest. +25% Reishi. | -
+b | 70 | cpudown | none | Look for a map | GAMBLE: Next foe CPU -2, or you find nothing useful. | You discover a map of the palace, complete with patrol routes and restricted areas. This should prove useful against your next opponent. Next foe: CPU level -2. | There don't seem to be many maps in Hueco Mundo. Probably because there's nothing to map.
+b | 100 | iron_guard+slow | none | Take defensive precautions | Your guard never wears down, but movement speed -20% next fight. | Using materials found throughout the palace, you build yourself some makeshift armour. It's not comfortable, but it will strengthen your defences in the next battle. Your guard never wears down, but movement speed -20% next fight. | -
+
+spot hueco lab Las Noches - Control Room
+desc Hidden within the seemingly endless corridors of Las Noches lies a room filled with unfamiliar machinery. Several monitors display different sections of the palace, while numerous switches and control panels appear to regulate its internal systems. You wonder how much of Las Noches can be controlled from this single room.
+image scn_las_noches_control_room.jpg
+line You step into a dimly lit room, illuminated only by the faint glow of several monitors. Surprisingly, whoever is responsible for operating them appears to be absent.
+line After wandering through the corridors of Las Noches, you stumble upon a rather unusual room. The constant humming of machinery makes it difficult to hear anything beyond its entrance.
+exit You leave the control room, hoping that whoever operates it won't notice your interference anytime soon.
+exit A pair of blue eyes follows your every movement as you leave the control room. Whoever has been watching you from the shadows has no intention of making their presence known.
+a | 60 | cpudown | hurt+hurt+hurt | Alter the patrol routes | GAMBLE: Manipulate the patrol routes to gain an advantage over your next opponent (CPU -2), or cause additional reinforcements to be dispatched (next foe +3 Konpaku). | After familiarising yourself with the controls, you manage to alter several patrol routes throughout Las Noches. Your interference should leave your next opponent considerably less prepared for your arrival. Next foe: CPU level -2. | You attempt to alter the patrol routes, but your unfamiliarity with the machinery causes you to issue an emergency signal instead. Several additional guards are dispatched throughout the palace. Next foe: +3 Konpaku.
+a | 100 | foe_rev_empty+bleed | none | Override the security system | Next foe starts with an empty Reverse gauge, but you lose 15% Reishi. | You attempt to override the security system by channelling your own spiritual energy into one of the devices. Although you successfully disable several defensive mechanisms, the machine drains considerably more energy than you anticipated. Next foe starts with an empty Reverse gauge, -15% Reishi. | -
+a | 40 | foe_no_awaken | foe_fs_full | Issue false orders | GAMBLE: Issue false orders to confuse your next opponent (starts with no Fighting Spirit and cannot gain any), or provoke them instead (full Fighting Spirit). | You discover a communication device and attempt to imitate the authoritative voice of an Arrancar. Somehow, your rather questionable performance proves convincing enough to cause considerable confusion among the palace's inhabitants. Next foe starts with no Fighting Spirit and cannot gain any. | Your attempt to impersonate a high-ranking Arrancar is met with an awkward silence. A moment later, an increasingly furious voice demands to know who is responsible. Perhaps you should leave before they find you. Next foe starts with full Fighting Spirit.
+b | 100 | none | none | Examine the surveillance monitors | Several monitors display different sections of Las Noches. You take a moment to observe the activities of its inhabitants. | Although Sōsuke Aizen stands at the head of the Arrancar army, much of its hierarchy revolves around the ten Espada. Each Espada is permitted to select subordinate Arrancar, known as their Fracción. Watching the different groups move through the palace, you begin to realise that Las Noches is considerably more organised than one might expect from a fortress inhabited by Hollows. | -
+b | 100 | mend | none | Rest in the control room | Recover 25% Reishi. | You discover an unoccupied chair in front of one of the monitors. Making yourself comfortable, you spend some time watching the mostly empty corridors displayed on the screens. One of the monitors catches your eye. To your amusement, you spot Baraggan furiously beating what appears to be a makeshift punching bag bearing Aizen's likeness, blissfully unaware that he's being watched. If that sight isn't refreshing, you don't know what is. +25% Reishi. | -
+b | 100 | ward+ward | none | Seal off a passage | Next foe loses 2 Konpaku. | You discover a set of controls responsible for opening and closing several doors throughout Las Noches. You start sealing off numerous passages. Your next opponent arrives exhausted from all the detours they had to take. Next foe: -2 Konpaku. | -
+
+spot hueco sand Sinking Sands
+desc The sand here feels almost alive, ready to consume you or anything that dares to stay for too long.
+image scn_las_noches.jpg
+line White sand slides in slow rings toward a hollow at the centre. Many have lost their lives here.
+line A ring of half-swallowed white masks marks the edge of the danger zone. Most Hollows don't survive entering the Sinking Sands.
+exit You retreat from the sand before it swallows you.
+exit Behind you, the sinkhole still waits for prey stupid enough to enter it.
+a | 40 | crys | bleed | Dig for valuables | GAMBLE: +1 Soul Crystal, or the sand drags you under (lose 15% Reishi). | After digging for a bit, you find something shiny in the endless sands. It's a Soul Crystal. +1 Soul Crystal. | The sand pulls you down, nearly burying you alive. You survive and decide you've dug enough for the next few months. -15% Reishi.
+a | 100 | slow+sturdy | none | Pack your legs in sand | Move speed -20%, but damage taken -20% next fight. | You let the sticky sand envelop your legs. Like armour, it will slow you down but also keep you safe during your next battle. Movement speed -20%, but damage taken -20% next fight. | -
+a | 60 | foe_slow | slow | Lure the foe here | GAMBLE: The next foe moves 20% slower, or you do. | You successfully lure your next foe into the sand. They don't seem to like it. Next foe: -20% movement speed. | Your attempts to lure your next foe into the sand only succeed in slowing you down. Your movement speed -20% next fight.
+b | 100 | none | none | Investigate the sand | You let a fistful of the white sand run through your fingers. It feels unnatural. | Hueco Mundo's sand is not really sand. You're not quite sure what it is, but it feels more like the ashes of the dead. There is a lot of sand here... You stop thinking about it. | -
+b | 100 | mend | none | Rest on the rim | Recover 25% Reishi. | The cool sand draws the pain out of you. The quiet feels nice. +25% Reishi. | -
+b | 100 | cpudown | none | Scout the area | The next foe's CPU level -2. | Most Hollows stay clear of the Sinking Sands. You use this opportunity to observe the Hollows' movements and take in your surroundings. Next foe: CPU level -2. | -
+
+spot hueco lab Szayelaporro's Lab
+desc Deep within Las Noches lies the laboratory of Szayelaporro Granz, the Octava Espada. Countless specimens float within glass containers, while strange machinery hums throughout the rooms.
+image scn_las_noches_corridor.jpg
+line You enter the laboratory filled with strange machinery and countless glass containers. A faint mechanical hum echoes through the corridors, while several monitors display information about ongoing experiments.
+line As you explore Szayelaporro's laboratory, you notice a collection of grotesque dolls arranged on a nearby table. Each appears to resemble a different person. You decide not to touch them.
+exit As you make your way towards the exit, you hear footsteps approaching from a nearby corridor. You quickly disappear around a corner, hoping that whoever is coming hasn't noticed you.
+exit You finally reach the exit after navigating the laboratory's confusing corridors. Behind you, the machinery continues humming, and somewhere deeper inside, the Octava Espada continues his experiments.
+a | 50 | tali2 | poison:1:60 | Search the specimen containers | GAMBLE: Find 2 Spirit Talismans, or accidentally expose yourself to a poisonous substance. | You carefully search through several specimen containers, making sure not to disturb their contents. Hidden inside a sealed compartment, you discover two Spirit Talismans, probably collected for one of Szayelaporro's experiments. +2 Spirit Talismans. | As you inspect one of the containers, you accidentally damage its seal. A strange liquid spills across your hands, burning your skin. You hurriedly wash it off, but whatever was inside has already entered your system. -1% Reishi per second for the first 60 seconds of the next fight.
+a | 65 | cpudown | none | Study the research equipment | GAMBLE: Use Szayelaporro's research equipment to analyse your next opponent (CPU -2), or fail to obtain useful information. | After some experimentation with the controls, you manage to access one of the laboratory's analytical devices. To your surprise, the device contains detailed analyses of numerous fighters, including their spiritual pressure and combat capabilities. You study the results carefully before erasing any evidence of your intrusion. Next foe: CPU level -2. | The device begins displaying an endless stream of incomprehensible numbers and diagrams. You spend some time attempting to decipher the results before giving up. Whatever Szayelaporro is researching, understanding it will take more than a few minutes. Come to think of it, you're not even sure you want to understand it.
+a | 100 | regen:1+bleed | none | Inject an experimental serum | Regain 1% Reishi per second during the next fight, but lose 15% Reishi immediately. | You discover a syringe containing an unfamiliar purple liquid. Despite the obvious risks, you decide to administer the substance. A sharp pain courses through your body as your veins swell and turn a deep purple. An unusual sensation of warmth follows. Your spiritual energy gradually begins replenishing itself, just as the label seems to promise. -15% Reishi immediately, +1% Reishi per second during the next fight. | -
+a | 45 | crys | bleed:20 | Break into the sealed chamber | GAMBLE: Find a Soul Crystal inside a sealed chamber, or trigger one of Szayelaporro's security mechanisms (lose 20% Reishi). | You forcefully open a reinforced door and enter a small chamber containing several valuable vials and components. Among them, you discover a Soul Crystal suspended inside a glass container. You carefully remove it, close the chamber behind you, and leave before anyone notices. +1 Soul Crystal. | You force the door open with a little too much enthusiasm. Unfortunately, you've triggered both an alarm and a security trap. Several concealed devices spring to life, bombarding the entrance with concentrated blasts of spiritual energy. You manage to escape, but not without sustaining considerable injuries. -20% Reishi.
+b | 100 | none | none | Read Szayelaporro's research notes | You pick up a collection of handwritten notes scattered across a desk. The pages contain elaborate diagrams of the "human" body, accompanied by disturbing descriptions of various experiments. | Szayelaporro Granz, the Octava Espada, is a scientist obsessed with achieving perfection through his research. His experiments involve studying the spiritual composition and abilities of other beings, often using unwilling subjects. Among his most disturbing creations are his own Fracción, whom he can consume to regenerate his body. You can't help but wonder how many victims his experiments have claimed. Even knowing they're Hollows, you find yourself pitying them. | -
+b | 100 | mend | none | Rest in an isolation chamber | Recover 25% Reishi. | You discover an unoccupied chamber apparently intended for isolating experimental subjects. After making sure it doesn't have some hidden function that turns you into an eight-legged frog or something, you step inside and close the chamber. The room is surprisingly comfortable and, more importantly, completely silent. You take the opportunity to recover before continuing your exploration. +25% Reishi. | -
+b | 100 | foe_rev_empty | none | Destroy the observation equipment | Next foe starts with an empty Reverse gauge. | You notice several observation screens, all connected to an extensive surveillance system. Unwilling to let Szayelaporro gather information about your movements, you systematically disable every device you can find. Whoever was relying on these observations will have to face you without the advantage they expected. Next foe starts with an empty Reverse gauge. | -
+
+spot hueco moon Under the False Sky
+desc The illusory sky, created by Aizen as a mockery, hangs over you. The interior stretches farther than the eye can see.
+image scn_tres_cifras.jpg
+line You stare at the fake sun, wondering how the traitorous Shinigami accomplished such a feat.
+line The atmosphere creates an eerie feeling inside you. It looks just like the rest of Hueco Mundo, but the blue sky and bright sun in place of the eternal crescent moon always prove that you're inside Aizen Sōsuke's world now.
+exit You step out from under the dome, ready to face the world under the true sky again.
+exit Behind you, the false sun burns on... Does it burn? Probably not, right?
+a | 100 | fs_half+swift | none | Bask in the false sun | Start with half Fighting Spirit and movement speed +20%. | You know it's fake, but your body doesn't feel it that way. Why does a man capable of creating marvels like this long to destroy and rule? Start next fight with 50% Fighting Spirit and +20% movement speed. | -
+a | 35 | heal+kon+kon | kon_down | Sleep under the sun | GAMBLE: Full Reishi and +2 Konpaku, or get ambushed (-1 Konpaku). | You sleep like a certain Espada. You feel revitalized. Full Reishi and +2 Konpaku. | You awake to some lower-ranking Arrancar attacking you. You manage to get away, sadly not unscathed. -1 Konpaku.
+b | 100 | none | none | Look up | You tilt your head back. A perfect blue sky stares down at you, painted over a world that only knew the night. | Aizen had a false sky made inside the dome of Las Noches, imitating the one in the World of the Living. You're sure it is a mockery. You're not sure of what or whom. | -
+b | 100 | mend | none | Sit in the light | Recover 25% Reishi. | You enjoy the gentle warmth you haven't felt in days. +25% Reishi. | -
+b | 70 | cpudown | none | Scout the area | GAMBLE: Next foe CPU -2, or nothing gained. | You successfully scout the area, giving you an advantage over your next opponent. Next foe: CPU level -2. | You're too distracted thinking about how Aizen created the false sky to perceive anything meaningful.
+
+spot hueco storm White Sandstorm
+desc Powerful winds sweep across the endless white desert of Hueco Mundo, carrying enormous clouds of sand with them. Visibility becomes increasingly limited as the storm approaches. While you struggle to find your bearings, the Hollows inhabiting the desert seem largely unfazed by the storm.
+image scn_las_noches_desert.jpg
+line The horizon disappears behind an enormous wall of white sand. As the storm approaches, you can hear the rattling of Hollow masks somewhere in the distance.
+line Strong winds tear at your clothes as the surrounding dunes gradually disappear from sight. You can barely tell where the desert ends and the sky begins, let alone make out an approaching enemy.
+exit The winds gradually subside, revealing a completely rearranged landscape. The dunes look nothing like they did before the storm.
+exit You shake an astonishing amount of sand out of your clothes before continuing your journey. Somehow, you can still feel more of it between your toes.
+a | 50 | foe_frail | bleed:20 | Ambush your opponent | GAMBLE: Ambush your next opponent (foe starts at 50% Reishi), or get ambushed yourself (-20% Reishi). | You suppress your spiritual pressure and wait for your opponent to approach. Using the sandstorm to conceal your movements, you manage to land a devastating blow before disappearing into the white haze. Next foe starts at 50% Reishi. | You attempt to conceal yourself within the storm, but quickly lose your bearings. Before you can locate your opponent, a powerful attack catches you off guard. -20% Reishi.
+a | 100 | haste+bleed | none | Push straight through | Action speed +12% next fight, but lose 15% Reishi. | Rather than waiting for the storm to pass, you decide to force your way through it. Constantly reacting to sudden gusts of wind and flying debris sharpens your reflexes, although the journey leaves your skin covered in small cuts. Action speed +12% next fight, -15% Reishi. | -
+a | 45 | tali2 | lose_crys | Investigate the rattling noise | GAMBLE: Investigate a strange noise to find 2 Spirit Talismans, or lose a Soul Crystal in the sand. | You follow a rattling noise through the storm. Eventually, you discover several fragments of Hollow masks clattering against one another in the wind. Among them, you find two Spirit Talismans, which you manage to secure before the storm carries them away. +2 Spirit Talismans. | While trying to locate the source of the noise, you stumble and tumble down the side of a dune. After getting back on your feet, you realise that one of your Soul Crystals is missing. Looking for it in these conditions would be like looking for a needle in a haystack. -1 Soul Crystal.
+b | 100 | mend | none | Take shelter behind a dune | Recover 25% Reishi. | You find a sheltered area behind an enormous dune and decide to wait for the storm to pass. Although some sand still manages to find its way into your clothes, the winds are considerably weaker here. You take the opportunity to recover your strength. +25% Reishi. | -
+b | 100 | none | none | Observe the sandstorm | You watch enormous clouds of white sand sweep across the desert. Even in a world without sunlight or rain, such powerful natural phenomena seem to occur. You wonder what causes them. | Unlike the World of the Living, Hueco Mundo is enveloped in perpetual night. Its endless desert consists of highly concentrated spiritual particles rather than ordinary sand. Some Hollows believe that the enormous sandstorms originate from the movements of the Menos inhabiting the forest beneath the desert. Whether there is any truth to this remains uncertain. | -
+b | 100 | sturdy+sluggish | none | Wrap yourself in protective clothing | Damage taken -20%, but action speed -12% next fight. | You wrap several layers of cloth around your body to protect yourself from the relentless sand. The additional padding should also offer some protection against incoming attacks, although the tightly wrapped clothing restricts your movements. Damage taken -20%, action speed -12% next fight. | -
+
+# ============================================================================
+# SOUL SOCIETY
+# ============================================================================
+
+spot soul scroll Central 46 Chambers
+desc The still-empty chamber of the sages and judges who governed Soul Society.
+image scn_central_46_chambers.jpg
+line The large chamber, currently open to all inhabitants of the Seireitei, lies before you. Many people have gathered to catch glimpses of potential new sages.
+line The once-busy place from which Central 46 used to govern Soul Society lies before you.
+exit You leave before anyone can ask what you were doing there.
+exit The doors close with a heavy sound as you appreciate that you're still alive.
+a | 50 | crys+tali | curse | Search the Library | GAMBLE: +1 Soul Crystal and +1 talisman, or the guards catch you (next foe +1 Konpaku, +20% attack). | The archive holds more than just old records. Among the old scrolls, you find some useful items. +1 Soul Crystal and +1 Spirit Talisman. | It's a place full of old scrolls and books. You find nothing of interest and decide to go somewhere more interesting. Next foe: +1 Konpaku, +20% attack.
+a | 33 | run:sturdy:15 | lose_tali+hurt | Forge a decree | GAMBLE: Every later foe deals 15% less damage, or you're caught (lose a talisman, next foe +1 Konpaku). | You find some forgery tools Aizen seems to have used and decide to forge your own decree by enhancing a talisman with off-limits powers. Receive a crystal: all subsequent foes deal 15% less damage for the rest of the run. | You try to forge a decree but can't find the necessary tools and eventually get caught. You can't retrieve the talisman you tried to enhance. -1 Spirit Talisman. Next foe: +1 Konpaku.
+a | 100 | tali+cpuup | none | Pocket a sealed scroll | +1 Spirit Talisman, but next foe CPU +2. | You use your sleight-of-hand skills to steal a sealed scroll unnoticed. An alarm Kido cast on it triggers when you open it. Well, at least it also contained a talisman. You make a run for it. +1 Spirit Talisman, but next foe CPU +2. | -
+b | 100 | none | none | Count the empty seats | You walk between the tiers of empty seats. The silence is heavy as you dwell on memories. | You think about how the forty sages and six judges ruled Soul Society, and how nobody noticed their deaths after Aizen killed them and ordered terrible actions in their name. Does the fact that nobody was surprised by those orders mean that Central 46 was capable of such cruelty as well? | -
+b | 100 | mend | none | Rest in the anteroom | Recover 25% Reishi. | Quiet as a tomb... because it is one. +25% Reishi. | -
+b | 65 | cpudown | none | Read the Gotei reports | GAMBLE: Next foe CPU -2, or nothing found. | You find files on the combat styles of every single seated officer. You feel prepared for your next fight. Next foe: CPU level -2. | You find only volumes upon volumes of the Seireitei Communication magazines. There's not much in them besides gossip, for the most part.
+
+spot soul ruin Deicide Battle - Destroyed Mountains
+desc What was once a mountainous landscape has been reduced to an enormous field of rubble. Entire mountainsides have vanished, while others appear to have been sliced cleanly in two. Enormous boulders lie scattered across the terrain, and a deep fissure that seems to have only one end scars the ground.
+image scn_destroyed_mountains.jpg
+line Judging by the sheer extent of the destruction, whatever happened here must have been a battle of unimaginable proportions.
+line You climb over an enormous piece of rock, only to discover that the mountain it once belonged to has almost entirely disappeared. What kind of monster could have done this?
+exit As you leave the battlefield, you find yourself wondering whether the people responsible for this destruction ever truly understood the extent of their own strength.
+exit You glance back at the remains of the mountains. You hope you'll never have to be caught in the middle of a battle like the one that transpired here.
+a | 50 | crys | bleed:20 | Search the rubble | GAMBLE: Search the remains of the destroyed mountains for 1 Soul Crystal, or get injured by falling rubble (-20% Reishi). | You begin searching through the remains of the mountains, hoping to find something valuable among the debris. After moving several large pieces of rock, you discover a Soul Crystal wedged between them. +1 Soul Crystal. | While attempting to move a large piece of rock, you disturb the rubble surrounding it. Several boulders come crashing down, and although you manage to escape, you don't make it out unscathed. -20% Reishi.
+a | 35 | run:strong:8 | bleed_big | Attempt to recreate the destruction | GAMBLE: Attempt to recreate the destructive power displayed here (damage dealt +8% for the rest of the run), or exhaust yourself (-30% Reishi). | Standing before one of the remaining mountains, you gather as much spiritual energy as possible and unleash an attack powered by your full potential. While the resulting destruction pales in comparison to what happened here, you discover a more effective way of concentrating your strength into a single strike. Damage dealt +8% for the rest of the run. | You gather an enormous amount of spiritual energy and unleash it against one of the remaining mountains. As the dust settles, you stare at the rather unimpressive dent you've managed to leave behind. Perhaps you should have set yourself a more reasonable goal. -30% Reishi.
+a | 100 | strong+slow | none | Lift the debris | Damage dealt +20%, but movement speed -20% next fight. | You decide to use the enormous pieces of rubble scattered across the battlefield for some improvised strength training. Repeatedly lifting the heavy rocks proves to be an effective exercise, although by the time you're finished, your legs are barely able to support you. Damage dealt +20%, movement speed -20% next fight. | -
+b | 100 | none | none | Gather information on the battle | You look towards the remains of a mountain that appears to have been destroyed by a single swing of a sword. Who could possibly possess such strength? | Despite the overwhelming destruction surrounding you, you cannot sense even a trace of spiritual pressure. This only strengthens your suspicion that you've stumbled upon the site of Ichigo's final confrontation with Aizen. Two transcendent monsters whose spiritual pressure exists on a plane so far beyond your own that you cannot even perceive it. You can only assume that the destruction of the mountains was merely a by-product of their blades clashing, while the gigantic fissure must have been carved into the earth by Ichigo's ultimate technique: Mugetsu. | -
+b | 100 | mend | none | Rest among the remains | Recover 25% Reishi. | You find a comfortable spot atop one of the enormous boulders and decide to take a break. Despite the devastation surrounding you, the area is remarkably peaceful now. You sit in silence for a while, allowing yourself to recover. +25% Reishi. | -
+b | 100 | atkdown | none | Examine the battle's aftermath | Next foe's attack -15%. | You carefully examine the countless marks left behind by the battle. Comparing the different patterns of destruction, you begin to understand how even the slightest movement can redirect the force of an incoming attack. You intend to put this knowledge to use in your next battle. Next foe's attack -15%. | -
+
+spot soul dojo Eleventh Division Yard
+desc The training grounds of the Eleventh Division are littered with broken practice swords and damaged training equipment. Several Soul Reapers are engaged in sparring matches, while others enthusiastically cheer them on. Judging by their injuries, the line between a friendly spar and an actual fight seems rather blurry here.
+image scn_eleventh_division_yard.jpg
+line As you enter the training grounds, several members of the Eleventh Division turn towards you. Judging by the grins on their faces, they're already looking forward to having another opponent.
+line "Oi, new face!" A muscular Soul Reaper cracks his knuckles as he approaches you. "Nobody walks past our training grounds without a fight!"
+exit You've barely left the training grounds when you hear another fight breaking out behind you. These people just can't ever get tired of fighting.
+exit "Come back when you're stronger!" Despite how insulting that might sound elsewhere, you're fairly certain they mean it more as a... friendly invitation.
+a | 50 | kon | bleed:25 | Take them all on | GAMBLE: Take on several members of the Eleventh Division to gain 1 Konpaku, or lose 25% Reishi. | You confidently challenge several members of the Eleventh Division at once. Rather than being offended by your arrogance, they seem delighted by it. After a rather chaotic fight, you emerge as the last one standing, earning the respect of your opponents. +1 Konpaku. | You quickly realise that challenging several members of the Eleventh Division simultaneously might not have been your brightest idea. They show absolutely no intention of holding back, even after you've admitted defeat. -25% Reishi.
+a | 100 | strong+fragile:15 | none | Fight their way | Damage dealt +20%, but damage taken +15%. | You participate in several sparring matches, adopting the Eleventh Division's rather straightforward approach to combat. Instead of wasting time defending yourself, you focus entirely on overwhelming your opponent with relentless attacks. Damage dealt +20%, but damage taken +15%. | -
+a | 100 | tali+bleed | none | Participate in a fistfight | Gain 1 Spirit Talisman, but lose 15% Reishi. | Several Soul Reapers have gathered around two of their comrades, who are settling a disagreement with their fists. You decide to participate in the next round. After throwing and taking many hits, you emerge victorious. As the victor, you gain one Spirit Talisman. +1 Spirit Talisman, -15% Reishi. | -
+b | 100 | none | none | Watch a sparring match | You lean against one of the wooden pillars surrounding the training grounds, watching two Soul Reapers exchange blows. Both of them seem to have the same fighting philosophy: offence is the best defence. | The Eleventh Division specialises in direct combat and is renowned for its members' preference for physical strength over Kidō. Its captain traditionally bears the title of Kenpachi, a name associated with the strongest swordsman. The current captain, Kenpachi Zaraki, earned his position by killing his predecessor in front of the division's members, carrying on a long-standing tradition. | -
+b | 100 | fs_up:35 | none | Cheer them on | +35% Fighting Spirit. | You join a group of spectators cheering on two Soul Reapers engaged in a particularly intense sparring match. Their excitement is rather contagious, and you're already looking forward to your own next fight. +35% Fighting Spirit. | -
+b | 50 | tali | lose_tali | Bet on a sparring match | GAMBLE: Bet on the winner of a sparring match to gain or lose 1 Spirit Talisman. | You notice several members of the Eleventh Division placing bets on an upcoming sparring match. You decide to join in, wagering one of your Spirit Talismans on the Soul Reaper who appears to be the more capable fighter. After a surprisingly close match, your chosen fighter emerges victorious. You collect your winnings with a satisfied grin. +1 Spirit Talisman. | You confidently bet a Spirit Talisman on the Soul Reaper you believe will win the upcoming sparring match. Much to your disappointment, your chosen fighter is knocked to the ground shortly after the match begins. The other spectators laugh as you reluctantly hand over your Spirit Talisman. -1 Spirit Talisman.
+b | 100 | mend | none | Share their meal | Recover 25% Reishi. | Several members of the Eleventh Division invite you to join them for a hearty meal. The portions are enormous, the conversations are loud, and table manners are optional. Nevertheless, you enjoy the meal considerably more than you expected. +25% Reishi. | -
+
+spot soul medic Fourth Division Barracks
+desc A lot of stress hangs in the air, along with the smell of medicine. Much was asked of this squad during the recent war against Aizen and the Arrancar, but things seem to be slowing down again.
+image scn_fourth_division_barracks.jpg
+line A Fourth Division member stands ready to help you, with a tired smile on his face.
+line You spot some Squad 11 members looking like they've just seen a ghost.
+exit You leave the Squad 4 barracks, ready for your next fight. They won't be ready for you.
+exit You leave the station. Somewhere behind you, the healers rush to their next patient.
+a | 100 | mend:40 | none | Get patched up | Recover 40% Reishi. | Experienced hands patch you up in no time. You feel comfortable here. +40% Reishi. | -
+a | 67 | mend_big | bleed | Let the trainee try | GAMBLE: Recover 50% Reishi, or he botches it (lose 15% Reishi). | Eager to prove himself, the new recruit gives it his all. You can feel his determination in his Kaidō spell as you feel revitalized. +50% Reishi. | In his nervousness, he mixes up some hand movements, drastically altering what the spell does. His senior tries to fix his mistake, but you still leave more injured than before. -15% Reishi.
+a | 100 | regen+weak | none | Take a strong drug | Reishi regeneration next fight, but damage dealt -20%. | You take a drug. Its effects are not instant, but over the next few hours, you feel your body's regenerative properties go into overdrive. Reishi regeneration next fight, but damage dealt -20%. | -
+a | 45 | healtali | lose_crys | Raid the supply chest | GAMBLE: Full HP and +1 talisman, or you pay for it (lose a Soul Crystal). | Nobody notices as you steal from the healers. Full Reishi next fight, +1 Spirit Talisman. | You get noticed by a seated officer and decide to pay the fine in the form of a Soul Crystal before Captain Unohana gets involved. -1 Soul Crystal.
+b | 100 | none | none | Ask about the Fourth | You ask a weary medic about his division. He sighs, wipes blood off his hands, and glances at the beds lined up behind him. | He tells you how the other divisions mock the Fourth as errand boys, especially the Eleventh. But recently, some of them seem to have been getting nicer. Maybe it's because their healing abilities were needed more than in the past, showing the others their true value. | -
+b | 100 | tali | none | Ask for a field kit | +1 Spirit Talisman. | A squad member seems to recognize you and hands you a kit, wishing you the best of luck in your battles to come. +1 Spirit Talisman. | -
+b | 100 | lose_tali+heal | none | Donate supplies | Lose a talisman, but full HP next fight. | They're grateful for your donation. A high-ranking seated officer insists on treating you. -1 Spirit Talisman. Full Reishi next fight. | -
+
+spot soul spring Hidden Hot Spring
+desc Beneath Sokyoku Hill lies a hidden training ground. In its corner lies a hot spring, rumored to improve healing capabilities.
+image scn_hotspring.jpg
+line Beneath Sokyoku Hill lies a hidden training ground. In its corner lies a hot spring, rumored to improve healing capabilities.
+line Steam rises between smashed rocks in the hidden training ground, revealing the healing hot springs.
+exit You climb the long ladder back up into the light of the Seireitei.
+exit Your skin still tingles as you leave the hot steam behind you, preparing to face the cold reality again.
+a | 100 | heal | none | Soak in it | Full HP next fight. | You spend some time relaxing in the hot water, letting it heal your wounds. Full Reishi next fight. | -
+a | 67 | run:regen | frail | Use the water's power to train like never before | GAMBLE: Reishi regen for the rest of the run, or you overdo it (start at 50% Reishi). | You train extensively for hours on end, but never exceed the limit of what the spring's healing can handle. Its regenerative capabilities still flow through you after you leave. Reishi regeneration for the rest of the run. | In your excitement about this possibility, you train too hard, exceeding the limits of what the spring can heal. Your body still feels heavy when you leave. Start next fight at 50% Reishi.
+a | 100 | mend+slow | none | Stay as long as possible | Recover 25% Reishi, but move speed -20% next fight. | Warm and heavy, you could sleep here. +25% Reishi, but movement speed -20% next fight. | -
+a | 45 | kon | bleed | Climb the cliffs | GAMBLE: +1 Konpaku, or you fall (lose 15% Reishi). | You successfully bested the cliffs, feeling proud as you look down. +1 Konpaku. | Your attempt fails, and you hurt yourself slightly as you fall. -15% Reishi.
+b | 100 | mend | none | Dip your hands | Recover 25% Reishi. | Just a little. +25% Reishi. | -
+b | 100 | flask | none | Fill a flask | Heal 20% Reishi the next time you fall below 40% Reishi. | Still warm when you fight. +20% Reishi the next time you fall below 40% Reishi. | -
+b | 100 | iron_guard | none | Meditate on the stones | You meditate, steeling your mind and body's defenses against any and all attacks for a while. | You meditate, steeling your mind and body's defenses against any and all attacks for a while. Your guard never wears down next fight. | -
+
+spot soul house Inuzuri, District 78
+desc Dust, hunger, and crooked rooftops stretch as far as you can see. The children here learn to survive rather than how to live. One of the many signs of corruption in Soul Society.
+image scn_inuzuri_district_78.jpg
+line It's a saddening sight. People trying to survive. This is the "heaven" many Shinigami promise Pluses they'll enter after a Konsō. A kid blocks the way of some souls, demanding a toll.
+line The houses lean on each other in Inuzuri, and the water is never clean. A small boy blocks the road: "Toll. One coin. Or something shiny."
+exit The kid trails you to the district edge from a safe distance before vanishing into an alley.
+exit You leave Inuzuri behind, hoping that the new Central 46 will put more effort into improving the quality of life there.
+a | 100 | lose_tali+ward | none | Give him a talisman | Lose a talisman, next opponent -1 Konpaku. | He runs off smiling. You made his day. He and his gang also jump your next foe. -1 Spirit Talisman. Next foe: -1 Konpaku. | -
+a | 50 | tali | lose_tali | Steal from the kid | GAMBLE: +1 talisman, or he picks your pocket (lose a talisman). | Your sleight of hand is superior, and the kid decides you're a size or two too big for him. +1 Spirit Talisman. | While you're trying to steal the kid's talisman, he manages to take one of yours instead and run away. You don't know the area and decide not to waste your time chasing him. -1 Spirit Talisman.
+a | 85 | kon | kon_down | Teach him a stance | GAMBLE: +1 Konpaku, or he tries it on you (-1 Konpaku). | The teaching sharpens your mind as well as the kid's. Both of you feel ready for your next opponents, although they might be a little different in scale. +1 Konpaku. | He learns fast and decides to test the technique on you. It hurts. He runs off, fearing you might punish him. You decide not to chase him, feeling satisfied knowing the kid can take better care of himself now. -1 Konpaku.
+b | 100 | none | none | Ask about the district | You ask an old woman by the well about Inuzuri. She looks at you with disdain. You learn about life here. | Shinigami rarely come out this far to help or build any sort of infrastructure. The few who come here just want to fill their pockets, demanding protection money. | -
+b | 100 | mend | none | Share your rations | Recover 25% Reishi. | He eats like he's never seen food. You watch him and appreciate your life even more. Both of you are able to relax and gather some strength. +25% Reishi. | -
+b | 65 | cpudown | none | Ask for a shortcut | GAMBLE: Next foe CPU -2, or it's a dead end. | He knows every alley around here. Intrigued by someone like you being here, he shows you around. You gain an understanding of your surroundings that your next opponent won't be ready for. Next foe: CPU level -2. | You run into a dead end. He laughs at you from a rooftop as he runs away.
+b | 100 | heal+kon_down | none | Sleep in his shack | Full HP next fight, but -1 Konpaku. | You sleep in his shack and wake up after a good night's sleep. Next to you lies a piece of paper with an apology on it. The kid took one of your talismans. Full Reishi next fight, -1 Konpaku. | -
+
+spot soul tea Kuchiki Manor Garden
+desc The Kuchiki family estate is surrounded by a magnificent garden, meticulously maintained to reflect the family's noble status. Cherry and plum trees line the pathways, and a peaceful koi pond sits at its centre.
+image scn_sakura_park.jpg
+line You enter the Kuchiki Manor's garden. A servant approaches and politely offers you some tea while you wait.
+line A servant serves you tea while you admire the beautiful garden surrounding the manor. Everything is meticulously maintained, just as you'd expect from the Kuchiki family.
+exit A servant politely escorts you towards the estate's gates, bowing as you depart.
+exit As you leave the garden, the sweet scent of flowers and fruit lingers in the air.
+a | 100 | regen_big | none | Drink the tea | Increased Reishi regeneration next fight. | You enjoy a cup of freshly brewed tea. The taste is exquisite, and you can feel your spiritual energy recovering with every sip you take. Increased Reishi regeneration next fight. | -
+a | 40 | crys+tali | lose_crys | Sneak into the manor | GAMBLE: Find a Soul Crystal and Spirit Talisman inside the manor, or get caught and lose a Soul Crystal. | You manage to slip past the servants and enter a room filled with valuable family heirlooms. Among them, you discover a Soul Crystal and a Spirit Talisman. You take both and leave before anyone notices. +1 Soul Crystal and +1 Spirit Talisman. | Your attempt at thievery is stopped when a servant spots you. He demands a Soul Crystal in exchange for his silence. Reluctantly, you agree. -1 Soul Crystal.
+a | 100 | haste | none | Imitate the noble fighting style | Action speed +12% for the next fight. | You practise the elegant, fast, and controlled movements associated with the Kuchiki family. Your strikes become faster and more precise. Action speed +12% for the next fight. | -
+a | 55 | guard_dmg:30 | bleed | Practise with falling petals | GAMBLE: Next foe takes 30% more guard damage, or lose 15% Reishi. | Inspired by Senbonzakura, you practise striking individual petals as they drift through the air. Your precision has increased, allowing you to pierce an opponent's guard more easily. Guard damage +30% for the next fight. | Your training sends petals across the garden. The gardener is not amused and makes you clean up your mess. Nothing less than perfection will be tolerated. By the time the gardener finally lets you leave, you're completely exhausted. -15% Reishi.
+b | 100 | none | none | Ask about Hisana | You mention Lady Hisana's name to one of the servants. Their expression changes for a moment as they look around, seemingly checking for someone. | They tell you about how Byakuya Kuchiki once broke the laws of his noble family to marry Hisana, a commoner from Rukongai. After her death, he broke those laws once again by adopting her younger sister, Rukia, into the Kuchiki family. Although Byakuya seems to cope with it better following his fight with Kurosaki Ichigo, they still avoid speaking about her. | -
+b | 100 | mend | none | Sit by the pond | Recover 25% Reishi. | You settle down beside the koi pond and watch the fish swim around peacefully. The atmosphere helps you to regain your own peace. +25% Reishi. | -
+b | 100 | iron_guard | none | Study their posture | Your guard never wears down next fight. | You observe the impeccable posture of the Kuchiki family's retainers. Their composure never falters, even when standing perfectly still for extended periods. You attempt to imitate their discipline, strengthening your defensive stance. Your guard never wears down next fight. | -
+
+spot soul lab R&D Institute Annex
+desc Strange machines hum in the half-dark. Signs asking for volunteers hang on securely shut doors. They do not clarify what the volunteers are needed for.
+image scn_twelveth_division_laboratory.jpg
+line A side door of the Twelfth Division's Research and Development Institute stands ajar. Inside, something bubbles and something screams.
+line A researcher stands at the ready for you. He seems excited.
+exit The door hisses shut behind you. You try your best to forget most of what you saw in there.
+exit You leave the Institute and hope nobody did something weird to you.
+a | 35 | crys | bleed_big | Volunteer for a test | GAMBLE: +1 Soul Crystal, or it goes wrong (lose 30% Reishi). | You survive the test, and they pay up. +1 Soul Crystal. | You wake up in an empty waiting room. Your body hurts, and you don't remember anything. -30% Reishi.
+a | 100 | kon | none | Take a prototype pill | +1 Konpaku. | It works better than expected. You don't question their methods any further. +1 Konpaku. | -
+a | 55 | foe_slow:15+atkdown | slow:15+weak:15 | Steal a vial | GAMBLE: The next foe is poisoned, or you are. | You find a vial of poison. Your next opponent will hate this. Next foe: -15% speed, -15% damage. | You find a vial but trip as you're leaving, breaking it. You still feel sick. -15% speed, -15% damage next fight.
+a | 100 | tali+atkup | none | Sell your combat data | +1 Soul Crystal, but the next foe gains +15% attack. | You're surprised by how much information is worth. You hope no one nefarious gets their hands on it. Not like that ever happened, right? ... Right? +1 Spirit Talisman, but the next foe gains +15% attack. | -
+b | 100 | none | none | Read the notices | You scan the notice board. Some sheets ask for volunteers; others praise the progress made by R&D under its captain. None mention the side effects or its founder. | Kisuke Urahara founded the Institute when he became captain of the Twelfth Division. His successor, a coworker whom he freed from the Maggot's Nest, later took over both his roles, always trying to prove himself the superior scientist. | -
+b | 100 | cpudown | none | Peek at the monitors | The next foe's CPU level -2. | There is data on every fighter known to Soul Society. Your next opponent will be surprised by the intel you've gathered. Next foe: CPU level -2. | -
+b | 100 | atkdown:25 | none | Pocket a suppressor | The next foe's damage -25%. | Reiatsu suppressors were initially invented for Kenpachi Zaraki to fight prolonged battles. Lucky for you, there are some prototypes lying around to stick on your opponent as well. They won't like it. Next foe: -25% damage dealt. | -
+
+spot soul sewer Seireitei Waterways
+desc Beneath the streets of the Seireitei stretches a wide network of narrow waterways and underground tunnels. Cold water flows through the dimly lit passages, while chalk markings left by the Fourth Division guide those familiar with the routes.
+image scn_seireitei_waterways.jpg
+line You descend into the underground waterways of the Seireitei. The sound of dripping water echoes through the tunnels, and several chalk markings point towards passages disappearing into the darkness.
+line You climb through an old drainage grate and find yourself standing ankle-deep in cold water. Somewhere in the distance, a lantern flickers, accompanied by the faint sound of someone nervously humming.
+exit You finally discover a ladder leading back to the surface. Climbing out behind one of the barracks, you notice the smell clinging to your clothes. You should get them washed.
+exit As you make your way towards the exit, the faint glow of a lantern disappears down a distant passage. Whoever was carrying it is already gone, leaving you alone with the sound of flowing water.
+a | 100 | swift+bleed | none | Take the flooded passage | Movement speed +20% next fight, but lose 15% Reishi. | You discover a passage almost entirely submerged beneath the water. Rather than turning around, you force your way through the icy current. The struggle leaves you exhausted, but navigating the rushing water has sharpened your reflexes and footwork. Movement speed +20% next fight, -15% Reishi. | -
+a | 55 | strong | bleed | Rummage around | GAMBLE: Search the surroundings for something useful (damage dealt +20% next fight), or have an unfortunate accident (lose 15% Reishi). | You explore the tunnels, searching every corner for something valuable. Eventually, you discover some discarded bandages, food wrappers, and other belongings scattered around a relatively dry area. Judging by what's been left behind, a small group must have taken shelter here some time ago. Among the abandoned supplies, you find a small explosive that might prove useful in your next battle. Damage dealt +20% next fight. | While rummaging through a pile of discarded belongings, you notice a peculiar little sphere. Curious, you pick it up and begin examining it. Unfortunately, you accidentally activate the explosive. A loud bang echoes through the tunnels, leaving you covered in soot. -15% Reishi.
+a | 100 | crys+poison:1:60 | none | Fish something out of the water | Gain 1 Soul Crystal, but lose 1% Reishi per second for the first 60 seconds of the next match. | Something glitters beneath the murky surface. You reach into the water and discover a Soul Crystal wedged between two stones. Unfortunately, the water is far from clean. By the time you retrieve the crystal, you begin to feel the effects of whatever has been accumulating in these tunnels. +1 Soul Crystal, but lose 1% Reishi per second for the first 60 seconds of the next match. | -
+b | 100 | none | none | Examine the chalk markings | You notice several hastily drawn chalk arrows covering the damp walls. Some point towards dead ends, while others mark narrow passages that would be difficult to discover without guidance. You wonder who left them here. | Although the Fourth Division is primarily responsible for healing and support, its members are also tasked with maintaining the Seireitei's sewer system. Their extensive knowledge of the underground passages allows them to quickly reach any part of the Seireitei where their assistance is needed. | -
+b | 100 | mend:45 | none | Help the cleaning crew | Recover 45% Reishi. | You come across a small group of Fourth Division members struggling to clear debris from a blocked drainage channel. You offer to lend a hand, and together you manage to restore the flow of water. To show their appreciation, one of the Soul Reapers offers to treat your injuries with healing Kidō. +45% Reishi. | -
+b | 70 | cpudown | none | Map the underground passages | GAMBLE: Map the tunnels to gain an advantage over your next opponent (CPU -2), or get lost without learning anything useful. | You spend some time exploring the waterways, carefully noting the different entrances, exits, and connecting passages. Having formed a visual map of the waterways, you're confident you can outmanoeuvre your next opponent. Next foe: CPU level -2. | You attempt to create a map of the underground passages, but every tunnel seems to lead into another nearly identical one. By the time you realize you've been walking in circles, your map has become more confusing than the waterways themselves.
+
+spot soul fire Shiba Clan Fireworks House
+desc Two enormous stone arms hold a gigantic banner above a small house somewhere on the outskirts of Rukongai. Sounds of explosions and laughter can be heard coming from it.
+image scn_shiba_estate.jpg
+line A house flanked by two giant stone arms gripping a banner. A massive cannon is aimed at the sky nearby: the Shiba Clan's fireworks house.
+line Two giant men greet you as you approach the strange house and its stone arms.
+exit Fireworks light up the sky as you leave, seeing you off to your next battle.
+exit The boar sneezes goodbye as you turn to leave.
+a | 33 | fs_full+swift | bleed | Ride the cannon | GAMBLE: Full Fighting Spirit and move speed +20%, or a rough landing (lose 15% Reishi). | You fly over the rooftops of Rukongai, having the best time of your life. Full Fighting Spirit and +20% movement speed next fight. | It surprisingly does not work out as you hoped, leading to your face being plunged into the ground. -15% Reishi.
+a | 100 | foe_brittle_guard | none | Borrow a firework | The next foe's guard starts at 40%. | Bright, loud, and disorienting. Next foe's guard starts at 40%. | -
+a | 67 | ward | hurt | Wrestle Ganju | GAMBLE: The next foe -1 Konpaku, or he wins (next foe +1 Konpaku). | You pin him after a short back-and-forth. As a reward, he teaches you some tricks for getting around the area to outmaneuver your next opponent. Next foe: -1 Konpaku. | You never expected to reach a point this low in your life, as Ganju and his boar both sit on you after defeating you. Next foe: +1 Konpaku.
+a | 100 | glass | none | Mix the gunpowder | Damage dealt and taken +30% next fight. | You smell of gunpowder and are absolutely ready to explode. Damage dealt and taken +30% next fight. | -
+b | 100 | none | none | Ask about the house | You ask about the strange house with its giant stone arms. The two giant men next to it answer. | The house belongs to the current head of the Shiba Clan, Kukaku Shiba, and her brother Ganju. The Shiba were once considered one of the great noble houses. Kukaku's brother Kaien made a name for himself. | -
+b | 100 | mend | none | Share the sake | Recover 25% Reishi. | The head of the household, Kukaku, invites you in, and you drink your sorrows away together. +25% Reishi. | -
+b | 65 | crys | none | Buy fireworks | GAMBLE: +1 Soul Crystal, or a dud. | You're able to find a Soul Crystal in the box, hidden among various fireworks. +1 Soul Crystal. | You bought a whole box of fireworks, but sadly did not find any other special items within it.
+b | 100 | cpudown | none | Ask for battle advice | The next foe's CPU level -2. | Kukaku knows a lot about how to survive, teaching you a few tricks for every type of fighter. You feel prepared. Next foe: CPU level -2. | -
+
+spot soul school Shino Academy
+desc The Spiritual Arts Academy, also called Shin'ō Academy or simply Shinigami Academy, is an institution founded by Head Captain Yamamoto. All three branches of the Shinigami military are trained here in Zankensoki, the four forms of Shinigami combat.
+image scn_shino_academy.jpg
+line The gates of Shino Academy stand open. Students in red and blue uniforms practise Kido on straw targets in the yard.
+line You see students running around, talking nervously with each other. It seems like there's an exam coming up soon.
+exit A volley of misfired Hado lights up the yard as you leave.
+exit The Academy bell rings for the noon break. You decide to leave before you get run over.
+a | 50 | kon | bleed_big | Spar a top student | GAMBLE: +1 Konpaku, or they're very good (next foe +1 Konpaku). | You win. It was more challenging than you anticipated. You're in high spirits after an amazing spar. +1 Konpaku. | The top of the class is the top for a reason. You're impressed with the skills of the young student who just whooped your ass. -30% Reishi.
+a | 100 | foe_slow | none | Borrow a Bakudo scroll | The next foe moves 20% slower. | The scroll has instructions for Bakudo #4, Hainawa. A basic spell, but it'll do. Next foe: -20% movement speed. | -
+a | 45 | sp_strong | bleed | Join the Hado drill | GAMBLE: Full Fighting Spirit and action speed +12%, or a stray Shakkaho (lose 15% Reishi). | It's nice to remember the basics at times. Your training has enhanced your spiritual power. +20% damage on SP moves. | A first-year tries Eishohaki and fails. Today you learned that even a failed Kido can hurt a lot. -15% Reishi.
+a | 100 | tali | none | Raid the supply room | +1 Spirit Talisman. | You find some leftover training talismans and decide to take one with you. +1 Spirit Talisman. | -
+b | 100 | none | none | Read the graduation list | You walk the length of the graduation list, scouting for names you might recognize. | Most of the students here need six years to finish their training. But there are exceptions, such as Gin Ichimaru, Toshiro Hitsugaya and Kaien Shiba. Prodigies indeed. | -
+b | 100 | rev_full | none | Review the basics | Start with a full Reverse gauge. | Zanjutsu, Hakuda, Hoho, Kido. You remember why they matter and how they complement each other. Start next fight with a full Reverse gauge. | -
+b | 35 | crys | none | Teach a class | GAMBLE: +1 Soul Crystal, or nobody listens. | The class paid more attention than you thought. Seems like you're pretty good at this. The instructor pays you for your time. +1 Soul Crystal. | Half the class falls asleep during your lecture. The instructor decides they can't pay you for that.
+b | 100 | mend | none | Rest in the infirmary | Recover 25% Reishi. | A student is practising Kaido on you. Even though they're still inexperienced, you can tell they'll have a bright future in Squad 4. +25% Reishi. | -
+
+spot soul pillar Sokyoku Hill
+desc High above the Seireitei lie the execution grounds of Sokyoku Hill. The great halberd that once stood here is gone, but the execution scaffold remains. The scorched stone serves as a reminder of the executions carried out here.
+image scn_sokyoku_hill_day.jpg
+line You reach the summit of Sokyoku Hill. The abandoned execution scaffold stands before you, overlooking the entire Seireitei.
+line A cold wind sweeps across the hilltop. Scorch marks and sword cuts scar the stone, remnants of the enormous firebird that once rose here and the battle that stopped it.
+exit You descend the long staircase leading back into the Seireitei. The execution scaffold gradually disappears from sight behind you.
+exit Before leaving, you take one final look across the Seireitei. From up here, even the enormous city seems small.
+a | 100 | fs_up:30 | none | Stand on the execution scaffold | Gain 30% Fighting Spirit. | You climb onto the execution scaffold, looking down on the Seireitei. The thought of losing what's dear to you fills you with a determination to never waver. You're ready to face whatever comes next. +30% Fighting Spirit. | -
+a | 100 | crys+bleed | none | Chip away at the stone | +1 Soul Crystal, but lose 15% Reishi. | You notice something glittering within the scorched stone. After considerable effort, you manage to break off a fragment containing a Soul Crystal. The lingering spiritual energy of the blade with the strength of a million Zanpakutō burns your hands in the process. +1 Soul Crystal, but -15% Reishi. | -
+a | 100 | cpudown+foe_rev_empty | none | Hold the high ground | Next foe's CPU level -2, and the foe starts with an empty Reverse gauge. | From the hilltop, you can observe the movements of anyone approaching from below. You use the advantageous position to prepare for your next encounter, leaving your opponent with no opportunities to turn the battle around. They shouldn't try to fight you now. Next foe: CPU level -2, empty Reverse gauge at the start of the fight. | -
+b | 100 | none | none | Study the scorch marks | You kneel beside the blackened stone, examining the marks left behind by the Sokyoku. Even now, you can feel traces of the immense spiritual pressure that once filled this place. | The Sokyoku was said to possess the destructive power of a million Zanpakutō. When Rukia Kuchiki was sentenced to execution, Ichigo Kurosaki intercepted its first attack with his own blade. Shortly afterwards, Captains Kyōraku and Ukitake destroyed the weapon with a Shihōin artifact, bringing an end to its centuries-long existence before it could unleash its second attack against Ichigo. | -
+b | 100 | mend | none | Rest in the wind | Recover 25% Reishi. | You find a quiet spot beside the execution scaffold and sit down. The wind is cold, but the view over the Seireitei is breathtaking. After taking some time to rest, you feel refreshed. +25% Reishi. | -
+b | 100 | rev_full | none | Remember those who stood here | Start the next fight with a full Reverse gauge. | You think about the people who stood here during Rukia's execution. Against overwhelming odds, her friends and allies refused to abandon her, ultimately changing the course of Soul Society's history forever. Remembering their determination reaffirms your belief that every situation can be turned around. Start the next fight with a full Reverse gauge. | -
+
+# ============================================================================
+# WORLD OF THE LIVING
+# ============================================================================
+
+spot living medic Karakura General Hospital
+desc Polished floors and quiet corridors are a given at Ryuken Ishida's hospital. It's a place for patients, not spirits.
+image scn_karakura_hospital.jpg
+line Karakura General Hospital at night. The lady at the counter welcomes you and asks what you need.
+line The lights hum in Karakura General. Ryuken Ishida signs a chart without acknowledging your existence. At least the lady at the counter smiles at you.
+exit The automatic doors whisper shut behind you.
+exit As you leave, you turn around to see the director looking at you through his office window. You can feel his gaze until you're out of sight.
+a | 100 | mend_big+lose_crys | none | Pay for treatment | Recover 50% Reishi, but lose a Soul Crystal. | Efficient but expensive work. +50% Reishi, but -1 Soul Crystal. | -
+a | 50 | heal+kon | bleed | Sneak into a ward | GAMBLE: Full HP next fight and +1 Konpaku, or a nurse catches you (lose 15% Reishi). | With some luck, you manage to sneak in, earning yourself a free night's stay and full treatment. Full Reishi next fight, +1 Konpaku. | You get caught, and a not-so-happy director makes sure you regret this. -15% Reishi.
+a | 100 | haste+reishi_cap | none | Take the stimulant | Action speed +12%, but Reishi capped at 75% next fight. | You take the strong medication. You instantly feel its effects: exhilarating, but also dangerous. Action speed +12%, but Reishi capped at 75% next fight. | -
+b | 100 | none | none | Read the plaque | You stop before the brass plaque in the lobby. The director's name causes your mind to wander. | Ryuken Ishida runs this hospital and swore off his Quincy legacy. What could motivate a clearly driven man like him to forsake his culture like that? You imagine there is some deeper, sadder reason for this. | -
+b | 100 | mend | none | Wait in the lobby | Recover 25% Reishi. | Just the usual hospital lobby experience. Still, a quiet hour is always appreciated. +25% Reishi. | -
+b | 65 | atkdown | none | Ask for bandages | GAMBLE: The next foe's attack -15%, or the counter's closed. | You're lucky. This hospital wrapping is tight and professional. This should help your defense against your next foe. Next foe: -15% attack. | They're running too short on bandages themselves to risk giving any out. You walk away empty-handed.
+b | 100 | regen | none | Take a saline drip | Reishi regeneration next fight. | Who could have guessed that human medication could be this helpful? You feel regenerative power coursing through you. Reishi regeneration next fight. | -
+
+spot living school Karakura High Rooftop
+desc The rooftop of Karakura High School offers an excellent view of the town. Most students have already left for the day, leaving you alone on the roof.
+image scn_karakura_high_rooftop.jpg
+line You instantly feel remnants of multiple dense spiritual pressure signatures. This must be where Ichigo and his friends spend their breaks.
+line The warm afternoon sun shines down upon you. You could see yourself spending some time here.
+exit The afternoon slowly draws to a close. You take one last look at the rooftops before leaping off towards your next fight.
+exit A gentle breeze passes over the rooftop as you turn to leave. You're still surprised by how comfortable this place felt, despite being a rooftop.
+a | 100 | swift+haste | none | Train on the rooftops | Movement speed +20% and action speed +12% next fight. | You stretch properly and run around the rooftop. Your body is warmed up and ready to fight. Movement speed +20% and action speed +12% next fight. | -
+a | 65 | tali | none | Search for forgotten belongings | GAMBLE: Find a Spirit Talisman among the belongings left behind by students, or come away empty-handed. | Someone seems to have been rather careless with their belongings. You find a talisman that you can put to better use than leaving it on the rooftop. +1 Spirit Talisman. | You search around the rooftop, but all you find are empty drink cartons, scraps of paper, and an abandoned notebook with an apple lying on top of it.
+b | 100 | none | none | Watch the town | You lean against the railing and watch the streets of Karakura below. From up here, the town seems almost peaceful... | Karakura Town has always attracted an unusually large number of spirits. Hollows, Soul Reapers and even Quincy have crossed paths here. Yet to most of its inhabitants, it's just another ordinary town. | -
+b | 100 | mend | none | Enjoy a meal up here | Recover 25% Reishi. | You settle down to enjoy a late lunch while overlooking the town. The pleasant weather and truly peaceful surroundings make for a refreshing break. +25% Reishi. | -
+b | 100 | kon+sluggish | none | Soak in the afternoon calm | Gain 1 Konpaku, but action speed -12%. | You close your eyes and let the warmth of the afternoon sun wash over you. For just a few moments, there is nothing to worry about. This sort of peace is what you fight for. Your resolve is strengthened. +1 Konpaku, but action speed -12%. | -
+
+spot living moon Karakura Riverbank
+desc A river runs through Karakura. This is a nice spot near a bridge where the riverbank is especially beautiful, but for some reason, the atmosphere feels heavy.
+image scn_karakura_riverbank.jpg
+line The grass at the riverbank is wet from earlier rain. You get the feeling that something important happened here.
+line A nice patch of greenery around the river provides a perfect opportunity to enjoy the river's sounds and movements.
+exit The river keeps flowing, with or without you.
+exit The sounds of the river quiet down as you depart.
+a | 50 | kon | curse | Check the water's edge | GAMBLE: +1 Konpaku, or it's a lure (next foe +1 Konpaku, +20% attack). | Just a scared Plus. You calm her down and send her on her way. +1 Konpaku. | It's a lure of some sort. When you leave, you feel like something is following you. Next foe: +1 Konpaku, +20% attack.
+a | 100 | strong+wounded | none | Train under the bridge | Damage dealt +20%, but start at 75% Reishi. | Concrete pillars make good punching bags, and the river's current is a great force to train against. Your gigai disagrees. Damage dealt +20%, but start next fight at 75% Reishi. | -
+a | 45 | crys | lose_tali | Wade in for a glint | GAMBLE: +1 Soul Crystal, or the current takes a talisman. | You find a crystal lost by a Soul Reaper, caught on the rocks. +1 Soul Crystal. | The river's currents are ruthless and sweep away one of your talismans. -1 Spirit Talisman.
+a | 100 | fs_full+reishi_cap | none | Stare at the water | Full Fighting Spirit, but Reishi capped at 75%. | For some reason, staring into the water fills you with determination, but also sadness and anger. You feel ready to destroy your next opponent. Full Fighting Spirit, but Reishi capped at 75% next fight. | -
+b | 100 | none | none | Leave a flower | You remember a story you heard about Ichigo and his mother. You decide to leave a flower, just in case the story is true. | According to the story, Masaki Kurosaki was a human who was also able to see ghosts and sacrificed herself for her son here on a rainy day. One can only imagine how Ichigo must hate the rain. | -
+b | 100 | mend | none | Sit on the grass | Recover 25% Reishi. | The evening air is soft. You enjoy the quiet moment and rest. +25% Reishi. | -
+b | 100 | ward | none | Take a long walk | The next foe -1 Konpaku. | You had a nice walk that doubled as a chance to scout the area. Your next opponent will be at a disadvantage. Next foe: -1 Konpaku. | -
+
+spot living medic Kurosaki Clinic
+desc A small family clinic stands on a quiet street in Karakura Town. Even after closing hours, the lights inside are often still on. The Kurosaki family lives here, and Isshin's eccentric personality alone is enough to ensure there's never a dull moment.
+image scn_kurosaki_clinic.jpg
+line The Kurosaki Clinic's sign glows above the entrance. Through a window, you spot a girl wearing an apron, busy setting the dinner table.
+line The clinic door suddenly flies open, followed by a bearded man in a white coat. After being kicked out by his own daughter, he lands on the pavement, notices you, and quickly straightens his coat.
+exit You like this family. You've barely left, but you're already looking forward to your next visit. Not something you'd usually say about a clinic, but who cares?
+exit As you walk away, the clinic lights begin switching off one by one. You can still hear the Kurosaki family arguing inside.
+a | 100 | mend_big | none | Ask for first aid | Recover 50% Reishi. | You ask the doctor to treat your injuries. Despite his rather questionable behaviour, Isshin proves to be an excellent physician. After tending to your wounds, he hands you a lollipop and sends you on your way. +50% Reishi. | -
+a | 50 | heal | bleed:20 | Spar with the doctor | GAMBLE: Start the next fight with full HP, or get overwhelmed by the doctor (lose 20% Reishi). | Isshin eagerly accepts your challenge. Although he initially fights like a complete fool, his movements betray years of experience. After an entertaining spar, he patches you up and sends you off feeling better than ever. Full Reishi next fight. | You quickly discover that Isshin is considerably stronger than his ridiculous behaviour suggests. He was a captain once, after all, and after a rather humiliating defeat, you understand exactly why. -20% Reishi.
+a | 100 | regen:1 | none | Get a proper check-up | Regain 1% Reishi per second during the next fight. | Isshin performs a thorough examination before administering a rather unpleasant injection. The treatment initially leaves you feeling weak, but he assures you that its restorative effects will become apparent during your next battle. +1% Reishi per second during the next fight. | -
+a | 50 | tali2 | kon_down | Raid the medicine cabinet | GAMBLE: Find 2 Spirit Talismans, or get caught by one of the Kurosaki sisters (lose 1 Konpaku). | While nobody is looking, you rummage through the medicine cabinet. Hidden behind several bottles of cough syrup, you discover two old Spirit Talismans. You pocket them before anyone notices. +2 Spirit Talismans. | Just as you reach into the cabinet, Karin catches you red-handed. Before you can explain yourself, a football comes flying towards your head. You leave the clinic rather embarrassed and with a newfound respect for her aim. -1 Konpaku.
+b | 100 | none | none | Look at the poster | You notice an enormous poster of a smiling woman hanging on the wall. Something about her expression seems remarkably warm, like the afternoon sun. You try to remember what you know about her. | The woman in the poster is Masaki Kurosaki, the late mother of Ichigo, Karin and Yuzu, and Isshin's beloved wife. Despite her passing seven years ago, Isshin still talks to her portrait every morning. His children have long since stopped questioning the habit. | -
+b | 100 | tali | none | Help set the table | +1 Spirit Talisman. | You offer to help Yuzu prepare the dinner table. She gratefully accepts, and after everything is ready, insists that you take a small good-luck charm as thanks. To your surprise, it turns out to be an actual Spirit Talisman. She probably got it from her dad. +1 Spirit Talisman. | -
+b | 100 | sturdy | none | Ask the doctor for advice | Damage taken -20% next fight. | You ask Isshin for some advice on fighting. He immediately launches into an enthusiastic demonstration, loudly reminding you to keep your chin down and protect yourself. He makes it impossible for his children not to hear his advice. His methods are questionable, but his advice proves surprisingly useful. Damage taken -20% next fight. | -
+
+spot living grave Quincy's Graveyard
+desc You stand before a vast graveyard filled with massive tombstones shaped like traditional Quincy crosses. Many of these graves are too recent to be from the genocide 200 years ago.
+image scn_quincy_graveyard.jpg
+line You contemplate what could have happened for there to be so many deaths.
+line Wind blows over the graveyard. Something unnatural must have caused this, but you don't know what.
+exit You leave the graveyard behind, but the image of the countless graves has burned itself into your mind.
+exit As you turn to leave, you glance back one last time. You wonder how this event affected Ryūken and Uryū.
+a | 100 | haste+fragile | none | Examine the Quincy crosses | Action speed +12%, but damage taken +20% next fight. | You examine the enormous crosses and their intricate designs. You dwell on memories about the Quincy and their unique ability to manipulate Reishi. Trying to keep their traditions alive, you attempt to replicate their techniques. It somewhat worked, and your next opponent is in for a supercharged fight. Action speed +12%, but damage taken +20% next fight. | -
+a | 100 | kon+kon+lose_tali | none | Leave a talisman behind | -1 Spirit Talisman, +2 Konpaku. | You leave behind a protective talisman, hoping it'll somehow protect them. Your resolve is unshakeable. +2 Konpaku, -1 Spirit Talisman. | -
+b | 100 | none | none | Examine the dates | You examine the dates inscribed on the crosses, trying to figure out when these people died. | Most of the newer graves belong to people who died seven years ago. All of them died on or shortly after June 17. That date... You feel like you've heard something about that day before. | -
+b | 100 | mend | none | Pay your respects | Recover 25% Reishi. | You bow your head slightly, showing your respect for the fallen. The melancholic atmosphere helps you gather your strength. +25% Reishi. | -
+b | 100 | none | none | Make a silent vow | No effect. | You cannot change what happened here, nor can you bring these people back. But you can fight to create a better world. | -
+
+spot living ghost Spirit Encounter
+desc On an ordinary street, a translucent figure stands still. A chain hangs from its chest. It seems like it has been waiting here for quite some time.
+image scn_spirit_encounter.jpg
+line A man in a suit waits at an old bus stop that closed years ago. He seems to be waiting for a bus you know won't come.
+line A Plus sits on a park bench, swinging her legs. The Chain of Fate on her chest is clean.
+exit Behind you, humans walk by, never knowing what you did.
+exit You walk away smiling, knowing you accomplished something today.
+a | 100 | kon | none | Perform Konso | GAMBLE: +1 Konpaku, or they're not ready. | You console them before sending them off. Seeing their grateful eyes fills you with determination. +1 Konpaku. | -
+a | 100 | regen | none | Promise to find them | Reishi regeneration next fight. | A promise is meant to be kept. You swear to yourself never to fall until all your promises have been fulfilled. Reishi regeneration next fight. | -
+b | 100 | none | none | Ask how long they waited | You ask the soul how long it has waited here. It glances down at the chain on its chest. | Every Plus has a Chain of Fate. Over time, it erodes away, transforming the Plus into a Hollow if the erosion reaches the chest. It is a Soul Reaper's job to perform a Konso to send them to Soul Society before that can happen. | -
+b | 100 | mend | none | Keep them company | Recover 25% Reishi. | You keep them company. It seems to bring them comfort and reminds you why you're fighting. +25% Reishi. | -
+b | 65 | tali | none | Ask what they saw | Next CPU -2. | They actually saw someone similar to you training nearby. You can gather some intel that's sure to surprise your next opponent. +1 Spirit Talisman. | They have seen a lot in their time here, just not anything useful to you.
+
+spot living ghost The Haunted Hospital
+desc An abandoned hospital stands on the outskirts of Karakura Town. Broken windows, dusty corridors, claw marks on the walls, and equipment left behind by a television crew give the building an eerie atmosphere.
+image scn_haunted_hospital.jpg
+line You arrive at the abandoned hospital featured in Don Kanonji's television special. The building still bears the scars of the battle that took place here. You see a spirit hiding behind a wall.
+line As you enter the hospital, a stretcher begins rolling down the hallway on its own. Nearby, a frightened Plus with a partially eroded Chain of Fate watches you approach.
+exit As you leave the abandoned hospital, you hear a group of children shouting "BWAHAHA!" somewhere down the street. Apparently, Don Kanonji's popularity isn't fading anytime soon.
+exit You step outside and take one last look at the hospital before getting ready to face your next opponent.
+a | 100 | ward | none | Perform Konsō | Next foe loses 1 Konpaku. | You approach the wandering spirit and gently press the hilt of your Zanpakutō against its forehead. The spirit smiles with relief before disappearing into Soul Society. Having guided a lost soul to the afterlife, you feel a renewed sense of purpose. Next foe: -1 Konpaku. | -
+a | 50 | tali2 | kon_down+fragile | Search the abandoned wards | GAMBLE: Find 2 Spirit Talismans, or accidentally provoke a Hollow (lose 1 Konpaku and take 20% more damage). | You explore the abandoned wards, searching through equipment left behind by the television crew. Among the discarded belongings, you discover two Spirit Talismans. +2 Spirit Talismans. | Your snooping around seems to have drawn a Hollow to the abandoned hospital. You fight it, protecting the Plus at the same time. You win, but it was not an easy fight. -1 Konpaku, +20% damage taken.
+a | 100 | fs_up:20 | none | Strike the Kanonji pose | Gain 20% Fighting Spirit. | You spread your arms and strike Don Kanonji's signature pose. "BWAHAHAHA!" Your enthusiasm is surprisingly contagious, even if you look completely ridiculous. You're overflowing with fighting spirit. +20% Fighting Spirit. | -
+b | 100 | none | none | Read the television flyer | You notice an old promotional flyer hanging near the hospital's entrance. A man wearing sunglasses grins at the camera, promising to cleanse the building of evil spirits live on television. | Don Kanonji once filmed an episode of his popular television show here. During the broadcast, his attempts to exorcise a wandering spirit nearly caused it to transform into a Hollow. Ichigo Kurosaki intervened just in time to prevent the disaster, revealing the truth about what Kanonji had been doing to the spirits he "exorcised". | -
+b | 100 | mend | none | Rest in the lobby | Recover 25% Reishi. | You settle into one of the dusty chairs in the abandoned lobby. Despite the unsettling surroundings, it's surprisingly quiet here. You take the opportunity to rest and recover your strength. +25% Reishi. | -
+b | 65 | cpudown | none | Question the wandering spirit | GAMBLE: Learn something useful about your next opponent (CPU -2), or get no useful information. | The spirit seems frightened at first, but eventually begins answering your questions. Apparently, your next opponent passed through the area recently. Its description gives you some valuable insight into their movements. You thank it before performing a Konsō. Next foe: CPU level -2. | You try speaking to the spirit, but it only responds with frightened wailing. After several unsuccessful attempts, you give up and send it to Soul Society.
+b | 100 | mend:100+fs_down:40 | none | Sleep on a hospital cot | Gain 100% Reishi, but lose 40% Fighting Spirit. | You discover an old hospital cot that looks reasonably comfortable. Against your better judgement, you lie down and fall asleep. You wake up feeling completely rested, although the deep sleep has left you sleepy, lowering your fighting spirit. +100% Reishi, -40% Fighting Spirit. | -
+
+spot living candy Urahara Candy Dispenser
+desc Outside a little shop sits a dispenser shaped like a rabbit's head. A white-and-green-striped sign promises only the finest goods in town.
+image scn_urahara_shop_day.jpg
+line You approach the dispenser, recognizing its shape as it seems to recognize your spiritual pressure.
+line Its eyes start to glow with a faint light as it recognizes spiritual pressure approaching it.
+exit You leave the dispenser behind, hoping Urahara knows what he is doing.
+exit Somewhere, a humble candy shop owner grins as you leave.
+a | 60 | swift+haste | sluggish | Pop a candy | GAMBLE: Movement and action speed increase, or it's a dud (action speed -12%). | The "special" candy kicks in, and you're ready to kick your next opponent's ass. Movement speed +20% and action speed +12% next fight. | Someone seems to have saved some money. The candy turns out to be a raisin. Action speed -12% next fight.
+a | 40 | kon | curse | Swallow two | GAMBLE: +1 Konpaku, or they fight each other (next foe +1 Konpaku, +20% attack). | You realize you might have overdone it a little. Well, your opponent will be the one feeling it first. +1 Konpaku. | Your stomach can't handle this much at once. You feel nauseous. Next foe: +1 Konpaku, +20% attack.
+b | 100 | none | none | Inspect the Dispenser | You investigate the machine further. | Whatever Urahara has created here seems to be able to distinguish between spiritually aware creatures and normal humans. You reckon they wouldn't be able to survive consuming whatever comes out of it. You hope you do. | -
+b | 30 | crys | none | Shake the dispenser | GAMBLE: +1 Soul Crystal, or it's empty. | You shake the dispenser vigorously, without a care for what you might break. Something hard rattles at the bottom. +1 Soul Crystal. | Your efforts only seem to break something inside. You'd better leave before someone sees you.
+b | 100 | mend | none | Sit on the bench next to it | Recover 25% Reishi. | Just the usual busyness of a workday in the World of the Living. You relax and get ready for the next fight. +25% Reishi. | -
+
+spot living bar Xcution Hideout
+desc Hidden away from the busy streets of Karakura Town, you find an entrance to a secluded bar. The middle-aged bartender wears a peculiar eyepatch-like band around his head, hiding his right eye. He initially seems surprised to see you before regaining his composure.
+image scn_xcution_bar.jpg
+line An odd assortment of people is gathered around a table, enjoying their drinks. A few of them turn towards you as you enter.
+line You manage to find your way into the rather secluded lounge. A tall man with slicked-back hair notices you standing by the entrance and, after sizing you up for a moment, gestures towards an unoccupied seat.
+exit You thank the regulars for their hospitality before leaving. They certainly are an unusual bunch, but you wouldn't mind stopping by again.
+exit Just before the door closes behind you, you hear two of the regulars arguing over what qualifies as cute. You smile to yourself and continue on your way.
+a | 100 | none | none | Approach the other guests | Introduce yourself to the other guests and join their conversation. | You approach the group sitting around the table and introduce yourself. While a young woman with pink hair immediately questions what you're doing here, the tall man welcomes you and invites you to sit down. A rather reserved man with long dark hair briefly looks up from his book to acknowledge your presence. It takes a while for everyone to warm up to you, but you eventually find yourself enjoying their company. As pleasant as their company has been, you get the impression that they'd rather be among themselves. Not wanting to overstay your welcome, you bid them farewell. | -
+a | 65 | crys | none | Look around the bar | GAMBLE: Look around the bar and potentially discover a Soul Crystal. | You take some time to familiarise yourself with your surroundings. Between one of the sofas and the wall, you discover a small object that must have been dropped by one of the guests. Upon closer inspection, you realise it's a Soul Crystal. Judging by the amount of dust surrounding it, nobody has been looking for it in quite some time. +1 Soul Crystal. | You wander around the bar, examining its decorations and furnishings. Before long, you notice the bartender following your every movement with his eye. Not wanting to arouse any further suspicion, you decide to return to your seat. You can't help but wonder: "Why do you keep checking your watch?"
+a | 50 | tali2 | lose_tali | Join a card game | GAMBLE: Join the regulars in a card game for a chance to win 2 Spirit Talismans, or lose one of your own. | You notice some of the guests playing cards and ask whether you can join them. Instead of playing for money, everyone puts a small personal belonging on the table. After several surprisingly competitive rounds, you emerge victorious. Among your winnings are two Spirit Talismans. +2 Spirit Talismans. | You join a card game and confidently place one of your Spirit Talismans on the table. Unfortunately, the young boy sitting opposite you proves considerably better at the game than you anticipated. He collects his winnings with a rather smug expression before returning his attention to his handheld gaming console. -1 Spirit Talisman.
+b | 100 | none | none | Examine the membership card | You notice a small card lying on one of the tables. Apart from an unfamiliar symbol and a name printed on its surface, it contains very little information. | "Xcution." Apparently, that's the name of the little group that regularly gathers here. You've never heard of them before. Probably some wannabe Yakuza or something. You put the card back where you found it. | -
+b | 100 | mend | none | Have a drink | Recover 25% Reishi. | You take a seat at the bar and ask for a drink. The middle-aged man with the eyepatch prepares one for you. Despite being surrounded by strangers, you feel oddly at home here. You decide to stay a little longer. +25% Reishi. | -
+b | 60 | tali | none | Listen to the conversation | GAMBLE: Overhear a conversation that might lead you to a Spirit Talisman, or learn nothing useful. | While enjoying your drink, you overhear one of the guests talking about a peculiar ornament they spotted near an abandoned building. From their description, you suspect it might be a Spirit Talisman. You memorise the location and decide to investigate once you leave the bar. Much to your delight, they were telling the truth. +1 Spirit Talisman. | You attempt to listen in on the conversation, but the tanned woman notices you eavesdropping. The group falls silent, and you can tell you'd better leave.
+
+# ============================================================================
+# SEVERAL REALMS / ANY REALM
+# ============================================================================
+
+spot any sword Broken Asauchi
+desc A nameless, shattered blade lies snapped in two before you. A Zanpakuto that never got to be.
+image scn_broken_zanpakuto.jpg
+line A plain Zanpakuto lies snapped in two in the dust.
+line Half a blade sticks out of the ground. A broken Asauchi, buried by the sands of time.
+exit You reminisce about your own life as you leave and pray your weapon never breaks.
+exit Behind you, the wind whistles over the snapped blade.
+a | 50 | fs_gain:50+haste | no_spirit | Listen to the blade | GAMBLE: Fighting Spirit gain +50% and action speed +12%, or its silence spreads (no Fighting Spirit gain). | You manage to grasp the last whispers of its voice, bestowing its last ounces of power upon you. "Make it count." Increased Fighting Spirit gain and +12% action speed next fight. | You try to hear the voice of the blade, as you sometimes can in battle. Sadly, you realize there is no voice to be heard. No Fighting Spirit gain next fight.
+a | 100 | foe_fragile+atkup | none | Take the broken half | The next foe takes 20% more damage, but their attack increases by 15%. | A rusted blade can inflict the worst cuts, but can never be trusted. No amount of control will stop it from cutting even you. Next foe: +20% damage taken, +15% attack. | -
+a | 45 | crys | bleed | Draw out its reishi | GAMBLE: +1 Soul Crystal, or it fights back (lose 15% Reishi). | Its last reishi crystallizes in your palm as a Soul Crystal. +1 Soul Crystal. | Your attempt to disturb it in its dying moments is met with a cut. You only feel its loneliness. -15% Reishi.
+b | 100 | none | none | Read the hilt | You pick up the broken blade and turn it around a few times. | Every student at Shin'o Academy starts with an Asauchi, a nameless blade. Apparently, they come straight from the Soul King's Palace. By training and growing with their blade, they imprint a part of their souls onto it until it eventually becomes its own Zanpakuto with its own name. | -
+b | 100 | kon | none | Bury it properly | +1 Konpaku. | You bury the blade, finally granting it the peace it deserves. Your will is stronger than before. You will not die. +1 Konpaku. | -
+b | 40 | tali | none | Look for its owner | GAMBLE: +1 talisman, or no trace. | You look around until the smell tells you that you won't find the owner. At least, not like you hoped you would. You bury their body alongside their Zanpakuto. You keep a talisman you found, vowing to use it for good. +1 Spirit Talisman. | There seems to be no trace of them. You leave the blade behind.
+b | 100 | mend | none | Consume its energy | Recover 25% Reishi. | You destroy what's left of the blade and absorb its power. +25% Reishi. | -
+
+spot living,soul rift Garganta Scar
+desc A black, teeth-like rift hangs in the air, oozing energy from foreign realms.
+image scn_garganta.jpg
+line The air is torn in a jagged black seam where a Garganta once ripped open space.
+line A black scar left by a Hollow's Garganta hums with power foreign to this world.
+exit The scar pulsates as you leave, leaving the power within it untouched.
+exit You put distance between yourself and the tear before it decides to open.
+a | 50 | kon+tali | curse | Reach inside | GAMBLE: +1 Konpaku and +1 talisman, or something reaches back (next foe +1 Konpaku, +20% attack). | Your hand closes on loose reishi. +1 Konpaku and +1 Spirit Talisman. | Something on the other side grabs your wrist, trying to pull you through. After some struggle, you manage to break free from its grip. Next foe: +1 Konpaku, +20% attack.
+a | 100 | crys+cpuup | none | Harvest the static | +1 Soul Crystal, but next foe CPU +2. | You collect it; the noise draws a sharper foe. +1 Soul Crystal, but next foe CPU +2. | -
+b | 100 | none | none | Watch the seam | You watch the black seam in the sky. It breathes, opening by a hair, as though something on the other side is listening... | A Garganta needs no gate. Hollows tear the sky open by hand, and Arrancar walk the dark inside on paths of their own reishi. | -
+b | 100 | foe_slow | none | Leave a decoy | The next foe moves 20% slower. | You leave traces of your reiatsu near the scar. Your next foe wastes time trying to find you there. Next foe: -20% movement speed. | -
+b | 67 | ward | hurt | Seal it with Kido | GAMBLE: the next foe -1 Konpaku, or it bursts open (next foe +1 Konpaku). | You successfully perform a full-incantation Bakudo spell to seal the gateway. Your next foe has a harder time reaching you. Next foe: -1 Konpaku. | You fail the spell, leaving obvious evidence of your efforts. Your next foe will be prepared for you. Next foe: +1 Konpaku.
+c | 100 | travel_hueco | none | Walk the reishi path | Enter another realm. | You focus your reiatsu and rip open the scar into a full Garganta, then step through. Travel to Hueco Mundo. | -
+
+spot hueco,soul,living ghost Hell Butterfly
+desc A black butterfly drifts across your path. It seems to know where it's going.
+image scn_hell_butterfly.jpg
+line A black butterfly drifts across your path and lands on your finger. A Hell Butterfly, carrying a message for someone.
+line You spot a lone Hell Butterfly on its way to deliver a message. Maybe it's for you?
+exit The butterfly flutters away, same as always.
+exit It flies away, quickly becoming impossible for you to see.
+a | 65 | cpudown | cpuup | Read its message | GAMBLE: Next foe CPU -2, or it was meant for them (next foe CPU +2). | Someone in Soul Society means well by you. It's a warning about your next opponent. Next foe: CPU level -2. | The butterfly evades you and flies away. The only thing you could read was your name. You've got a bad feeling about this. Next foe: CPU level +2.
+a | 45 | lose_tali+tali2 | lose_tali | Send a supply request | GAMBLE: +2 talismans, or it never returns (lose a talisman). | You tuck a talisman under its wing together with a request. It returns with two new ones. -1 Spirit Talisman, +2 Spirit Talismans. | You wait for the butterfly's return, sadly to no avail. Bye-bye, talisman. -1 Spirit Talisman.
+b | 100 | none | none | Watch it fly | You follow the black butterfly with your eyes. It flutters around. It makes you think for a while. What even are Hell Butterflies? | Hell Butterflies carry the Gotei 13's messages and guide Soul Reapers to the World of the Living and back. Without them, Soul Reapers would need to use the dangerous route through the Dangai every time they traveled between realms. But what's the "Hell" in their name supposed to mean? | -
+b | 100 | mend | none | Let it rest on you | Recover 25% Reishi. | The butterfly appreciates the moment of rest, and so do you. You feel relaxed after studying the intricate patterns on its wings for a while. +25% Reishi. | -
+c | 100 | travel_soul | none | Follow its path to somewhere spiritual | Travel to another realm. | With its help, you open a Senkaimon and enter Soul Society. Travel to Soul Society. | -
+c | 100 | travel_living | none | Follow its path to somewhere physical | Travel to another realm. | With its help, you open a Senkaimon and enter the World of the Living. Travel to the World of the Living. | -
+
+spot any skull Purified Hollow
+desc The remains of a recently defeated Hollow lie before you. Its fractured mask slowly dissolves into particles of spiritual energy. For a brief moment, the face beneath the mask appears almost human, bearing an expression of tranquillity rather than the hunger and aggression associated with Hollows.
+image scn_rukongai.jpg
+line You look at the face of the soul revealed behind the mask and are glad it has finally found peace.
+line Countless particles of spiritual energy rise from the remains of a Hollow. Whoever defeated it cannot have left long ago.
+exit You watch the last particles of spiritual energy drift away. All that remains is the hope that the soul will find peace wherever it ends up.
+exit You turn around one last time before continuing your journey. There is no longer any indication that a Hollow was ever here.
+a | 67 | kon | poison:1:40 | Absorb its Reishi | GAMBLE: Absorb the Hollow's remaining spiritual energy to gain 1 Konpaku, or lose 1% Reishi per second for the first 40 seconds of the next fight. | You approach the dissolving Hollow and attempt to absorb some of the spiritual energy emanating from its body. To your surprise, the energy feels gentle. As it flows into you, you feel your soul growing in resolve. +1 Konpaku. | You attempt to absorb the spiritual energy emanating from the Hollow. However, something about it feels distinctly unpleasant. You immediately stop, but some of the contaminated energy has already entered your body. You lose 1% Reishi per second for the first 40 seconds of the next fight.
+a | 55 | strong | none | Examine the fatal wound | GAMBLE: Study the attack that defeated the Hollow to improve your own combat technique (damage dealt +20% next fight), or learn nothing useful. | You carefully examine the wound that split the Hollow's mask. Judging by the angle and precision of the cut, a single well-placed strike was enough to defeat it. You spend some time recreating the movement in your head, considering how you could incorporate it into your own fighting style. Damage dealt +20% next fight. | You fail to examine the Hollow's wounds in time because its body dissolves too quickly. Before you can draw any meaningful conclusions, the evidence disappears before your eyes.
+b | 100 | none | none | Observe the purification | You watch as the Hollow's mask gradually crumbles away. For a brief moment, you catch a glimpse of the person hidden beneath it. You rarely think about the cruel lives of eternal, insatiable hunger Hollows have to live. | When a Soul Reaper defeats a Hollow with their Zanpakutō, the sins committed during its existence as a Hollow are purified, allowing its soul to pass on to Soul Society. For those who committed unforgivable sins during their human lives, however, the gates of Hell open instead. You can barely imagine a place worse than Hueco Mundo for the average Hollow, and honestly, you're happy you'll never have to interact with Hell. | -
+b | 100 | mend | none | Say a prayer | Recover 25% Reishi. | You kneel beside the disappearing Hollow and close your eyes. Whoever this person once was, you hope that their next life will be kinder to them. You remain there for a little while longer, allowing yourself a moment of tranquillity. +25% Reishi. | -
+b | 100 | regen:1:60 | none | Bathe in the light | 1% Reishi regeneration per second for the first 60 seconds of the next fight. | You stand amidst the particles of spiritual energy rising from the Hollow's remains. A pleasant warmth spreads throughout your body as some of the purified energy settles on your skin. Even after the last particles have disappeared, the sensation remains. 1% Reishi regeneration per second for the first 60 seconds of the next fight. | -

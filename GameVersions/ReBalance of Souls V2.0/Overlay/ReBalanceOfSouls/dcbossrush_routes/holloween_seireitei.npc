@@ -1,0 +1,207 @@
+# An ADVENTURE event's story nodes -- Happy Holloween! (the Halloween event, 2026 script).
+# The format is dcbossrush_npc.txt's (npc / spot, art, image, line, say, music, bgm, exit, desc).
+# A speaker@look (pl010@holloween) is drawn in that costume sprite (dcbossrush 0.18.1).
+
+npc 26 soul Too Quiet
+bg seireitei_library
+desc The Tenth Division office. It has been far too quiet today.
+bgm bgm_adv_0040
+say - |  | Just as Toshiro Hitsugaya finishes his last task for the day, he notices something.
+say pl026 | Toshiro Hitsugaya | It has been awfully quiet today. Too quiet... ...Oh, damn it.
+say - |  | Hitsugaya gets up and rushes to his Lieutenant's office. But nobody is there.
+say pl026 | Toshiro Hitsugaya | There is a giant stack of papers she was supposed to do. Where is she?!
+say pl012 | Rangiku Matsumoto | Captain! Good morning!
+say pl026 | Toshiro Hitsugaya | It's afternoon!
+say pl012 | Rangiku Matsumoto | You're right, it's afternoon. The sun is going down, the night approaches and going outside becomes... spooky.
+say pl026 | Toshiro Hitsugaya | I don't know about spooky, but the only thing that actually scares me is knowing what you do when I'm not checking on you. There are so many papers on your desk.
+say pl026 | Toshiro Hitsugaya | I'm glad you're at least checking your mailbox.
+say pl012 | Rangiku Matsumoto | ...
+say pl026 | Toshiro Hitsugaya | Matsumoto.
+say pl012 | Rangiku Matsumoto | Did we recently get one?
+say pl026 | Toshiro Hitsugaya | It's been here for months!
+say pl012 | Rangiku Matsumoto | Ah, it's whatever. Nothing in there is actually important, unlike the news I brought from the human realm!
+say pl026 | Toshiro Hitsugaya | You don't even know what's in the mailbox!
+say pl012 | Rangiku Matsumoto | Captain Hitsugaya, have you ever heard of Halloween?
+say pl026 | Toshiro Hitsugaya | It's fine, it's fine, this is not your first time with her...
+say pl012 | Rangiku Matsumoto | Come again?
+say pl026 | Toshiro Hitsugaya | Forget it. No, I haven't heard of it.
+say pl012 | Rangiku Matsumoto | It's a special day the World of the Living has once a year. People dress up like scary monsters and go around gathering candy!
+say pl026 | Toshiro Hitsugaya | This sounds like it's made for children.
+say pl012 | Rangiku Matsumoto | It's totally not! Orihime told me all about it and showed me pictures of adult women in nurse costumes.
+say pl026 | Toshiro Hitsugaya | I thought they were supposed to be scary.
+say pl012 | Rangiku Matsumoto | I didn't say they were good costumes. Anyway, since the humans have their Halloween festival, why don't we have our own?!
+say pl026 | Toshiro Hitsugaya | The papers on your-
+say pl012 | Rangiku Matsumoto | We'll call it Holloween! It will be so much fun, I already know what I'll dress up as. Tomorrow is the big day!
+say pl026 | Toshiro Hitsugaya | Matsumoto, can you hold on for a second?! Just because you want something doesn't mean you can- Matsumoto?
+say - |  | The woman was long gone, and so was Toshiro's hope that the work on his Lieutenant's desk would be done anytime soon.
+exit The question that remained now was... what was about to happen tomorrow?
+
+npc 62 soul Happy Holloween
+bg seireitei_library
+desc The next evening. Rangiku is nowhere to be found, and the Seireitei looks... different.
+art momo_hinamori
+bgm bgm_adv_0150
+say - |  | The next day, Rangiku is nowhere to be found, and Hitsugaya takes it upon himself to finish his Lieutenant's work. He knows it would all fall back on him eventually.
+say - |  | It is almost evening when he finishes.
+say pl026 | Toshiro Hitsugaya | I'll have to monitor her more. This woman just disappears into thin air. She's probably drinking somewhere with her friends.
+say pl026 | Toshiro Hitsugaya | Tomorrow I'll wake her up personally and drag her in here, no matter how hungover she is.
+scene seireitei_walkway
+say - |  | When the Captain opens the door to the Seireitei, he walks face-first into fake cobwebs and almost steps in a pumpkin.
+say pl026 | Toshiro Hitsugaya | What the-
+say momo_hinamori@holloween | Momo Hinamori | Happy Holloween, Shiro!
+say pl026 | Toshiro Hitsugaya | Momo?! What are you wearing? And did you just say "Holloween"?
+say momo_hinamori@holloween | Momo Hinamori | This is my costume for today, I'm a cat maid! Haven't you heard the news?
+say pl026 | Toshiro Hitsugaya | Don't tell me that-
+say momo_hinamori@holloween | Momo Hinamori | Rangiku told us we're having a Holloween party and should all dress up as something spooky.
+say pl026 | Toshiro Hitsugaya | And you chose to be a cat maid...?
+say momo_hinamori@holloween | Momo Hinamori | I provide bad service. And now imagine if you had an allergy, too.
+say pl026 | Toshiro Hitsugaya | I've got to find Matsumoto...
+say momo_hinamori@holloween | Momo Hinamori | Even Captain Aizen dressed up as a mummy. I can show you his costume, if you help me get into Muken.
+say pl026 | Toshiro Hitsugaya | Give it up, Momo.
+say momo_hinamori@holloween | Momo Hinamori | Never!
+exit A shriek echoes down the lane. Something that is not a costume drops from the rooftops.
+
+npc 97 soul An Unfortunate Choice of Words
+bg seireitei_alleyway
+desc Hollows inside the walls of the Seireitei, and a Lieutenant who takes things literally.
+art nemu_kurotsuchi
+bgm bgm_adv_0170
+say pl026 | Toshiro Hitsugaya | I can't believe this. Why are Hollows appearing in the Seireitei?
+say nemu_kurotsuchi | Nemu Kurotsuchi | Captain Hitsugaya.
+say pl026 | Toshiro Hitsugaya | Lieutenant Kurotsuchi. I'm glad you still look normal and didn't dress up like an idiot.
+say nemu_kurotsuchi | Nemu Kurotsuchi | ...
+say nemu_kurotsuchi | Nemu Kurotsuchi | Can you repeat that?
+say pl026 | Toshiro Hitsugaya | I said it seems people are dressing up as stupid things today.
+say nemu_kurotsuchi | Nemu Kurotsuchi | Have you just called Master Mayuri an idiot to my face?
+say pl026 | Toshiro Hitsugaya | What?! No, he is always dressed up, I didn't even think of him!
+say nemu_kurotsuchi | Nemu Kurotsuchi | I can't let something like this go.
+exit Nemu steps forward. She is not listening anymore.
+
+npc 97 soul Missing Bait
+bg seireitei_alleyway
+desc Nemu has stopped attacking. Something has gone missing from the Twelfth Division.
+art nemu_kurotsuchi
+bgm bgm_adv_0180
+say pl026 | Toshiro Hitsugaya | Stop attacking me! I was talking about Hinamori, and probably Matsumoto!
+say nemu_kurotsuchi | Nemu Kurotsuchi | Oh. Why didn't you say so earlier?
+say pl026 | Toshiro Hitsugaya | Because you didn't let me!
+say nemu_kurotsuchi | Nemu Kurotsuchi | I see. I apologize for my actions.
+say pl026 | Toshiro Hitsugaya | It's fine. Maybe you can help me. Have you seen Matsumoto anywhere? Apparently she's holding some kind of costume party she calls Holloween.
+say pl026 | Toshiro Hitsugaya | It's inspired by something similar in the World of the Living.
+say nemu_kurotsuchi | Nemu Kurotsuchi | I'm sorry, I have not seen her today. I've been looking for some Hollow bait that disappeared from our laboratory.
+say pl026 | Toshiro Hitsugaya | Hollow bait? That could explain why I found Hollows inside the walls.
+say pl026 | Toshiro Hitsugaya | You don't think Matsumoto and the missing bait are related, do you?
+say nemu_kurotsuchi | Nemu Kurotsuchi | I have not thought about this yet.
+say pl026 | Toshiro Hitsugaya | Either way, I have to find her. Let me know once you've located the missing bait!
+say nemu_kurotsuchi | Nemu Kurotsuchi | I will.
+exit Nemu bows and leaves. Further down the lane, two Hollows howl at the lanterns.
+
+npc 10 soul Trick or Treat
+bg seireitei_water_pathway
+desc A succubus and a... whatever Renji is supposed to be.
+bgm bgm_adv_0360
+say pl026 | Toshiro Hitsugaya | Where could she be...?
+say pl010@holloween | Rukia Kuchiki | Trick or treat, Captain Hitsugaya!
+say pl026 | Toshiro Hitsugaya | Kuchiki?! What- what are you wearing?!
+say pl010@holloween | Rukia Kuchiki | Isn't it cute? I'm a succubus. This is my Holloween costume.
+say pl026 | Toshiro Hitsugaya | I-
+say pl008@holloween | Renji Abarai | Oh, there you are. I was trying to catch up to you, but it's kinda hard to walk in this.
+say pl026 | Toshiro Hitsugaya | Not you, too.
+say pl010@holloween | Rukia Kuchiki | Captain Hitsugaya, why aren't you dressed up?
+say pl026 | Toshiro Hitsugaya | First of all, I didn't have time to even think about a costume, because I was busy doing the tasks that were assigned to Matsumoto.
+say pl026 | Toshiro Hitsugaya | Second of all, where is Matsumoto in the first place?!
+say pl008@holloween | Renji Abarai | She's at the Holloween party. At-
+say pl010@holloween | Rukia Kuchiki | Silence, Renji! It sounds like telling him the location could ruin the party.
+say pl008@holloween | Renji Abarai | You're right.
+say pl026 | Toshiro Hitsugaya | This is unbelievable...
+exit Rukia draws Sode no Shirayuki, wings and all. The party's location will have to be earned.
+
+npc 10 soul The Third Division
+bg seireitei_water_pathway
+desc Rukia gives up the party's location.
+bgm bgm_adv_0080
+say pl026 | Toshiro Hitsugaya | Are you going to tell me where that party is now?
+say pl010@holloween | Rukia Kuchiki | I guess I have no choice. The party is being held in the Third Division barracks.
+say pl026 | Toshiro Hitsugaya | The Third Division, huh?
+say pl010@holloween | Rukia Kuchiki | Rangiku said something about there being no Captain and that Kira would never say no to her.
+say pl026 | Toshiro Hitsugaya | This woman needs to be stopped. I can't believe this.
+exit On the way to the Third Division, three Hollows block the road between the lanterns.
+
+npc 7 soul The Party
+bg seireitei_barracks
+desc The Third Division barracks: loud music, pumpkins, garlands, and a familiar guest at the door.
+bgm bgm_adv_0330
+say - |  | Captain Hitsugaya arrives in front of the Third Division barracks and already hears loud music. There is decoration everywhere he looks: pumpkins, fake cobwebs and tons of garlands.
+say - |  | Soul Reapers in every costume imaginable are enjoying the party.
+say pl026 | Toshiro Hitsugaya | Matsumoto! Come out immediately, I know you're here!
+say pl007@holloween | Yoruichi Shihoin | Why are you so angry, Captain Hitsugaya? Didn't you get any treats yet?
+say pl026 | Toshiro Hitsugaya | Even you are here?
+say pl007@holloween | Yoruichi Shihoin | Well, I kind of told Rangiku about Halloween in the first place. Of course I was joining in for some fun.
+say pl026 | Toshiro Hitsugaya | Does the Head Captain know about this?
+say pl007@holloween | Yoruichi Shihoin | Why would he?
+say pl026 | Toshiro Hitsugaya | Enough. I'm sorry, but I'm going straight in there to drag Matsumoto back to her office.
+say pl007@holloween | Yoruichi Shihoin | I'm afraid I can't let you do that. Don't you see how much fun everyone is having?
+say pl026 | Toshiro Hitsugaya | I'm certainly having none.
+exit Yoruichi stretches, grinning. The Goddess of Flash isn't moving from that door.
+
+npc 12 soul Matsumoto!
+bg barracks_wall
+desc Inside the barracks, the hostess of the evening.
+bgm bgm_adv_0330
+say - |  | After the encounter with Yoruichi, the Captain bursts into the barracks.
+say pl026 | Toshiro Hitsugaya | Matsumoto!
+say pl012@holloween | Rangiku Matsumoto | Captain! I'm so glad you came, hello! And happy Holloween!
+say pl026 | Toshiro Hitsugaya | I'm not nearly as glad to see you. Do you have any idea what you've caused?
+say pl012@holloween | Rangiku Matsumoto | A lot of fun?
+say pl026 | Toshiro Hitsugaya | You're coming back with me, right now.
+say pl012@holloween | Rangiku Matsumoto | There is no way I'm leaving already. Do you know how long it took to get dressed up in the first place?
+say pl026 | Toshiro Hitsugaya | That's none of my concern!
+exit Rangiku sets down her drink. If he wants her to leave, he'll have to make her.
+
+npc 29 soul The Real Culprit
+bg barracks_wall
+desc The party is over. Or so Toshiro thinks.
+bgm bgm_adv_0330
+say pl026 | Toshiro Hitsugaya | Come on, now.
+say pl012@holloween | Rangiku Matsumoto | Just because I wanted to have a fun party...
+say pl026 | Toshiro Hitsugaya | You know, I'm used to you not working properly. It's one thing for you to abandon your tasks. Same for randomly decorating our barracks. But I draw the line when you endanger other people.
+say pl026 | Toshiro Hitsugaya | And that is exactly what you've done.
+say pl012@holloween | Rangiku Matsumoto | Endanger? Are you talking about alcohol poisoning?
+say pl026 | Toshiro Hitsugaya | I'm talking about the Hollow bait you stole from Captain Kurotsuchi's laboratory for your themed party. Do you have any idea how many Hollows are in the Seireitei right now?
+say pl012@holloween | Rangiku Matsumoto | Stolen Hollow bait? Wait a second, I have nothing to do with that. I called it Holloween as a wordplay on Halloween. You really think I would lure Hollows in here?
+say pl012@holloween | Rangiku Matsumoto | How could we have fun knowing there are Hollows everywhere?
+say pl026 | Toshiro Hitsugaya | But who else would do something like this?!
+music bgm_adv_0230
+say pl029@post_aizen | Mayuri Kurotsuchi | It seems my experiment has failed.
+say pl012@holloween | Rangiku Matsumoto | Captain Kurotsuchi?
+say pl026 | Toshiro Hitsugaya | What are you doing here? What experiment are you talking about?
+say pl029@post_aizen | Mayuri Kurotsuchi | I heard earlier that some Soul Reapers were planning to hold a party called Holloween.
+say pl029@post_aizen | Mayuri Kurotsuchi | And that name got me wondering: how ready would a bunch of drunken Soul Reapers be when an attack arises?
+say pl029@post_aizen | Mayuri Kurotsuchi | Sadly, Captain Hitsugaya took care of most of them, so I will have to redo this experiment another day, when nobody expects it.
+say pl026 | Toshiro Hitsugaya | But even Nemu said the bait was stolen.
+say pl029@post_aizen | Mayuri Kurotsuchi | Did she say that? That just speaks to her not checking our stock properly. I don't tell her everything I do, for this very reason.
+say pl026 | Toshiro Hitsugaya | I still can't believe you would risk so many lives for an experiment like this.
+say pl029@post_aizen | Mayuri Kurotsuchi | You really can't believe that?
+say pl012@holloween | Rangiku Matsumoto | And even worse, you made me look guilty in front of my Captain!
+say pl026 | Toshiro Hitsugaya | Is that really worse...?
+say pl012@holloween | Rangiku Matsumoto | To me it is, and I won't let that slide!
+exit Rangiku draws Haineko and stands at her Captain's side. Mayuri sighs, as if this were all very tedious.
+
+npc 12 soul Holloween Is Here to Stay
+bg barracks_wall
+desc After Mayuri leaves, the party goes on.
+bgm bgm_adv_0340
+say - |  | After Mayuri leaves, the Holloween party continues, and even Captain Hitsugaya stays a little longer.
+say pl012@holloween | Rangiku Matsumoto | Isn't this fun?
+say pl026 | Toshiro Hitsugaya | Well, it could be, if you'd planned it properly and hadn't left me all your work.
+say pl012@holloween | Rangiku Matsumoto | Huh? I never told you to do it. I was about to do it all tomorrow.
+say pl026 | Toshiro Hitsugaya | We both know that wasn't happening.
+say pl012@holloween | Rangiku Matsumoto | Or maybe the day after tomorrow...
+say - |  | Toshiro sighs.
+say pl026 | Toshiro Hitsugaya | Let's not think about that now.
+say pl012@holloween | Rangiku Matsumoto | Yeah. Let's think about your costume for next year instead. This time I made an exception, but next time nobody gets in without dressing up.
+say pl026 | Toshiro Hitsugaya | So we're doing this every year now?
+say pl012@holloween | Rangiku Matsumoto | Of course we are! Holloween is here to stay!
+say - |  | It was a long night for Captain Hitsugaya, but almost a usual one for Rangiku.
+say - |  | While one of them couldn't wait to get back to his normal life, the other was already planning an even bigger party for next year.
+exit Happy Holloween!

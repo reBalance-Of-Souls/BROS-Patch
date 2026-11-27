@@ -1,0 +1,25 @@
+# An ADVENTURE event's route -- The Fourth Division's Day Off (the Swimsuit event, 2026 script).
+# realm, then one node per pin: node <row> <column> fight|story key=value ... [name=<rest>]
+# stages: 29 Seireitei Pathway (Day) for both Seireitei fights (they never leave the walkway between them; Venx,
+#   2026-11-24), 1 Karakura Intersection (Day), 30 [???] Beach - Morning for the beach fight: Missions stage row 30
+#   is bg002_02, the beach stage since 2026-11-26 (until then 3 Karakura Forest Park (Day) stood in for it)
+# effects: no_awaken seals the PLAYER's Awakening, foe_no_awaken the foes'; several are joined with +
+# ally=<chara>[,<chara>]: allies at the player's side; with=<chara>: a group fight's other foes (dcbossrush 0.19.x)
+# player=19,5: Retsu Unohana in her Red Swimsuit for the beach fight. The number is the costume SLOT, which counts
+#   every cos_ row in order, mission-only ones too (cos_05 = 5); 4 was cos_04, another skin (Venx, 2026-11-24).
+#   The event's `unlock costume` lines count PICKER places instead (mission-only rows skipped: cos_05 = 4)
+# bgm=bgm_ext_bbs_summer: Brave Souls' summer event music, a state ADDED to Sound/bgm.bnk (Files/Music/mk_bgm_extra.py)
+# Fighters: 11 Shuhei Hisagi, 12 Rangiku Matsumoto, 13 Izuru Kira, 26 Toshiro Hitsugaya, 35 Tier Halibel, 40 Isane Kotetsu, 97 Nemu Kurotsuchi
+realm soul
+node 1 0 story story=0
+node 2 0 story story=1
+node 3 0 fight chara=13 with=11 stage=29 konpaku=3 atk=95 form=0 cpu=4 effects=no_awaken ally=40 ally_kon=3 ally_cpu=5 name=Izuru Kira and Shuhei Hisagi
+node 4 0 story story=2
+node 5 0 fight chara=97 with=12 stage=29 konpaku=3 atk=100 form=0 cpu=5 effects=no_awaken ally=40 ally_kon=3 ally_cpu=5 name=Nemu Kurotsuchi and Rangiku Matsumoto
+node 6 0 story story=3
+node 7 0 story story=4 realm=living
+node 8 0 fight chara=12 stage=1 konpaku=5 atk=100 form=1 cpu=6 effects=no_awaken realm=living ally=40,26 ally_kon=3 ally_cpu=5 name=Rangiku Matsumoto (Awakened)
+node 9 0 story story=5 realm=living
+node 10 0 fight chara=35 stage=30 konpaku=9 atk=100 form=0 cpu=7 effects=no_awaken+foe_no_awaken player=19,5 bgm=bgm_ext_bbs_summer realm=living name=Tier Halibel
+node 11 0 story story=6 realm=living
+node 12 0 story story=7 realm=living

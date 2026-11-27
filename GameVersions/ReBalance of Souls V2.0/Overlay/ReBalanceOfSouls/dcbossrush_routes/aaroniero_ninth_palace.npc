@@ -1,0 +1,162 @@
+# An ADVENTURE event's story nodes -- written by DataChakka's Events Builder.
+# The format is dcbossrush_npc.txt's (npc / spot, art, image, line, exit, desc, a | ..., b | ...).
+
+npc 41 hueco Glotoneria
+bg maggots_nest
+desc The Forest of Menos, under the sands of Hueco Mundo. One Gillian in the crowd still knows who it is.
+say - |  | Long ago. The Forest of Menos, far beneath the white sands of Hueco Mundo.
+say - |  | Gillian are made of hundreds of Hollows crushed together - Most of them have no mind left at all... They wander, they eat, and they forget.
+say - |  | ...One of them has not forgotten anything.
+say - | A High Voice | Still hungry... We're always hungry...
+say - | A Low Voice | ...Then eat.
+say - |  | The Gillian closes its jaw around the Hollow beside it. Then the next one. Then the next one. Then the next. Whatever it swallows stays with it, along with every trick that Hollow ever knew.
+say - | A High Voice | They taste different when they're scared, you know.
+say - | A Low Voice | ...You say that every time. These Gillian all taste the same in my eyes.
+say - |  | Something huge shifts in the dark between the trees. Another Menos, drawn in by all that Reiatsu packed into a single pair of twins.
+say - | A High Voice | ...Oh, look. It came to us.
+say - | A Low Voice | ...How polite.
+exit The Gillian turns toward the Menos and opens its mouth, charging a crimson orb of deathly energy.
+
+npc 41 hueco The Hollow That Came Home
+bg hueco_mundo_desert
+desc A Hollow crawls back across the sand with something inside it that doesn't belong there.
+say - |  | Some time later, something drags itself across the desert, leaking Reiatsu with every step.
+say - |  | It is what's left of the Hollow that Soul Society designated 'Metastacia'. The Thirteenth Division put it down after a brutal confrontation, but not before it got inside one of their own.
+say - | A High Voice | This one smells wrong. Like a Soul Reaper.
+say - | A Low Voice | ...Because it ate one. A Lieutenant, by the feel of it. It's still wearing him.
+say - | A High Voice | Look at the flesh! The bones protruding! The blood it leaves like paint..! Can we..?
+say - | A Low Voice | ...We can.
+say - |  | The Gillian ambushes Metastacia, cannibalizing it whole. For a moment nothing happens... Then the memories start, and they don't stop.
+scene seireitei_grounds
+say pl031 | Kaien Shiba | Oi, Kuchiki! Your guard's dropping again!
+say - |  | A courtyard in the Seireitei. A small, serious girl gripping a wooden sword. A wife named Miyako. A white-haired Captain coughing into his sleeve. A sword that spins water into a trident.
+say pl031 | Kaien Shiba | Flood the Seas and Skies, Nejibana!
+scene hueco_mundo_desert
+say - | A High Voice | ...Ohhh... This one's good. This one's really good.
+say - | A Low Voice | ...His face and his voice. His Zanpakuto, too. All ours now. We have outdone ourselves.
+say - | A High Voice | ...And the little one with the wooden sword. She cried for him, didn't she? I want to see that again... I want to taste her tears... Taste her blood..!
+
+npc 20 hueco The Ninth
+bg aizens_throne
+desc Las Noches has a new master, and he is looking for allies.
+say - |  | Las Noches. A palace built in the middle of the desert, under a blue sky that someone painted on.
+say - |  | As the stranger holds a dark orb in glass, geometric casing towards them, the Gillian's mask tears away. What's left is tall and thin, with a glass cylinder for a head. Two small skulls float inside it in red amniotic liquid. Under their cloak is a mass of tentacles and tendrils, lined with teeth and fluids. They speak in turn, one high and one low.
+say pl020 | Sosuke Aizen | A Gillian that kept its own mind. That's rare. Most of your kind often succumb to the Hogyoku's power, evaporating instantaneously. Tell me your name, Arrancar.
+say aaroniero_aaruruerie | Aaroniero Arruruerie | We are Aaroniero Aaruruerie, Lord Aizen. Both of us. Two minds... One body... And a single focus.
+say pl020 | Sosuke Aizen | So I see. Everything you devour stays with you, along with what it could do. There's no ceiling to how far you can grow...
+say pl018 | Gin Ichimaru | Still just a Gillian, though. The lowest class of Menos, wantin' a seat at the big table. Ain't that a little funny, Captain Aizen?
+say aaroniero_aaruruerie | Aaroniero Arruruerie | ...Lowest class for today.
+say aaroniero_aaruruerie | Aaroniero Arruruerie | Ask us that question again in a hundred years. After we have consumed all these sands offer.
+say pl020 | Sosuke Aizen | You will become the Ninth Espada, Aaroniero Arruruerie. Is there anything you require?
+say aaroniero_aaruruerie | Aaroniero Arruruerie | A palace with no windows.
+say pl018 | Gin Ichimaru | No windows? In a place where the sun never sets? And here I thought the sun inside Las Noches was a luxury... You're gonna be bumpin' into the furniture. Besides, which one of you wants that? Sure there's not gonna be some sibling quarreling?
+say aaroniero_aaruruerie | Aaroniero Arruruerie | You forget. We are one. And we like the dark. In the dark, we can wear our favorite face...
+say pl020 | Sosuke Aizen | Then you'll have one. Build it however you like. Await more orders from either myself, Gin Ichimaru, or Kaname Tosen. We look forward to awakening your true potential, Aaroniero Aaruruerie...
+
+npc 31 hueco Borrowed Memories
+bg las_noches_corridor
+desc The Ninth Palace, where no light gets in. Aaroniero Aaruruerie practices their metamorphosis into Kaien Shiba.
+say - |  | The Ninth Palace. Every window has been bricked over. Not a single lamp is lit. Pure, unassuming darkness.
+say pl031 | Kaien Shiba | Right. Like this. Shoulders loose. Hand on the back of the neck. Grin... God, being a Soul Reaper is tough work...
+say aaroniero_aaruruerie | Aaroniero Arruruerie | ...He grinned all the time, this one. It's exhausting. I can't keep the angle right!
+say aaroniero_aaruruerie | Aaroniero Arruruerie | ...Then keep at it until it isn't wrong. Don't get it wrong, even the language he used is alien. We have much to learn.
+say - |  | He closes his eyes and lets one of the stolen memories play, the way someone else might reread a favorite book, or watch a film.
+scene seireitei_grounds
+say - |  | Decades ago. The Thirteenth Division's training ground. A new recruit faces her Lieutenant, wooden sword raised, standing far too stiffly.
+say pl031 | Kaien Shiba | You look like you're about to apologise to your sword, Kuchiki. Relax. Come at me like you mean it.
+say pl010 | Rukia Kuchiki | Y-yes, Lieutenant Shiba, sir!
+say pl031 | Kaien Shiba | And stop calling me "Sir". It makes me sound like an old man...
+say pl010 | Rukia Kuchiki | ...Yes, Lieutenant Shiba, sir!
+exit Kaien laughs and lifts his practice sword. The memory isn't his, but the laugh comes out right.
+
+npc 20 hueco Uninvited Guests
+bg espada_meeting_room
+desc The Espada are called to the long table. Intruders have broken into Las Noches.
+say - |  | Las Noches. The Espada sit around a long table while Aizen is poured a cup of tea.
+say pl020 | Sosuke Aizen | Intruders have entered Las Noches. Allies of the girl Orihime Inoue, come to take her back.
+say pl038 | Grimmjow Jaegerjaquez | Tch. So he actually came.
+say pl020 | Sosuke Aizen | There's no need for alarm. Go back to your palaces and wait. If they reach you, deal with them however you see fit.
+say pl039 | Szayelaporro Granz | Our Ninth is awfully quiet today. Not hungry?
+show img_screenshot_2026_11_04_at_20_54_51_2.png
+say aaroniero_aaruruerie | Aaroniero Arruruerie | ...Starving.
+say aaroniero_aaruruerie | Aaroniero Arruruerie | ...But prey tastes better when it walks in on its own. Unassuming. A canvas for terror.
+say pl036 | Ulquiorra Cifer | ...You talk as if you already know which one will come to you.
+show -
+say aaroniero_aaruruerie | Aaroniero Arruruerie | We don't. Not yet.
+scene las_noches_hallway
+say - |  | Hours later, a small Reiatsu slips into the corridors near the Ninth Palace. It's cold and sharp, like frost on a blade.
+say - |  | Somewhere inside the glass, a memory that doesn't belong to Aaroniero sits up and pays attention.
+say aaroniero_aaruruerie | Aaroniero Arruruerie | ...Now we do.
+
+npc 31 hueco A Familiar Face
+bg las_noches_corridor
+desc A dark hall; in the depths, a voice Rukia hasn't heard in decades calls her by name.
+show img_screenshot_2026_11_04_at_20_54_05.png
+say - |  | Rukia runs through the corridors of Las Noches until they open into a hall with no light at all.
+say pl010 | Rukia Kuchiki | (This Reiatsu... It can't be.)
+show img_screenshot_2026_11_04_at_20_54_17.png
+say - | ??? | Been a while, Kuchiki.
+show img_screenshot_2026_11_04_at_20_55_12.png
+say pl010 | Rukia Kuchiki | ...Lieutenant... Kaien... Sir..?
+say pl010 | Rukia Kuchiki | That's impossible. Y-you... Died. I was there. I..!
+show img_screenshot_2026_11_04_at_20_56_09.png
+say pl031 | Kaien Shiba | I know. I remember all of it. You don't have to say it...
+say pl031 | Kaien Shiba | It's alright, Kuchiki. I'm not angry. I never was...
+show img_screenshot_2026_11_04_at_20_55_24.png
+say - |  | Rukia's sword arm drops a few inches. Her eyes are wet with tears; not warm, but cold. As if the rain of that fateful evening were falling upon her face this very moment.
+say pl031 | Kaien Shiba | Stay here with me. Your friends will be fine without you. Let them go on ahead... Let's catch up!
+say pl010 | Rukia Kuchiki | ...
+say pl010 | Rukia Kuchiki | Lieutenant Kaien taught me where a person's heart is. He said it lives in the bonds you have with other people.
+show img_screenshot_2026_11_04_at_20_55_17.png
+say pl010 | Rukia Kuchiki | He would never ask me to leave my friends behind. Not for anything.
+say pl010 | Rukia Kuchiki | ...Who... Are you..?
+show img_screenshot_2026_11_04_at_21_15_05.png
+say - |  | Kaien's grin stays exactly where it is, offering no answers.
+exit Water spins into a trident in Kaien's hands. Rukia draws her blade.
+
+npc 41 hueco Light in the Ninth Palace
+bg las_noches_hallway
+desc The wall comes down. In the light, the face Aaroniero stole falls away.
+show img_screenshot_2026_11_04_at_21_11_23.png
+say - |  | Rukia's ice tears straight through the palace wall. Light from the false sky of Las Noches pours into the hall.
+show img_screenshot_2026_11_04_at_21_11_31.png
+say - |  | Kaien's face flakes away like old paint, the flesh dropping off, wicked away like mist off a window. Underneath is a glass cylinder full of red liquid, with two small skulls bobbing inside.
+show img_screenshot_2026_11_04_at_21_11_45.png
+say aaroniero_aaruruerie | Aaroniero Arruruerie | Ahh!! That was rude!!
+say aaroniero_aaruruerie | Aaroniero Arruruerie | ...She worked out the light. Faster than we hoped.
+show img_screenshot_2026_11_04_at_21_13_17.png
+say pl010 | Rukia Kuchiki | ...So that's your real face.
+show img_screenshot_2026_11_04_at_21_13_25.png
+say aaroniero_aaruruerie | Aaroniero Arruruerie | I am Espada number nine. Aaroniero Arruruerie.
+say aaroniero_aaruruerie | Aaroniero Arruruerie | Our Glotoneria eats Hollows and keeps them. Thirty-three thousand, six hundred and fifty of them. All of them in here with us.
+show img_screenshot_2026_11_04_at_21_13_52.png
+say aaroniero_aaruruerie | Aaroniero Arruruerie | And one Lieutenant of the Thirteenth Division. You remember him, don't you, Kuchiki?
+show img_screenshot_2026_11_04_at_21_15_51.png
+say aaroniero_aaruruerie | Aaroniero Arruruerie | ...You're the one who killed him, aren't you?
+say pl010 | Rukia Kuchiki | ...
+say pl010 | Rukia Kuchiki | I remember. That's exactly why I won't let you keep wearing him.
+say aaroniero_aaruruerie | Aaroniero Arruruerie | You may have exposed our form, but you will never be able to erase the memories. The blood that you shed. The pain that you caused. You should be relishing the chance to see your beloved Lieutenant once more.
+show img_screenshot_2026_11_04_at_21_16_10.png
+say - |  | The room's darkness mixes with the light beaming from the crater in the wall; the temperature drops significantly, as if the belly of Hell and the beams of Heaven itself were meeting.
+exit Rukia steadies her blade. The hole in the wall keeps letting in more light.
+
+npc 10 hueco Satiety
+bg las_noches_hallway
+desc Rukia's sword is broken. Aaroniero is close enough to touch.
+show img_screenshot_2026_11_04_at_21_26_06.png
+say - |  | The trident goes through Rukia's side, blood seeping as she tries to stop her sides from splitting open. Aaroniero, wearing Kaien's face again in the shadow of the broken wall, leans in close.
+say pl031 | Kaien Shiba | You let me get too close, Kuchiki. Same mistake as last time.
+show img_screenshot_2026_11_04_at_21_27_33.png
+say pl010 | Rukia Kuchiki | No. This time, I wanted you close.
+show img_screenshot_2026_11_04_at_21_27_03.png
+say - |  | The broken blade of Sode no Shirayuki grows back out of ice. San no mai, Shirafune.
+show img_screenshot_2026_11_04_at_21_27_17.png
+say - |  | The ice runs up through the glass cylinder and through both skulls inside it at once.
+say aaroniero_aaruruerie | Aaroniero Arruruerie | No... Im...possible..!!
+say aaroniero_aaruruerie | Aaroniero Arruruerie | ...Lord... Aizen...!!!!
+show img_screenshot_2026_11_04_at_21_27_50.png
+say - |  | The glass shatters. The body that was never really his comes apart on the stone floor, the tentacles bubbling into an acrid puddle of bile and acid.
+say - |  | For a moment, Rukia feels a hand on her head. Big and warm, a little rough. Exactly how she remembers it.
+say pl031 | Kaien Shiba | Thanks, Kuchiki. Thanks to you, my heart gets to stay here.
+say pl010 | Rukia Kuchiki | ...
+say - |  | Rukia sinks to her knees in the light, the tears beginning to flow quietly. The Ninth Palace stays bright long after she can no longer hold her sword.

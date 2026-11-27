@@ -1,0 +1,11 @@
+# token xbox ps4 ps5 pcQWERTY pcQWERTZ pcAZERTY -- from Text/ButtonReplace.bin (mk_key_art.py)
+ps5_Lleftright xbox_Lleftright ps4_Lleftright ps5_Lleftright pc_A,pc_D pc_A,pc_D pc_Q,pc_D
+ps5_Dleftright xbox_Dleftright ps4_Dleftright ps5_Dleftright pc_Left,pc_Right pc_Left,pc_Right pc_Left,pc_Right
+ps5_Lupdown xbox_Lupdown ps4_Lupdown ps5_Lupdown pc_W,pc_S pc_W,pc_S pc_Z,pc_S
+ps5_Dupdown xbox_Dupdown ps4_Dupdown ps5_Dupdown pc_Up,pc_Down pc_Up,pc_Down pc_Up,pc_Down
+ps5_Decide xbox_ABA ps4_ABcross ps5_ABcross pc_Enter pc_Enter pc_Entree
+ps5_Cancel xbox_ABB ps4_ABcircle ps5_ABcircle pc_backspace pc_backspace pc_Echap
+ps5_options xbox_start ps4_options ps5_options pc_F3 pc_F3 pc_F3
+ps5_L1 xbox_LB ps4_L1 ps5_L1 pc_Q pc_Q pc_A
+ps5_R1 xbox_RB ps4_R1 ps5_R1 pc_E pc_E pc_E
+ps5_Rleftright xbox_Rleftright ps4_Rleftright ps5_Rleftright pc_none pc_none pc_none

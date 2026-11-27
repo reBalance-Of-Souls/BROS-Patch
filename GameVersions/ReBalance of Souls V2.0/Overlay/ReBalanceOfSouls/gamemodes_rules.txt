@@ -1,0 +1,95 @@
+# Extras > GAMEMODES RULES (replay.dll, 2026-11-22): what each Room Match game mode and option does.
+# Same format as balance_changes.txt: an entry = its name alone on a line, ending in ":"; its lines under it, one tab
+# a level; a line ending in ":" is a heading (yellow, shown without the ":"). Blank lines and # lines are skipped.
+# "@gamemodes" alone on a line: every mode of gamemodes.txt goes there, in the Game Modes tab (the launcher writes
+# gamemodes.txt from GameModes/<mode>/Mode.json: edit a mode's rules there, not here). These entries: the Room
+# Options tab. ASCII only, and no '=' (the game's font has no such glyph: the line would fall back to Segoe UI).
+# Wrapped and cut in pages by replay.dll (15 lines a page).
+Game Mode:
+	How it works:
+		The room owner picks it on the Create room dialog's Game Mode row (Off: the normal rules). It changes the rules for every player in the room, on top of this update's balance.
+	With the other rows:
+		It works with Tag Battle, Team Battle, Multiplayer Team Battle, 2D Camera and Motion inputs. The room list shows the battle type, then the Game Mode and the options turned on.
+	Same version:
+		A player whose game does not have the same version of the mode cannot be Ready.
+
+@gamemodes
+
+Tag Battle:
+	Two characters a side:
+		One fights, the other waits on the bench: swap them during the fight.
+	1v1, 2 players:
+		Each player picks two characters: one in Battle Settings, the other with Character 2 in the lobby.
+	1v2, 3 players:
+		Team 1 is one player with two characters, team 2 two players with one character each. Join a team in the lobby: Ready waits until both teams are full.
+	2v2, 4 players:
+		Two players a team, one character each. The first to join a team starts the fight, the other one on the bench.
+	Tag:
+		Press two of Light, Heavy and Signature together, or your Rapid Reverse button.
+	Tag in neutral:
+		Free, from standing, walking, running, a step or a dash. The opponent freezes while your partner comes in, then your partner has a short recovery where it cannot act or guard: it can be punished.
+	Tag in a combo:
+		Costs 1.5 Reverse bars, once a combo, after the last hit of a move. The opponent stays in hitstun while your partner comes in. No Yellow Reverse for the rest of that combo.
+	Kikon switch:
+		Kikon, then hold Heavy: on hit, the opponent is forced to switch and its partner comes in with the blocked Kikon cinematic. No Konpaku is lost.
+	KO:
+		A character with no Konpaku left is out and its partner comes in. A side with no character left loses.
+	Gauges:
+		SP, Reverse, Fighting Spirit, HP and Konpaku are each character's own.
+	Rapid Reverse:
+		Only once your partner is out: until then, its input is the tag.
+
+Team Battle:
+	One after the other:
+		KOF style: 2 or 3 characters a side, played in order. No tag.
+	2v2 or 3v3, 2 players:
+		Pick your characters in the lobby: Battle Settings, Character 2, then Character 3 in 3v3.
+	KO:
+		When a character loses its last Konpaku, the next one of its side comes in. A side with no character left loses.
+	The one who made the KO:
+		Keeps its HP and Konpaku (HP back up to 31% if it was under 30%). Back to base form, Fighting Spirit and SP at 0, Reverse full.
+	Timer:
+		The round timer starts again at each KO.
+	The rest:
+		Rapid Reverse works as in a normal match. No tag, no Kikon switch.
+
+Multiplayer Team Battle:
+	A player a character:
+		Team Battle rules, but each character of a team is played by its own player.
+	2v2, 4 players:
+		Two players a team, one character each.
+	1v2 (2v2), 3 players:
+		Team 1 is one player with two characters, team 2 two players with one character each.
+	Lobby:
+		Join a team in the lobby: Ready waits until both teams are full.
+	The rest:
+		As in Team Battle: a KO brings the next character in, the one who made the KO keeps its HP and Konpaku with its gauges and form reset, and the timer starts again.
+
+2D Camera:
+	Side view:
+		The fight is filmed from the side, as in a 2D fighting game. Your character starts on the left of your screen; the camera zooms out as the fighters move apart and turns with them when they sidestep around each other.
+	Same game:
+		Only the camera changes: moves, damage and combos are the normal ones. Cinematics (Kikon, Awakening, intros) keep their own cameras.
+	Controls follow the screen:
+		Left and right move you left and right on the screen: toward or away from your opponent depending on your side. Up and down sidestep into and out of the screen. Steps and Hoho take the same directions.
+	For everyone:
+		The room owner turns it on: every player in the room plays with it.
+
+Motion inputs:
+	Same game, new inputs:
+		Moves, damage and combos are the normal ones: only the way you do them changes. Directions in numpad notation (6 is forward).
+	Directions:
+		With 2D Camera: read on the screen, 6 is toward your opponent. With the normal camera: read on the stick as you hold it (6 is right, 8 is up), whatever your side.
+	Signature:
+		236 + Light. Forward Signature: 623 + Light, back Signature: 421 + Light, for the characters that have one. Wherever a move waits for the Signature button (its next hit, a follow-up): 236 + Light.
+	Specials:
+		Reverse: 214 + Light. Hoho: 623 + Heavy. Tilt: 236 + Heavy (forward + Heavy is a plain Heavy). SP1: 236236 + Light. SP2: 236236 + Heavy.
+	Kikon:
+		214 + Heavy. To charge it, keep Heavy held, or do 214 + Heavy again and hold it, during its opening.
+	Halibel and Yhwach:
+		Halibel's side Signatures: 8 or 2 + Light with 2D Camera, 4 or 6 + Light with the normal camera. Yhwach's back SP1: 214214 + Light, his forward SP1: 41236 + Light.
+	Buttons:
+		The Signature and Kikon buttons and the SP trigger do nothing. Light, Heavy, Guard, Dash, Grab, Awakening (L3 + R3) and Rapid Reverse (Light + Heavy) stay. No motion dashes.
+	For everyone:
+		The room owner turns it on: every player in the room plays with it.
+

@@ -1,0 +1,1 @@
+CPU Lv.6-X on (dcreborn 0.33.8+). Delete this file for the game's own CPU Lv.1-5 only.
