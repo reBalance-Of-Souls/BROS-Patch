@@ -8,7 +8,8 @@ exit /b
 #>
 # BROS Diagnostic -- one report of what happened in a player's games: crashes, performance, online matches, inputs.
 #
-# Double-click it. It only READS: nothing on the PC is changed and nothing is sent anywhere. It writes one zip on the
+# Double-click it. It only READS (one git fetch --dry-run downloads the next update's data into .git, no file moves):
+# nothing is sent anywhere. It writes one zip on the
 # Desktop (BROS_Diagnostic_<date>.zip) that the player sends to the patch team by hand. report.txt inside starts with
 # what stands out, then every detail the team needs to work without asking twice.
 #
@@ -17,7 +18,7 @@ exit /b
 
 $ErrorActionPreference = 'Continue'
 $ProgressPreference = 'SilentlyContinue'
-$DiagVersion = '2026-10-04'
+$DiagVersion = '2026-11-27'
 $NoPause = [bool]$env:BROS_DIAG_NOPAUSE
 $Inv = [Globalization.CultureInfo]::InvariantCulture
 
@@ -34,6 +35,8 @@ Say '    - which programs run right now (names only) and which mods sit in the g
 Say '    - Windows'' records of game crashes, graphics driver resets and memory shortages (last 30 days)'
 Say '    - Steam''s lines about this game''s launches, Steam disconnections and controllers (IP addresses removed)'
 Say '    - a 20-second ping test of your connection'
+Say '    - the update state of the patch folder, a test that GitHub answers, and the launcher''s install reports'
+Say '    - your antivirus'' name and whether Windows blocks programs from writing in your folders'
 Say '  It takes about a minute.'
 Say ''
 
@@ -138,6 +141,177 @@ if ($git -and (Test-Path (Join-Path $root '.git'))) {
         if ($dirty -gt 0) { Flag ("The patch folder has {0} file(s) changed by hand: the launcher may not install what the patch ships." -f $dirty) }
     } catch { $inst.Add('git: could not be read') }
 } else { $inst.Add('git: not available, or the patch folder is not a git clone') }
+
+# ============================================================ the update (2026-11-27: a failed update shows only
+# "exit status 128" in the launcher; this keeps git's own words, the live GitHub main and the clone's shape)
+Say '  Checking the update (git and GitHub, up to 2 minutes)...'
+$upd = Sec 'UPDATE (git in the patch folder, and GitHub)'
+function Run-Git([string[]]$a, [int]$ms) {
+    # git's stdout + stderr and its exit code, killed after $ms (a stuck fetch must not hang the diagnostic)
+    $pi = New-Object Diagnostics.ProcessStartInfo
+    $pi.FileName = $git; $pi.UseShellExecute = $false; $pi.CreateNoWindow = $true
+    $pi.RedirectStandardOutput = $true; $pi.RedirectStandardError = $true
+    $pi.Arguments = (($a | ForEach-Object { if ($_ -match '[\s"]') { '"' + ($_ -replace '"', '\"') + '"' } else { $_ } }) -join ' ')
+    $pi.EnvironmentVariables['GIT_TERMINAL_PROMPT'] = '0'
+    $p = [Diagnostics.Process]::Start($pi)
+    $eo = $p.StandardError.ReadToEndAsync(); $so = $p.StandardOutput.ReadToEndAsync()
+    if (-not $p.WaitForExit($ms)) { try { $p.Kill() } catch {}; return [pscustomobject]@{ Code = -999; Out = ''; Err = "(stopped after $($ms / 1000) s: no answer)" } }
+    return [pscustomobject]@{ Code = $p.ExitCode; Out = $so.Result.Trim(); Err = $eo.Result.Trim() }
+}
+$upd.Add("Patch folder: $root")
+if ($root -match 'OneDrive|Dropbox|Google Drive|iCloud') { Flag "UPDATE: the patch folder is inside a cloud-synced folder ($root): the sync locks and rewrites files while the launcher updates. Move it out (for example C:\BROS-Patch)." }
+$dt = Test-Path (Join-Path $root 'BalanceLeadTools\DevToken.txt')
+$upd.Add("DevToken.txt: $dt (with it the launcher only pulls; without it the patch folder is reset to GitHub's main)")
+if ($git) {
+    $upd.Add('git: ' + (Run-Git @('--version') 10000).Out + ' at ' + $git)
+    $lfs = Run-Git @('lfs', 'version') 10000
+    $upd.Add('git-lfs: ' + $(if ($lfs.Code -eq 0) { $lfs.Out } else { 'not installed' }))
+}
+if ($git -and (Test-Path (Join-Path $root '.git'))) {
+    $gd = Join-Path $root '.git'
+    foreach ($k in @('remote.origin.url', 'remote.origin.partialclonefilter', 'remote.origin.promisor', 'core.sparseCheckout', 'core.autocrlf', 'core.longpaths')) {
+        $r = Run-Git @('-C', $root, 'config', '--get', $k) 10000
+        if ($r.Out) { $upd.Add("git config ${k} = $($r.Out)") }
+    }
+    $br = (Run-Git @('-C', $root, 'rev-parse', '--abbrev-ref', 'HEAD') 10000).Out
+    $hd = (Run-Git @('-C', $root, 'rev-parse', 'HEAD') 10000).Out
+    $om = (Run-Git @('-C', $root, 'rev-parse', 'origin/main') 10000).Out
+    $upd.Add("Branch $br, HEAD $hd, origin/main (last fetch) $om")
+    foreach ($f in @('index.lock', 'HEAD.lock', 'shallow.lock', 'MERGE_HEAD', 'rebase-merge', 'rebase-apply', 'CHERRY_PICK_HEAD')) {
+        $p = Join-Path $gd $f
+        if (Test-Path $p) {
+            $upd.Add(("LEFT IN .git: {0} ({1})" -f $f, (Get-Item $p).LastWriteTime.ToString('yyyy-MM-dd HH:mm')))
+            if ($f -like '*.lock') { Flag "UPDATE: .git\$f is left over from an update that was cut off: every next update fails until it is deleted (with the launcher closed)." }
+            else { Flag "UPDATE: the patch folder is stuck in the middle of a git operation ($f)." }
+        }
+    }
+    $st = Run-Git @('-C', $root, 'status', '--porcelain', '--untracked-files=no') 60000
+    $chg = @($st.Out -split "`n" | Where-Object { $_ })
+    if ($st.Code -ne 0) { $upd.Add("git status FAILED (exit $($st.Code)): $($st.Err)"); Flag "UPDATE: git status fails in the patch folder: $($st.Err)" }
+    elseif ($chg.Count) { $upd.Add("Tracked files changed in the patch folder ($($chg.Count), first 40):"); foreach ($c in ($chg | Select-Object -First 40)) { $upd.Add("    $c") } }
+    $co = Run-Git @('-C', $root, 'count-objects', '-vH') 30000
+    if ($co.Out) { $upd.Add('git objects: ' + (($co.Out -split "`n" | ForEach-Object { $_.Trim() }) -join ', ')) }
+    $ls = Run-Git @('-C', $root, 'ls-remote', 'origin', 'refs/heads/main') 60000
+    if ($ls.Code -eq 0 -and $ls.Out) {
+        $live = ($ls.Out -split '\s+')[0]
+        $upd.Add("GitHub main right now: $live")
+        if ($hd -and $live -ne $hd) {
+            $known = (Run-Git @('-C', $root, 'merge-base', '--is-ancestor', $live, 'HEAD') 10000).Code -eq 0
+            if (-not $known) { Flag ("UPDATE: this patch folder is NOT on GitHub's main (here {0}, GitHub {1}): the game is an older version, and online it only meets players on the same files." -f $hd.Substring(0, 8), $live.Substring(0, 8)) }
+        }
+    } else {
+        $upd.Add("git ls-remote FAILED (exit $($ls.Code)): $($ls.Err)")
+        Flag "UPDATE: GitHub could not be reached from git (exit $($ls.Code)): $($ls.Err)"
+    }
+    # the launcher's own update step, without moving any branch (objects it downloads are the ones the next update needs)
+    $fe = Run-Git @('-C', $root, '-c', 'fetch.unpackLimit=1', 'fetch', '--dry-run', 'origin') 120000
+    $upd.Add("git fetch --dry-run: exit $($fe.Code)")
+    foreach ($l in (@($fe.Err -split "`n" | Where-Object { $_ -and $_ -notmatch '^\s*(remote: )?(Counting|Compressing|Receiving|Resolving|Enumerating|Total)' }) | Select-Object -Last 25)) { $upd.Add("    $($l.Trim())") }
+    if ($fe.Code -ne 0) {
+        $why = @($fe.Err -split "`n" | Where-Object { $_ -match 'fatal|error' } | Select-Object -Last 2) -join ' / '
+        Flag "UPDATE: the launcher's update step (git fetch) FAILS here (exit $($fe.Code)): $why"
+    }
+}
+foreach ($n in @('launcher_install_report.txt', 'launcher_patch_state.json')) {
+    $p = Join-Path $game $n
+    if (Test-Path $p) { $upd.Add(("{0}: {1} (copied into the zip)" -f $n, (Get-Item $p).LastWriteTime.ToString('yyyy-MM-dd HH:mm'))) } else { $upd.Add("${n}: none") }
+}
+$rep0 = Join-Path $game 'launcher_install_report.txt'
+if (Test-Path $rep0) {
+    $rt = [IO.File]::ReadAllText($rep0)
+    $m = [regex]::Match($rt, 'STILL WRONG: (\d+)'); if ($m.Success -and [int]$m.Groups[1].Value -gt 0) { Flag "INSTALL: the launcher's last install left $($m.Groups[1].Value) game file(s) wrong (launcher_install_report.txt)." }
+    $m = [regex]::Match($rt, 'NOT REGISTERED[^:]*: (\d+)'); if ($m.Success -and [int]$m.Groups[1].Value -gt 0) { Flag "INSTALL: $($m.Groups[1].Value) effect file(s) not registered by the last install." }
+    $m = [regex]::Match($rt, 'COULD NOT BE MOVED: (\d+)'); if ($m.Success -and [int]$m.Groups[1].Value -gt 0) { Flag "INSTALL: $($m.Groups[1].Value) effect folder(s) could not be moved by the last install." }
+    $m = [regex]::Match($rt, '(?ms)== For the player\s*\r?\n(.+?)(\r?\n\(|\z)'); if ($m.Success -and $m.Groups[1].Value.Trim() -ne 'nothing to report') { Flag ('INSTALL: the launcher told the player: ' + ($m.Groups[1].Value.Trim() -replace '\s+', ' ')) }
+}
+$poolJ = Join-Path $game 'launcher_content_pool.json'
+if (Test-Path $poolJ) {
+    $m = [regex]::Match([IO.File]::ReadAllText($poolJ), '"code"\s*:\s*(\d+)')
+    if ($m.Success) { $upd.Add("Online pool code the launcher computed at the last launch: $($m.Groups[1].Value) (two players meet only with the same code)") }
+}
+# Every file the pool counts, against the files the patch folder ships (any version layer, by name): one file the patch
+# does not ship is enough to put this player alone on his pool. Small files are compared by git's own hash, big ones
+# (models' motions, demos) by size only (shortcut: an edit that keeps a big file's size is missed).
+if ((Test-Path $poolJ) -and $git -and (Test-Path (Join-Path $root '.git'))) {
+    Say '  Comparing the files the online pool counts with the patch...'
+    try {
+        $pj = [IO.File]::ReadAllText($poolJ) | ConvertFrom-Json
+        $lt = Run-Git @('-C', $root, 'ls-tree', '-r', '-l', 'HEAD') 120000
+        $ship = @{}   # basename -> list of "oid size"
+        foreach ($l in ($lt.Out -split "`n")) {
+            $m = [regex]::Match($l, '^\d+ blob ([0-9a-f]{40})\s+(\d+)\t(.+)$')
+            if (-not $m.Success) { continue }
+            $bn = [IO.Path]::GetFileName($m.Groups[3].Value.Trim('"')).ToLower()
+            if (-not $ship.ContainsKey($bn)) { $ship[$bn] = New-Object System.Collections.Generic.List[string] }
+            $ship[$bn].Add($m.Groups[1].Value + ' ' + $m.Groups[2].Value)
+        }
+        $sha1 = [Security.Cryptography.SHA1]::Create()
+        $odd = New-Object System.Collections.Generic.List[string]; $nf = 0
+        $made = New-Object System.Collections.Generic.List[string]   # the launcher's own option / marker files
+        $stockNs = [long]$pj.exe[1] + 86400L * 1000000000L           # older than the exe + 1 day = from Steam's install
+        foreach ($pr in $pj.files.PSObject.Properties) {
+            $rel = $pr.Name; $size = [long]$pr.Value[0]; $nf++
+            $bn = [IO.Path]::GetFileName($rel).ToLower()
+            $c = $ship[$bn]
+            if (-not $c) {
+                # the game's own files (stock demos) are not in the patch either: same for every player of this Steam build
+                if ([long]$pr.Value[1] -le $stockNs) { continue }
+                if ($bn -match '^bros_.*\.txt$' -or $bn -in @('gamemodes.txt', 'tag2v2_hudclone.txt')) { $made.Add($rel); continue }
+                $odd.Add(("NOT IN THE PATCH  {0} ({1} bytes, {2})" -f $rel, $size, ([datetime]'1970-01-01').AddSeconds([long]$pr.Value[1] / 1e9).ToLocalTime().ToString('yyyy-MM-dd HH:mm'))); continue
+            }
+            $same = @($c | Where-Object { [long]($_.Split(' ')[1]) -eq $size })
+            if (-not $same.Count) { $odd.Add("OTHER SIZE        $rel ($size bytes; the patch: " + ((@($c | ForEach-Object { $_.Split(' ')[1] }) | Select-Object -Unique -First 3) -join ' / ') + ')'); continue }
+            if ($size -gt 2MB) { continue }
+            $p = Join-Path $game ($rel -replace '/', '\')
+            if (-not (Test-Path -LiteralPath $p)) { continue }
+            $b = [IO.File]::ReadAllBytes($p)
+            $h = [Text.Encoding]::ASCII.GetBytes("blob $($b.Length)`0")
+            $all = New-Object byte[] ($h.Length + $b.Length)
+            [Array]::Copy($h, 0, $all, 0, $h.Length); [Array]::Copy($b, 0, $all, $h.Length, $b.Length)
+            $oid = [BitConverter]::ToString($sha1.ComputeHash($all)).Replace('-', '').ToLower()
+            if (-not @($same | Where-Object { $_.StartsWith($oid) }).Count) { $odd.Add("OTHER CONTENT     $rel ($size bytes)") }
+        }
+        $upd.Add("Files the online pool counts: $nf; not as the patch ships them: $($odd.Count) (written in full to pool_files_not_shipped.txt)")
+        foreach ($o in ($odd | Select-Object -First 30)) { $upd.Add("    $o") }
+        if ($made.Count) { $upd.Add("    written by the launcher (options and markers, counted too): " + ($made -join ', ')) }
+        $odd | Set-Content (Join-Path $work 'pool_files_not_shipped.txt') -Encoding UTF8
+        if ($odd.Count) { Flag ("ONLINE POOL: $($odd.Count) file(s) the pool counts are not the patch's (first: " + ($odd[0] -replace '\s+', ' ') + '): this player only meets players with the very same files. Details in the UPDATE section.') }
+    } catch { $upd.Add("Pool file check failed: $($_.Exception.Message)") }
+}
+$rc =Join-Path $game 'ReBalanceOfSouls\online_room_check.json'
+if (Test-Path $rc) {   # online.dll's census at the last game start: why each other player online could or could not meet this one
+    try {
+        $j = [IO.File]::ReadAllText($rc) | ConvertFrom-Json
+        $when = ([datetime]'1970-01-01').AddSeconds([double]$j.written).ToLocalTime().ToString('yyyy-MM-dd HH:mm')
+        $pl = @($j.players)
+        $upd.Add("Online census of $when ($($pl.Count) other players; this player: code $($j.me.code), folder code $($j.me.folder_code), fingerprint $($j.me.fp)):")
+        foreach ($g in ($pl | Group-Object verdict | Sort-Object Count -Descending)) { $upd.Add("    $($g.Count) x $($g.Name)") }
+        $same = @($pl | Where-Object { $_.code -eq $j.me.code }).Count
+        if ($pl.Count -ge 5 -and $same -eq 0) { Flag "ONLINE: at the last game start nobody online was on this player's pool ($($j.me.code)); $($pl.Count) other players were online (census in game_online_room_check.json)." }
+        $diff = @{}
+        foreach ($p in $pl) { foreach ($n in @($p.plugins) + @($p.plugin_files) + @($p.options)) { if ($n) { $diff[$n] = 1 + [int]$diff[$n] } } }
+        if ($diff.Count) { $upd.Add('    differences named by the census (name: players): ' + (($diff.GetEnumerator() | Sort-Object Value -Descending | Select-Object -First 25 | ForEach-Object { "$($_.Key): $($_.Value)" }) -join ', ')) }
+    } catch { $upd.Add("online_room_check.json could not be read: $($_.Exception.Message)") }
+}
+try {   # Windows' "Controlled folder access" refuses writes by unknown programs in Documents, Desktop, Downloads...
+    $mp = Get-MpPreference -ErrorAction Stop
+    $cfa = @{ 0 = 'off'; 1 = 'ON (blocks)'; 2 = 'audit only'; 3 = 'ON for disks'; 4 = 'ON for disks, audit' }[[int]$mp.EnableControlledFolderAccess]
+    $upd.Add("Windows Controlled folder access: $cfa")
+    if ([int]$mp.EnableControlledFolderAccess -in @(1, 3)) { Flag 'WINDOWS: Controlled folder access is ON: it can refuse the launcher''s and git''s writes (Permission denied). Allow python.exe and git.exe in Windows Security > Ransomware protection.' }
+} catch { $upd.Add('Windows Defender settings: could not be read') }
+try {
+    $av = @(Get-CimInstance -Namespace root/SecurityCenter2 -ClassName AntiVirusProduct -ErrorAction Stop | ForEach-Object { $_.displayName })
+    if ($av.Count) { $upd.Add('Antivirus: ' + ($av -join ', ')) }
+    $other = @($av | Where-Object { $_ -notmatch 'Windows Defender|Microsoft Defender' })
+    if ($other.Count) { Flag ('Antivirus other than Windows'': ' + ($other -join ', ') + ' -- it can lock or delete patch files while they are copied (Permission denied, files missing).') }
+} catch {}
+try {   # the maintenance plugin reads GitHub's clock; a PC clock far off is worth seeing
+    $wr = [Net.WebRequest]::Create('https://github.com'); $wr.Method = 'HEAD'; $wr.Timeout = 15000
+    $resp = $wr.GetResponse(); $srv = [datetime]::Parse($resp.Headers['Date']).ToUniversalTime(); $resp.Close()
+    $off = ((Get-Date).ToUniversalTime() - $srv).TotalSeconds
+    $upd.Add(("PC clock vs github.com: {0:N0} s {1}" -f [math]::Abs($off), $(if ($off -ge 0) { 'ahead' } else { 'behind' })))
+    if ([math]::Abs($off) -gt 120) { Flag ("The PC clock is {0:N0} s off: set Windows time to automatic." -f [math]::Abs($off)) }
+} catch { $upd.Add('github.com over HTTPS: NO ANSWER (' + $_.Exception.Message + ')'); Flag 'UPDATE: github.com does not answer over HTTPS from this PC (firewall, DNS, VPN or antivirus).' }
 if ($cfg) {
     $keep = @()
     foreach ($k in @('TEAM_BATTLE', 'awakeningaura', 'breaker_grab', 'hakugeki', 'hit', 'reverse_globe', 'skill_activation')) {
@@ -690,6 +864,10 @@ if ($crashes.Count) {
     $pick = @($crashes | Where-Object { $_.Name -like 'crash-unhandled-*' -or $_.Name -like 'hang-*' } | Select-Object -First 15)
     $pick += @($crashes | Where-Object { $_.Name -notlike 'crash-unhandled-*' -and $_.Name -notlike 'hang-*' } | Select-Object -First 5)
     foreach ($c in $pick) { Copy-Item $c.FullName $cd -Force }
+}
+foreach ($n in @('launcher_install_report.txt', 'launcher_patch_state.json', 'launcher_content_pool.json', 'ReBalanceOfSouls\online_room_check.json')) {
+    $p = Join-Path $game $n
+    if (Test-Path $p) { Copy-Tail $p (Join-Path $work ('game_' + (Split-Path $n -Leaf))) 2MB }
 }
 $cap = 40MB
 $zip = Join-Path $outRoot ("BROS_Diagnostic_{0}.zip" -f $stamp)
