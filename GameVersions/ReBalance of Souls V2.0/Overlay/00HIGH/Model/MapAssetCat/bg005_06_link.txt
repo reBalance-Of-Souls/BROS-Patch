@@ -1,0 +1,4 @@
+bg005_06tex0.lds
+bg005_06tex1.lds
+bg005_06tex2.lds
+bg005_06tex3.lds
