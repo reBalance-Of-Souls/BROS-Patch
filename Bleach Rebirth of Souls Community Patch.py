@@ -2098,8 +2098,14 @@ try:
                         _leftovers.clean(game_path, _keep_txt, _keep_root, _others - _keep_root, print)
                         # Another version's cutscene over the game's own (leftovers.py, CUTSCENES): put back from a
                         # copy proven against Steam's list (vanilla_revert's sources), else only Steam's verify can.
+                        # This repo has no other version's Overlay (V1.7's Yumichika cutscenes are not here): the
+                        # built-in tables name them too (2026-11-27, Petrichor alone on his pool with V1.7's
+                        # Demo/pl015_evo_ct_sp_break01_2.tdemopkg, which V2.0's registry still lists).
+                        _od = _leftovers.other_demos(_gv, version_chain(gameVersion))
+                        for _r, _c in _leftovers.known_other_demos().items():
+                            _od.setdefault(_r, []).extend(_c)
                         _left = _leftovers.fix_demo(
-                            game_path, _leftovers.other_demos(_gv, version_chain(gameVersion)),
+                            game_path, _od,
                             (lambda: _vanilla_revert.steam_list(BASE_DIR, game_path)) if _vanilla_revert else None,
                             (lambda _r: _vanilla_revert._stock_sources(BASE_DIR, game_path, _r))
                             if _vanilla_revert else None, print)
