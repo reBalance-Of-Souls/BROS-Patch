@@ -1,0 +1,34 @@
+{
+ "about": "BaseOnly in a Room Match: every launcher (launcher/room_modes.py) lists every GameModes/<mode>/Mode.json in <game>/ReBalanceOfSouls/gamemodes.txt; the room owner picks one on the Create room dialog's Game Mode row and gamemode.dll arms it for that room (the CharaStatus cells of CharaStatus.json, the flags below). 'rules' is what the Extras page Gamemodes rules shows: [title, text] pairs.",
+ "name": "Base Only",
+ "name_fr": "Forme de base",
+ "flags": [],
+ "rules": [
+  [
+   "6 Konpaku",
+   "Every character starts with 6 Konpaku."
+  ],
+  [
+   "No Awakening",
+   "The base form's Fighting Spirit gauge is 0: nobody Awakens, the whole match is played in base form."
+  ],
+  [
+   "Aizen stays in base form",
+   "Aizen's base form timer (the wait before his cocoon form) never runs out."
+  ]
+ ],
+ "rules_fr": [
+  [
+   "6 Konpaku",
+   "Chaque personnage commence avec 6 Konpaku."
+  ],
+  [
+   "Pas d'Éveil",
+   "La jauge de Fighting Spirit de la forme de base est à 0 : personne ne s'éveille, tout le match se joue en forme de base."
+  ],
+  [
+   "Aizen reste en forme de base",
+   "Le timer de la forme de base d'Aizen (avant sa forme cocon) ne finit jamais."
+  ]
+ ]
+}

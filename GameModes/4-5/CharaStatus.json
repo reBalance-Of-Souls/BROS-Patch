@@ -1,0 +1,8 @@
+{
+  "about": "4-5's own CharaStatus. Only these cells differ from the version's CharaStatus.fsv; the launcher writes them at launch (launcher/mode_status.py). \"+x\" adds to the version's value, a bare number replaces it.",
+  "cells": {
+    "pl037": {
+      "evo_kikonsyouka_param": "+0.5"
+    }
+  }
+}

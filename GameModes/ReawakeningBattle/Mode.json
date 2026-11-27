@@ -1,0 +1,28 @@
+{
+ "about": "ReawakeningBattle in a Room Match: every launcher (launcher/room_modes.py) lists every GameModes/<mode>/Mode.json in <game>/ReBalanceOfSouls/gamemodes.txt; the room owner picks one on the Create room dialog's Game Mode row and gamemode.dll arms it for that room (the CharaStatus cells of CharaStatus.json, the flags below). 'rules' is what the Extras page Gamemodes rules shows: [title, text] pairs.",
+ "name": "Reawakening Battle",
+ "name_fr": "Combat en Réveil",
+ "flags": [
+  "start_reawakened"
+ ],
+ "rules": [
+  [
+   "Start Reawakened",
+   "Ichigo (Bankai), Uryu, Aizen, Ulquiorra and Yhwach start the match already in their Reawakening."
+  ],
+  [
+   "10 Konpaku",
+   "Their Reawakening has 10 Konpaku. Everyone else plays as usual."
+  ]
+ ],
+ "rules_fr": [
+  [
+   "Départ en Réveil",
+   "Ichigo (Bankai), Uryu, Aizen, Ulquiorra et Yhwach commencent le match déjà en Réveil."
+  ],
+  [
+   "10 Konpaku",
+   "Leur Réveil a 10 Konpaku. Les autres jouent comme d'habitude."
+  ]
+ ]
+}

@@ -1,0 +1,37 @@
+{
+ "about": "4-5 in a Room Match: every launcher (launcher/room_modes.py) lists every GameModes/<mode>/Mode.json in <game>/ReBalanceOfSouls/gamemodes.txt; the room owner picks one on the Create room dialog's Game Mode row and gamemode.dll arms it for that room (the CharaStatus cells of CharaStatus.json, the flags below). 'rules' is what the Extras page Gamemodes rules shows: [title, text] pairs.",
+ "name": "4-5",
+ "name_fr": "4-5",
+ "flags": [
+  "first_kill_cap",
+  "six_arms_spirit_drive"
+ ],
+ "rules": [
+  [
+   "First kill: 4 Konpaku at most",
+   "Until your opponent has lost a Konpaku, your Kikon destroys at most 4 of them, never 5. After that first kill, a Sublimation Kikon destroys its full 5 again. Kill one is always 4, kill two always 5, whoever gets there first."
+  ],
+  [
+   "Who it applies to",
+   "Ichigo (Bankai and TYBW), Uryu, Chad, Kisuke, Yoruichi, Rukia, Rangiku, Yamamoto, Gin, Aizen, Byakuya, Shunsui, Tosen, Toshiro, Mayuri, Kaien, Shinji, Halibel, Ulquiorra, Grimmjow, Nelliel and Yhwach."
+  ],
+  [
+   "Nnoitora: Six Arms with Spirit Drive",
+   "Nnoitora grows his Six Arms when he enters Spirit Drive, whatever his Konpaku, instead of at 4 Konpaku or less. His Awakened Kikon Channel to Spirit Drive gauge is 0.5 longer."
+  ]
+ ],
+ "rules_fr": [
+  [
+   "Premier kill : 4 Konpaku au plus",
+   "Tant que ton adversaire n'a perdu aucun Konpaku, ton Kikon en détruit 4 au plus, jamais 5. Après ce premier kill, un Kikon de Sublimation en détruit de nouveau 5. Le premier kill fait toujours 4, le second toujours 5, quel que soit celui qui y arrive en premier."
+  ],
+  [
+   "Personnages concernés",
+   "Ichigo (Bankai et TYBW), Uryu, Chad, Kisuke, Yoruichi, Rukia, Rangiku, Yamamoto, Gin, Aizen, Byakuya, Shunsui, Tosen, Toshiro, Mayuri, Kaien, Shinji, Halibel, Ulquiorra, Grimmjow, Nelliel et Yhwach."
+  ],
+  [
+   "Nnoitora : Six Bras avec le Spirit Drive",
+   "Nnoitora fait pousser ses Six Bras en entrant en Spirit Drive, quel que soit son nombre de Konpaku, au lieu de 4 Konpaku ou moins. Sa jauge Kikon Channel vers Spirit Drive en Éveil est plus longue de 0,5."
+  ]
+ ]
+}

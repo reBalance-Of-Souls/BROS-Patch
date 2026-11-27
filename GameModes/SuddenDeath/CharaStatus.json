@@ -1,0 +1,19 @@
+{
+  "about": "SuddenDeath's own CharaStatus. Only these cells differ from the version's CharaStatus.fsv; the launcher writes them at launch (launcher/mode_status.py) and gamemode.dll applies the same cells in a room that picked this mode. \"+x\"/\"-x\" adds to the version's value, a bare number replaces it; row \"*\" is every character row, a character's own row wins for its columns.",
+  "cells": {
+    "*": {
+      "soul_num": "1",
+      "evo_soul_num": "1",
+      "rev_soul_num": "1"
+    },
+    "pl001": {
+      "rev_soul_num": "2"
+    },
+    "pl021": {
+      "rev_soul_num": "2"
+    },
+    "pl044": {
+      "rev_soul_num": "2"
+    }
+  }
+}

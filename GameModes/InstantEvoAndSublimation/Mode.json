@@ -1,0 +1,36 @@
+{
+ "about": "InstantEvoAndSublimation (\"Instant Evo\") in a Room Match: every launcher (launcher/room_modes.py) lists every GameModes/<mode>/Mode.json in <game>/ReBalanceOfSouls/gamemodes.txt; the room owner picks one on the Create room dialog's Game Mode row and gamemode.dll arms it for that room (the CharaStatus cells of CharaStatus.json, the flags below). 'rules' is what the Extras page Gamemodes rules shows: [title, text] pairs.",
+ "name": "Instant Evo",
+ "name_fr": "Éveil instantané",
+ "flags": [
+  "start_awakened"
+ ],
+ "rules": [
+  [
+   "Start Awakened",
+   "Every character starts the match already Awakened."
+  ],
+  [
+   "Sublimation as usual",
+   "The Awakened form's Fighting Spirit gauge fills at its normal rate."
+  ],
+  [
+   "Reawakened gauge",
+   "The Reawakened form's Fighting Spirit gauge is 99: it never fills."
+  ]
+ ],
+ "rules_fr": [
+  [
+   "Départ en Éveil",
+   "Chaque personnage commence le match déjà éveillé."
+  ],
+  [
+   "Sublimation normale",
+   "La jauge de Fighting Spirit en Éveil se remplit à sa vitesse normale."
+  ],
+  [
+   "Jauge en Réveil",
+   "La jauge de Fighting Spirit en Réveil est à 99 : elle ne se remplit jamais."
+  ]
+ ]
+}

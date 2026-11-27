@@ -1,0 +1,26 @@
+{
+ "about": "ExtraKonpaku in a Room Match: every launcher (launcher/room_modes.py) lists every GameModes/<mode>/Mode.json in <game>/ReBalanceOfSouls/gamemodes.txt; the room owner picks one on the Create room dialog's Game Mode row and gamemode.dll arms it for that room (the CharaStatus cells of CharaStatus.json, the flags below). 'rules' is what the Extras page Gamemodes rules shows: [title, text] pairs.",
+ "name": "Extra Konpaku",
+ "name_fr": "Konpaku en plus",
+ "flags": [],
+ "rules": [
+  [
+   "12 Konpaku",
+   "Every character has 12 Konpaku in every form."
+  ],
+  [
+   "Exceptions",
+   "Ichigo (Bankai) and Aizen have 10 in base and Awakened form, 12 in Reawakening. Szayelaporro has 8, Yhwach 9."
+  ]
+ ],
+ "rules_fr": [
+  [
+   "12 Konpaku",
+   "Chaque personnage a 12 Konpaku dans toutes ses formes."
+  ],
+  [
+   "Exceptions",
+   "Ichigo (Bankai) et Aizen en ont 10 en forme de base et en Éveil, 12 en Réveil. Szayelaporro en a 8, Yhwach 9."
+  ]
+ ]
+}

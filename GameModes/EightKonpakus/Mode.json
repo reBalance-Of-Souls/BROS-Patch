@@ -1,0 +1,26 @@
+{
+ "about": "EightKonpakus in a Room Match: every launcher (launcher/room_modes.py) lists every GameModes/<mode>/Mode.json in <game>/ReBalanceOfSouls/gamemodes.txt; the room owner picks one on the Create room dialog's Game Mode row and gamemode.dll arms it for that room (the CharaStatus cells of CharaStatus.json, the flags below). 'rules' is what the Extras page Gamemodes rules shows: [title, text] pairs.",
+ "name": "8 Konpakus",
+ "name_fr": "8 Konpaku",
+ "flags": [],
+ "rules": [
+  [
+   "One Konpaku less",
+   "Every character has one Konpaku less in base and Awakened form: 8 instead of 9."
+  ],
+  [
+   "Exceptions",
+   "Ichigo (Bankai) and Aizen have one less in every form, Reawakening included. Szayelaporro has 8 instead of 5. Aizen's third slot keeps his own count."
+  ]
+ ],
+ "rules_fr": [
+  [
+   "Un Konpaku de moins",
+   "Chaque personnage a un Konpaku de moins en forme de base et en Éveil : 8 au lieu de 9."
+  ],
+  [
+   "Exceptions",
+   "Ichigo (Bankai) et Aizen en ont un de moins dans toutes leurs formes, Réveil compris. Szayelaporro en a 8 au lieu de 5. Le troisième emplacement d'Aizen garde le sien."
+  ]
+ ]
+}

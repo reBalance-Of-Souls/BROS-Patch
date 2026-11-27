@@ -1,0 +1,26 @@
+{
+ "about": "SuddenDeath in a Room Match: every launcher (launcher/room_modes.py) lists every GameModes/<mode>/Mode.json in <game>/ReBalanceOfSouls/gamemodes.txt; the room owner picks one on the Create room dialog's Game Mode row and gamemode.dll arms it for that room (the CharaStatus cells of CharaStatus.json, the flags below). 'rules' is what the Extras page Gamemodes rules shows: [title, text] pairs.",
+ "name": "Sudden Death",
+ "name_fr": "Mort subite",
+ "flags": [],
+ "rules": [
+  [
+   "1 Konpaku",
+   "Every character has a single Konpaku in every form."
+  ],
+  [
+   "Exceptions",
+   "A few Reawakening forms keep 2."
+  ]
+ ],
+ "rules_fr": [
+  [
+   "1 Konpaku",
+   "Chaque personnage n'a qu'un seul Konpaku dans toutes ses formes."
+  ],
+  [
+   "Exceptions",
+   "Quelques formes de Réveil en gardent 2."
+  ]
+ ]
+}
