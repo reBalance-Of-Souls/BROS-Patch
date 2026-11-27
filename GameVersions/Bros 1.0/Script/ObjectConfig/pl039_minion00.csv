@@ -1,4 +1,0 @@
-_csv0,name,bind_comp,bind_joint,resource_lod0,resource_lod1,resource_lod2
-main,body,,,00HIGH/Model/chara/ad032_cos00_00,,
-sub0,head_objects_c,body,head,00HIGH/Model/chara/ad032_face00_00_objects_c,,
-sub1,head_objects_d,body,head,00HIGH/Model/chara/ad032_face00_00_objects_d,,

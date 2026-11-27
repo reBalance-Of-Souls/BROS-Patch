@@ -42,10 +42,15 @@ BASE AND EVO :
 		sig(1): 
 			damage : 1250 -> 750
 
-		sig(2): 
+		sig(2):
 			damage : 1500 -> 1000
-	
-	Known issue : 
+
+	SUBLIMATION (毀魂昇華 Kikon) :
+		Kikon soul damage : 5/6 -> 4/5 (cast / soulbreak), matching the normal Kikon tier
+		Removed the 2-konpaku self-cost on casting the sublimation Kikon
+			(exe memory patch applied by the loader; the sublimation cutscene is fully preserved)
+
+	Known issue :
 		his SP2 can whiff up close against someone grabbing at the same time, this will be fixed in the future 
 			
 	
@@ -865,31 +870,94 @@ General:
 	Fixed spacing and frame data when Sakanade is active
 	Changed guard_fix_time on special flash from 24 to 29 to make it plus on block giving similar plus frames as light 3.
 	Increased movement speed by 10%
+=== Zangetsu (pl005) — moveset update, 2026-07-26 ===
+Applies to: GameVersions/Bleach Rebirth of Souls Community Patch + Character Roster Extension
 
-Aizen :
-Base :
-	Kikon Counter (R3 + L3 during the opponent's Kikon) now costs the 5 flames ONLY
-	Removed the requirement to have a full reverse gauge, and removed the reverse gauge cost
-	"He kept both costs on top of a once-per-match limit and a base-form-only gate, which made the counter almost never actually available.
-	The flame cost, the once-per-match limit, the base-form gate and the existing matchup blocklist are all unchanged."
+NEW MOVES
+- sp_step_atk string (flashstep follow-up, R2+X after a hit/guard):
+  00 warp behind target -> 01 slash (single hit 900/300, yellow trail, slow-motion 1.5,
+  screen blur LARGE, hitstun 52, auto gap-close) -> 02 three-hit string (blur SMALL,
+  hit-stop 8/8/16, slow-motion 1.5) -> elevation-based ender: lo03_d01 (Starrk) high,
+  lo03_u01 (Kenpachi launcher, slow-motion 1.15) otherwise. Both enders blur LARGE.
+- Perfect hoho (syunpo_out_just) now triggers and lands: added the missing
+  syunpo_in_act/JustAvoidTiming window (every playable has one; pl005 shipped without it),
+  Halibel's counter swing + cutscene pose, Yhwach's cutscene camera/body.
+
+FIXES
+- Flashstep follow-up now available from hi01, hi02, hi03 (via hi03_1), da01 and overatk
+  (each attack needs its own SoulRebootTiming window - that block is what offers R2+X).
+- Camera: def_atk_size 中 -> 小. pl005 shipped in the BOSS size class, so the game gave him
+  the "medium" (big-enemy) camera preset. Now on the playable rig, like every other character.
+- Plain flashstep no longer overshoots the opponent (boss clip root travel damped).
+- Walk speed under L2 (MotionMoveRate 2.5, keeps his own gait).
+- Front step recovery 42 -> 30 frames (playables sit at 27-34); combo/step-cancel/
+  dash-attack windows retimed to match.
+- Battle banner uses the game's own sp000 art; kikon + perfect-hoho cutscene cameras fixed.
+
+FILES CHANGED
+  Script/Action/pl005.tcmbpkg           be3b7e966e78d051
+  Script/Action/pl005.tadjpkg           9135237e42001266
+  Script/Action/pl005_modded.tadjpkg    9135237e42001266  (was identical to the above)
+  Motion/pl005.tactpkg                  3ba26cc7b01f070a
+  Overlay/Demo/pl005_ct_syunpo_out_just.tdemopkg   bef0fb0dc42aa70e
+  Script/CharaStatus.fsv / _modded.fsv  def_atk_size only
+  Overlay/{00HIGH,01MIDDLE}/ui/swap/spirit_chara_icon/pl005_pic0.lds + pic1.lds
+Previous versions kept beside each file as *.pre_spstep_bak
 
 
-Yamamoto :
-Base and Evo :
-	SP2 :
-		Fixed the SP2 hitbox reaching behind him (made flashstepping it near-impossible)
-		while keeping the fix for it whiffing when the opponent grabs on activation.
-		The lingering hitbox is now tangent to his own position instead of centred 1.0 in front:
-		it covers 0.00 to 5.50 in front, was -1.75 to 3.75. Forward reach is also 1.75 longer than the bandaid.
+=== Zangetsu (pl005) + Hiyori (pl009) - asset, costume & recovery pass, 2026-07-26 ===
+Applies to: GameVersions/Bleach Rebirth of Souls Community Patch + Character Roster Extension
 
+FIXES
+- Hit recovery (pl005). Being launched left him crawling up off the floor, unable to act
+  and fully vulnerable for ~125 frames. Cause: ported characters inherit the DONOR's
+  bare `1_normal_return_return_air` / `return_wall` tadj entries, which SHADOW the shared
+  `Script/Action/plcom.tadjpkg` entries of the same name. plcom is where the playable
+  recovery lives - AirStop, CancelTiming@20, Protect(完全無敵), MotionMoveRate=0
+  (recover in place), RotateLock. Renamed both to `_snd` layers (the native playable
+  pattern: sounds in the character package, mechanics from plcom). Recovery now matches
+  a stock playable.
+- Select-screen weapons (pl005). Sword and visor were invisible on the character-select
+  screen. His menu package (a Yhwach copy) pointed weapon0_0 / weapon0_1 / weapon1_0 at
+  acttmv visibility tracks that are ZERO on all 981 frames. Repointed to the all-ones
+  track. Yhwach mounts his sword in weapon0_2, the only slot switched on, which is why
+  the package worked for him and blanked everything Zangetsu owns.
+- Donor asset linkage (pl005 + pl009). CharaModelVisible / WepVisible pointed both ported
+  characters at their donors (sp000_*, en013_*), so edits to pl005_*/pl009_* textures did
+  nothing in game. Repointed both to their own names. pl005 additionally had a HALF
+  registration - present in filename.bin, absent from file_exist.htable (0 of 40 keys) -
+  so the engine believed his own models did not exist. Added 50 htable keys and 3
+  filename.bin triples (models, physics, face motion, edited_graphics).
+- Knockdown dead-end (pl005 + pl009). `dam_blown_landing` transitioned to `dam_down_loop`,
+  an action that exists nowhere in the game (an enemy-AI construct carried by every en*/
+  sp*/ad* and both ports). Set to the playable terminal form (end -1, flow 0). Added
+  `1_normal_damage_dam_fail`, present on every playable and missing from both ports.
 
-Byakuya :
-Evo :
-	Fixed not gaining petal form when SP1 lands a killing blow
-	Petal form now triggers on the FIRST hit of SP1 that connects, not the last.
-	The old gate was a combo-state check that ran a few frames after contact, so a dead opponent cancelled it.
-	SP1 is an expanding tornado (hitbox 2.5 -> 6.0 across the string), so at range the early hits whiff by design --
-	every one of the 9 hits can now trigger the form.
-	Fixed sometimes gaining PERMANENT petal form from SP2 (its duration was set to infinite by mistake;
-	it now expires on the same timer as SP1's)
-	"Hit count, damage, frame data and total length of SP1 are completely unchanged."
+NEW
+- Zangetsu costume 2 (white / inverted). Model pl005_cos00_01 registered and wired to
+  cos_01; visor omitted per design (weapon_01_00 = null). Textures supplied by the art
+  devs; built from the MID-tier set (15 textures), so it is paired with the MID mesh in
+  both LODs - the HIGH mesh expects 16 and would fault on the missing slot.
+- Costume-select thumbnails for Zangetsu. `chara_type.cat` had no `type_char_05_*` entries
+  at all (index 05 was never built - he shipped as a boss), so the costume menu kept
+  whatever texture was bound last, showing another character's portrait. Added
+  type_char_05_01 (black) and type_char_05_02 (white) as 116x228 BC7, inserted in sorted
+  position; all 185 original entries verified byte-identical.
+- Hiyori select-screen framing: menu_pl009 swapped to pl010's package (she was too short
+  to be in frame with the previous one).
+
+FILES CHANGED
+  Script/Action/pl005.tadjpkg              return_air / return_wall -> _snd layers
+  Script/CharaModelVisible.fsv             pl005 -> pl005_*, pl009 -> pl009_*
+  Script/WepVisible.fsv                    pl005 -> pl005_wep*, pl009 -> pl009_wep*
+  Script/Costume/cos_pl005.fsv             own weapons + cos_01 body/visor
+  Motion/pl005.tactpkg                     dam_blown_landing, dam_fail
+  Motion/pl009.tactpkg                     dam_blown_landing, dam_fail
+  Motion/Menu/menu_pl005.tactpkg           weapon visibility tracks
+  Motion/Menu/menu_pl009.tactpkg           pl010-based select posture
+  Overlay/Fnames/filename.bin              +3 triples
+  Overlay/Fnames/file_exist.htable         +50 keys
+  Overlay/{00HIGH,01MIDDLE}/Model/chara/pl005_cos00_01.lds + .tmd2   NEW
+  Overlay/{00HIGH,01MIDDLE}/ui/swap/chara_type.cat                   NEW
+
+Full technical write-up: PORTED_CHARACTER_BLUEPRINT.md

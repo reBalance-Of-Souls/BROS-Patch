@@ -1,3 +1,18 @@
+Yhwach Balance change (changes made by Nilsix)
+    Base and Evo :
+        Kaiser Gesang now starts the match at level 1 instead of level 0
+        (AddUniqueVal unique_type_idx=1 / add_unique_val=1.0 on ct_start)
+        Awakening no longer changes the Kaiser level: the +1 the engine grants
+        there is cancelled (AddUniqueVal unique_type_idx=1 / -0.5 on ct_evolve)
+        "Confirmed in game 2026-08-27 with a level trace: he starts on 1, and the
+         counter does not move a single step across the Awakening. The value is
+         -0.5 and not -1 because the engine plays 1_normal_ct_ct_evolve TWICE, so
+         the record applies twice -- 0.5 is exact in binary, so two of them make
+         exactly -1 with no drift."
+        "He starts with one unlock already spent: Reverse Actions are available
+         from the opening bell, and his reawakening (level 9) is reached one
+         SP2/Evo earlier. The level 2-8 move gates in the .tcmbpkg are untouched."
+
 Shuhei Balance change: 
     Base and Evo:
         Sig:
@@ -16,36 +31,3 @@ TYBW ICHIGO Balance change
             blockstun : 28->27
     "light2 on block -> light1 no longer frametraps tier 1 lights online"
 
-
-
-Aizen Balance change
-    Base :
-        Kikon Counter (ct_reset / KIKON_COUNTER) :
-            Reverse gauge requirement : full -> none
-            Reverse gauge cost : full gauge -> 0
-            Flame cost : 5 -> 5 (unchanged)
-    "Applied at runtime by dinput8.dll, not by editing the exe on disk.
-    Pl20-only: all three sites are inside his own gate/executor, reachable only from his behaviour slot."
-
-
-Yamamoto Hotfix
-    Base and Evo :
-        SP2 :
-            Attack_Bullet fire_offset_pos Z : 1.0 -> 2.75 (= the collision radius)
-    "SP2 is a near-stationary lingering sphere (fire_shot_speed 0.02/frame), radius 2.75, measured
-    from his own origin. At Z=1.0 it covered -1.75..3.75, i.e. 1.75 behind him. At Z=2.75 the near
-    edge sits exactly on his origin: no dead zone for a grab to slip into, and nothing behind.
-    add_bomb_fix_time 78->66 from the earlier pass is unchanged."
-
-
-Byakuya Hotfix
-    Evo :
-        SP1 (evo_sp_atk03) :
-            Petal-form trigger : combo-state gate (is_before_hit / hit_combo_stop) -> contact-time latch (my_action + HIT時)
-            Now latches on whichever of the 9 hits connects first, including a killing blow
-            ComboStart : 70 -> 88 (restores 18 frames of whiff recovery an earlier pass had removed)
-        SP2 (evo_sp_atk05_1) :
-            Enhance max_val : -1.0 (infinite) -> 1340 (same duration as SP1)
-    "The combo-state gate was evaluated 1-3 frames after contact, so a dead victim dropped the combo and the
-    swap never fired. my_action + 当たった瞬間 latches at contact instead. 9 hits, 1800 damage and every frame
-    window are byte-identical; the only change to the visible move is the latch field on hits 1-8."

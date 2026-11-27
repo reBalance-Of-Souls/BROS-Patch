@@ -1,9 +1,0 @@
-_csv0,name,bind_comp,bind_joint,resource_lod0,resource_lod1,resource_lod2
-main,body,,,00HIGH/Model/chara/ad008_cos00_00,,
-sub0,head,body,neck,00HIGH/Model/chara/ad008_face00_00,,
-sub1,head_objects_a,body,head,00HIGH/Model/chara/ad008_face00_00_objects_a,,
-sub2,head_objects_b,body,head,00HIGH/Model/chara/ad008_face00_00_objects_b,,
-sub3,head_objects_c,body,head,00HIGH/Model/chara/ad008_face00_00_objects_c,,
-sub4,head_objects_d,body,head,00HIGH/Model/chara/ad008_face00_00_objects_d,,
-sub5,head_objects_e,body,head,00HIGH/Model/chara/ad008_face00_00_objects_e,,
-sub6,weapon0_0,body,weapon_R,00HIGH/Model/chara/ad008_wep00_00_00,,

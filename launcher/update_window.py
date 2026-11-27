@@ -189,11 +189,6 @@ def _lfs_store(base):
 def lfs_pointers(base, commit):
     """{oid: (size, path)} of every git-LFS pointer in commit's tree, read with git itself (ls-tree, cat-file):
     a pointer is a small blob in the spec's format, whatever .gitattributes says (git-lfs decides the same way)."""
-    # A blobless clone (the installer's --filter=blob:none) lacks the new commit's blobs: ls-tree -l would fetch them
-    # one request at a time (2 s each, measured 2026-11-27: hours for a big update). git-lfs's checkout filter fetches
-    # any pointer there itself.
-    if _git(base, ["config", "--get-regexp", r"^remote\..*\.promisor$"]).stdout.strip():
-        return {}
     r = subprocess.run(["git", "-C", base, "ls-tree", "-r", "-l", "-z", commit], capture_output=True, **_NO_WINDOW)
     if r.returncode:
         return {}

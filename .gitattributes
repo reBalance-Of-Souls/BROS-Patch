@@ -1,30 +1,44 @@
-BrosCommunityEditionFiles/bgm.bnk filter=lfs diff=lfs merge=lfs -text
-*.bnk filter=lfs diff=lfs merge=lfs -text
 # Binary game files: never touch line endings
 *.fsv    binary
 *.tcmbpkg binary
 *.tadjpkg binary
 *.tbl    binary
 *.vfxb   binary
-
 # Text files — store as LF
 *.py     text eol=lf
 *.csv    text eol=lf
+# ⚠ The rule above is for OUR csv. Game payload is exempt further down: Steam
+# ships Script/ObjectConfig/*.csv with CRLF, and normalising them to LF rewrote
+# all 130 of them across all six versions. See the GameVersions block below.
 *.json   text eol=lf
 *.txt    text eol=lf
 *.bat    text eol=crlf
+# A CRLF shell script does not run: bash reports 'set: pipefail: invalid
+# option name' and the build silently does nothing. Pinned, not remembered.
+*.sh     text eol=lf
 
 *.dll binary
+# Byakuya gauge UI containers and scene/anim blobs: byte-exact or the game crashes
+*.cat    binary
+*.bin    binary
+# Backups of the above are the same bytes under another suffix, and a restore
+# has to hand back exactly what was saved -- so they are binary too.
+*_bak    binary
+*.bak    binary
+# A stage's MapAssetCat/<id>_link.txt ships CRLF from the game itself, and the
+# *.txt eol=lf rule above would rewrite it. Keep the bytes the loader reads.
+*_link.txt binary
 
 # ---------------------------------------------------------------------------
 # Game payload is bytes, not text
 #
 # Anything a version copies into the game folder must reach it exactly as Steam
-# shipped it. Measured 2026-09-21 against a clean install of build 21095206:
-# the "*.csv text eol=lf" rule above had stripped the CRLF from every
-# Script/ObjectConfig/*.csv, and each launch injected the stripped copies into
-# the game. None of them was intentionally modified. The original bytes are not
-# recoverable from history; they were restored from the clean install.
+# shipped it. Measured 2026-09-21 against a clean install: the "*.csv text
+# eol=lf" rule above had stripped the CRLF from every Script/ObjectConfig/*.csv
+# -- 22 files per version, 130 in all, zero of them intentionally modified --
+# and each launch injected the stripped copies into the game. The original
+# bytes are not recoverable from history; they were restored from the clean
+# install.
 #
 # -text disables end-of-line conversion while still allowing a textual diff.
 # ---------------------------------------------------------------------------
@@ -33,10 +47,14 @@ GameVersions/**/Motion/**    -text
 GameVersions/**/00HIGH/**    -text
 GameVersions/**/01MIDDLE/**  -text
 GameVersions/**/02LOW/**     -text
-GameVersions/**/Demo/**      -text
 GameVersions/**/Overlay/**   -text
 GameModes/**/Script/**       -text
 GameModes/**/Motion/**       -text
 Reworks/**/Script/**         -text
 Reworks/**/Motion/**         -text
+Reworks/**/Overlay/**        -text
 Files/Stock/**               -text
+# No Git LFS in this repository: every file is a plain blob, so nobody needs git-lfs and no LFS quota is
+# spent. The files above GitHub's 100 MB blob limit ship in parts under BigFiles/, which the launcher puts
+# together after an update (launcher/bigfiles.py). A part is bytes: never an end-of-line conversion.
+BigFiles/**                  -text

@@ -1,32 +1,97 @@
 config.json
 adminConfig.json
 BalanceLeadTools/DevToken.txt
-EXE_MODDING_GUIDE_for_devs.md
-BalanceLeadTools/GitHubToken.txt
 
-# The two-client online test rig. Dev-only tooling, and it carries machine
-# layout -- an absolute interpreter path and the Sandboxie box name -- which has
-# no business in a public repository. Both stay local; the runbook that explains
-# them is DataChakka/guides/Nilsix researches/SELF_HOSTED_ONLINE_TEST_RIG.md
-BalanceLeadTools/rig_up.ps1
+# The launcher's New netcode switch (launcher/netcode_mode.py): a personal
+# choice, kept out of git like config.json.
+Json/netcode.json
+
+# Added with the release pipeline: bytecode from the packaging
+# tools, and the staging directory release.yml builds assets in.
+launcher/__pycache__/
+tools/__pycache__/
+dist/
+
+# Personal working notes, not shipped.
+BalanceLeadTools/Nilsix BROS TODO LIST.txt
+
+# Python drops bytecode beside every module it imports (launcher/, the tools in
+# BalanceLeadTools). Never worth committing.
+__pycache__/
+
+# MSVC build artefacts from dll_switch rebuild / manual cl runs
+*.obj
+*.exp
+
+# build_dinput8.sh writes its objects and pdbs here.
+Files/Matchmaking/build/
+
+# Byakuya builder/spender concept: the saved web page. Working material, not
+# patch content. Its _files/ folder is deliberately NOT ignored.
+Byakuya Builder Spender Rework.html
+
+# Local double-click wrapper around rig_up.ps1. The rig script itself is
+# shared; this front door is personal convenience.
 BalanceLeadTools/Rig Up.bat
+
+# fix_intro_postreset.py keeps the pre-edit intro packages here. 224 MB of
+# copies, and they live OUTSIDE GameVersions/ on purpose: install_overlay walks
+# the whole Overlay tree and would install a .bak sitting next to its original
+# into the game's Demo/ folder.
+BalanceLeadTools/intro_cut/backups/
+
+# force_wide_evolve_cam.py keeps the stock evolve packages here, 125 MB of
+# copies that exist only to revert with.
+BalanceLeadTools/evolve_cam/backups/
+
+# The cut intro + map-camera Overlay files, parked here while we A/B whether the
+# intro skip is what displaces player 2. Put back with the restore below; NOT a
+# committed state.
+BalanceLeadTools/intro_cut/disabled_overlay/
+BalanceLeadTools/intro_cut/backups_p2jump/
+
+# The three-client rig. Same reasoning as the .bat wrapper: dev-only tooling
+# that hardcodes machine layout, and the two-client rig_up.ps1 stays shared.
 BalanceLeadTools/rig_up3.ps1
 BalanceLeadTools/Rig Up 3.bat
+Files/Matchmaking/CLAIMS.md
 
-# The New netcode switch's per-player choice (launcher/netcode_mode.py): absent = ON,
-# the default. Each player's own, never committed.
-Json/netcode.json
-Json/netcode.json.tmp
-
-# The invite-only beta's per-install state and its encrypted download cache (launcher/beta.py).
-Json/beta/
-
-# The tournament recorder's per-player switch (launcher/diagnostics.py, the Game Modes page): absent = ON,
+# The tournament recorder's per-player switch (launcher/diagnostics.py, the Diagnostics page): absent = ON,
 # the default. Each player's own, never committed.
 Json/diagnostics.json
 Json/diagnostics.json.tmp
 
-# The right-click Quick Launch menu's switch (launcher/quick_menu.py, the Game Modes
-# page): absent = ON, the default. Each player's own, never committed.
+# The advanced diagnostics switch (launcher/fulldiag.py, the Diagnostics page): absent = OFF, the
+# default. Each player's own, never committed.
+Json/fulldiag.json
+Json/fulldiag.json.tmp
+
+# replay.dll saves each room match here (Files/Matchmaking/replay_plugin.c). Each player's own, never committed.
+/Replays/
+
+# The right-click Quick Launch menu's switch (launcher/quick_menu.py, the Advanced page):
+# absent = ON, the default. Each player's own, never committed.
 Json/quick_menu.json
 Json/quick_menu.json.tmp
+
+# The Komamura rework switch (launcher/komamura_rework.py, the Advanced page): absent = OFF, the default.
+# Each player's own, never committed.
+Json/komamura_rework.json
+Json/komamura_rework.json.tmp
+
+# From the public patch's .gitignore (files a public install can hold)
+EXE_MODDING_GUIDE_for_devs.md
+BalanceLeadTools/GitHubToken.txt
+BalanceLeadTools/rig_up.ps1
+Json/netcode.json.tmp
+Json/beta/
+
+# The files that ship in parts under BigFiles/ (launcher/bigfiles.py): the launcher writes them here after an
+# update. Never committed: GitHub refuses them.
+/GameVersions/ReBalance of Souls V2.0/Overlay/00HIGH/Model/MapAssetCat/bg002_02tex0.lds
+/GameVersions/ReBalance of Souls V2.0/Overlay/00HIGH/Model/MapAssetCat/bg005_06tex0.lds
+/GameVersions/ReBalance of Souls V2.0/Overlay/00HIGH/Model/MapAssetCat/bg005_06tex1.lds
+/GameVersions/ReBalance of Souls V2.0/Overlay/00HIGH/Model/MapAssetCat/bg005_06tex2.lds
+/GameVersions/ReBalance of Souls V2.0/Overlay/00HIGH/ui/swap/store_item_tex.cat
+/GameVersions/ReBalance of Souls V2.0/Overlay/00HIGH/ui/ui_Action_mdl.cat
+/GameVersions/ReBalance of Souls V2.0/Overlay/00HIGH/ui/ui_Title_mdl.cat
