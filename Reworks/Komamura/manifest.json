@@ -1,0 +1,344 @@
+{
+ "about": "Komamura rework (pass kr, KOMAMURA_REWORK_2026-11-14): every file of Reworks/Komamura that a launch installs, with its game path; launcher/komamura_rework.py refuses a file that is not these bytes. Script/ and Motion/ go over the version's mirror; Overlay/ goes through the launcher's overlay pairs (stock backed up, put back when the switch is OFF); Plugin/ is installed by the launch step while ON only (never from Files/Matchmaking/Plugins). steam_path false: a path the Steam game does not have -- a launch with the switch OFF removes it when it holds these bytes, and while ON its launch registers it in Fnames/file_exist.htable. same_as_steam: built, but byte-identical to the Steam file, so not shipped.",
+ "files": [
+  {
+   "src": "Script/Action/pl023.tadjpkg",
+   "path": "Script/Action/pl023.tadjpkg",
+   "md5": "62f2bf0b0f8be3974b5e1772422de5a6",
+   "size": 441452,
+   "steam_path": true
+  },
+  {
+   "src": "Script/Action/pl023.tcmbpkg",
+   "path": "Script/Action/pl023.tcmbpkg",
+   "md5": "a40833b2137a2360fdbb881ee0c97f91",
+   "size": 89104,
+   "steam_path": true
+  },
+  {
+   "src": "Motion/pl023.tactpkg",
+   "path": "Motion/pl023.tactpkg",
+   "md5": "19de8481d44deca2be211cca8a889436",
+   "size": 25920902,
+   "steam_path": true
+  },
+  {
+   "src": "Overlay/AiAttackData/pl023/pl023_aff.bin",
+   "path": "AiAttackData/pl023/pl023_aff.bin",
+   "md5": "23d4ddd0dc8c988e00c2cdcbb9744ad4",
+   "size": 2352,
+   "steam_path": true
+  },
+  {
+   "src": "Overlay/AiAttackData/pl023/pl023_atk_da01.bin",
+   "path": "AiAttackData/pl023/pl023_atk_da01.bin",
+   "md5": "e9576798834af2c39833be838bb3b5fa",
+   "size": 407440,
+   "steam_path": true
+  },
+  {
+   "src": "Overlay/AiAttackData/pl023/pl023_atk_ex01.bin",
+   "path": "AiAttackData/pl023/pl023_atk_ex01.bin",
+   "md5": "2d64fb74e78ccb51c7523c8515948c7e",
+   "size": 614896,
+   "steam_path": true
+  },
+  {
+   "src": "Overlay/AiAttackData/pl023/pl023_atk_gr01.bin",
+   "path": "AiAttackData/pl023/pl023_atk_gr01.bin",
+   "md5": "ad8f57bcfe5242190d51f9ac87947732",
+   "size": 74272,
+   "steam_path": true
+  },
+  {
+   "src": "Overlay/AiAttackData/pl023/pl023_atk_hi01.bin",
+   "path": "AiAttackData/pl023/pl023_atk_hi01.bin",
+   "md5": "0823c7c2e37ebbd40cba3a4fc3f10e16",
+   "size": 247792,
+   "steam_path": true
+  },
+  {
+   "src": "Overlay/AiAttackData/pl023/pl023_atk_hi02.bin",
+   "path": "AiAttackData/pl023/pl023_atk_hi02.bin",
+   "md5": "67288b2041d40e9e9ab22db7a295abd0",
+   "size": 332032,
+   "steam_path": true
+  },
+  {
+   "src": "Overlay/AiAttackData/pl023/pl023_atk_hi03.bin",
+   "path": "AiAttackData/pl023/pl023_atk_hi03.bin",
+   "md5": "b42e813b631337d58dbcf9bd050be16d",
+   "size": 279472,
+   "steam_path": true
+  },
+  {
+   "src": "Overlay/AiAttackData/pl023/pl023_atk_lo01.bin",
+   "path": "AiAttackData/pl023/pl023_atk_lo01.bin",
+   "md5": "e7cc1362f31797b0397cbb68de0f2f00",
+   "size": 148432,
+   "steam_path": true
+  },
+  {
+   "src": "Overlay/AiAttackData/pl023/pl023_atk_lo02.bin",
+   "path": "AiAttackData/pl023/pl023_atk_lo02.bin",
+   "md5": "00dde9999859baf76b56960a6dd9f722",
+   "size": 102592,
+   "steam_path": true
+  },
+  {
+   "src": "Overlay/AiAttackData/pl023/pl023_atk_lo03_d.bin",
+   "path": "AiAttackData/pl023/pl023_atk_lo03_d.bin",
+   "md5": "c87987c8ac3d85a499dc5f97736d4cf5",
+   "size": 104752,
+   "steam_path": true
+  },
+  {
+   "src": "Overlay/AiAttackData/pl023/pl023_atk_lo03_u.bin",
+   "path": "AiAttackData/pl023/pl023_atk_lo03_u.bin",
+   "md5": "9927c6c03cfa234e213ac0a181009bf6",
+   "size": 104752,
+   "steam_path": true
+  },
+  {
+   "src": "Overlay/AiAttackData/pl023/pl023_evo_atk_da01.bin",
+   "path": "AiAttackData/pl023/pl023_evo_atk_da01.bin",
+   "md5": "87c1bab5a65450554fca840eb9aa0a7c",
+   "size": 407440,
+   "steam_path": true
+  },
+  {
+   "src": "Overlay/AiAttackData/pl023/pl023_evo_atk_ex01.bin",
+   "path": "AiAttackData/pl023/pl023_evo_atk_ex01.bin",
+   "md5": "c78f0458d14d51ff9ac2cb6680d63c3f",
+   "size": 112,
+   "steam_path": true
+  },
+  {
+   "src": "Overlay/AiAttackData/pl023/pl023_evo_atk_ex01_1.bin",
+   "path": "AiAttackData/pl023/pl023_evo_atk_ex01_1.bin",
+   "md5": "3e3bf96960de5f86ce76b9b99d8f915d",
+   "size": 859312,
+   "steam_path": true
+  },
+  {
+   "src": "Overlay/AiAttackData/pl023/pl023_evo_atk_ex01_2.bin",
+   "path": "AiAttackData/pl023/pl023_evo_atk_ex01_2.bin",
+   "md5": "b2ef9cda77b1a5ff4f2bcad2ffc1e808",
+   "size": 960112,
+   "steam_path": true
+  },
+  {
+   "src": "Overlay/AiAttackData/pl023/pl023_evo_atk_ex01_3.bin",
+   "path": "AiAttackData/pl023/pl023_evo_atk_ex01_3.bin",
+   "md5": "a4d4314c90bd961988374161bb45c54b",
+   "size": 427072,
+   "steam_path": false
+  },
+  {
+   "src": "Overlay/AiAttackData/pl023/pl023_evo_atk_gr01.bin",
+   "path": "AiAttackData/pl023/pl023_evo_atk_gr01.bin",
+   "md5": "95684c9270a4534d5532fbe2f951490d",
+   "size": 74272,
+   "steam_path": true
+  },
+  {
+   "src": "Overlay/AiAttackData/pl023/pl023_evo_atk_gr02_1.bin",
+   "path": "AiAttackData/pl023/pl023_evo_atk_gr02_1.bin",
+   "md5": "066307ccfb07f457f2f931f3f8e79ce9",
+   "size": 112,
+   "steam_path": false
+  },
+  {
+   "src": "Overlay/AiAttackData/pl023/pl023_evo_atk_hi01.bin",
+   "path": "AiAttackData/pl023/pl023_evo_atk_hi01.bin",
+   "md5": "4da2994bd7e33472357db04d27198e3b",
+   "size": 247792,
+   "steam_path": true
+  },
+  {
+   "src": "Overlay/AiAttackData/pl023/pl023_evo_atk_hi02.bin",
+   "path": "AiAttackData/pl023/pl023_evo_atk_hi02.bin",
+   "md5": "b3389c7a151e9d9313bb2255cd6f70f4",
+   "size": 332032,
+   "steam_path": true
+  },
+  {
+   "src": "Overlay/AiAttackData/pl023/pl023_evo_atk_hi03.bin",
+   "path": "AiAttackData/pl023/pl023_evo_atk_hi03.bin",
+   "md5": "338faefb98d1f1f98fc318eb0146c66c",
+   "size": 264112,
+   "steam_path": true
+  },
+  {
+   "src": "Overlay/AiAttackData/pl023/pl023_evo_atk_lo01.bin",
+   "path": "AiAttackData/pl023/pl023_evo_atk_lo01.bin",
+   "md5": "d55d28bf7333bb52d41ea4a9ed4a84bf",
+   "size": 148432,
+   "steam_path": true
+  },
+  {
+   "src": "Overlay/AiAttackData/pl023/pl023_evo_atk_lo02.bin",
+   "path": "AiAttackData/pl023/pl023_evo_atk_lo02.bin",
+   "md5": "1162fa7042f54ee3c2adaf159948d400",
+   "size": 102592,
+   "steam_path": true
+  },
+  {
+   "src": "Overlay/AiAttackData/pl023/pl023_evo_atk_lo03_d.bin",
+   "path": "AiAttackData/pl023/pl023_evo_atk_lo03_d.bin",
+   "md5": "6820af91e5b2d49c1f4d51f172f7e248",
+   "size": 104704,
+   "steam_path": false
+  },
+  {
+   "src": "Overlay/AiAttackData/pl023/pl023_evo_atk_lo03_u.bin",
+   "path": "AiAttackData/pl023/pl023_evo_atk_lo03_u.bin",
+   "md5": "900e361d67edc93d810b3c78ad8f1126",
+   "size": 104752,
+   "steam_path": false
+  },
+  {
+   "src": "Overlay/AiAttackData/pl023/pl023_evo_sp_atk01.bin",
+   "path": "AiAttackData/pl023/pl023_evo_sp_atk01.bin",
+   "md5": "ec38cb07608687b2d50d39700f31eba4",
+   "size": 910192,
+   "steam_path": true
+  },
+  {
+   "src": "Overlay/AiAttackData/pl023/pl023_evo_sp_atk02.bin",
+   "path": "AiAttackData/pl023/pl023_evo_sp_atk02.bin",
+   "md5": "02ebdd3e0c23930f4c5c50e17e735410",
+   "size": 834352,
+   "steam_path": true
+  },
+  {
+   "src": "Overlay/AiAttackData/pl023/pl023_sp_atk01.bin",
+   "path": "AiAttackData/pl023/pl023_sp_atk01.bin",
+   "md5": "96d4a77b24e758ade4f46be03aef7ce5",
+   "size": 598912,
+   "steam_path": true
+  },
+  {
+   "src": "Overlay/AiAttackData/pl023/pl023_sp_atk02.bin",
+   "path": "AiAttackData/pl023/pl023_sp_atk02.bin",
+   "md5": "18ab455f07a9953b862ea371bfab5e47",
+   "size": 365872,
+   "steam_path": true
+  },
+  {
+   "src": "Overlay/Demo/pl023_ct_evolve.tdemopkg",
+   "path": "Demo/pl023_ct_evolve.tdemopkg",
+   "md5": "73bdad102e6e4dc5a33932890e49a568",
+   "size": 2473979,
+   "steam_path": true
+  },
+  {
+   "src": "Overlay/Demo/pl023_ct_sp_break01.tdemopkg",
+   "path": "Demo/pl023_ct_sp_break01.tdemopkg",
+   "md5": "626d456e2fa7e16c8eee0d1b676f009b",
+   "size": 1432722,
+   "steam_path": true
+  },
+  {
+   "src": "Overlay/Demo/pl023_ct_sp_break01_maxout.tdemopkg",
+   "path": "Demo/pl023_ct_sp_break01_maxout.tdemopkg",
+   "md5": "92d8fe9b5fb8243714e4454e8cc376c1",
+   "size": 200813,
+   "steam_path": true
+  },
+  {
+   "src": "Overlay/Demo/pl023_ct_syunpo_out_just.tdemopkg",
+   "path": "Demo/pl023_ct_syunpo_out_just.tdemopkg",
+   "md5": "d66dbd8191de3d6489b320a35e10c69b",
+   "size": 465539,
+   "steam_path": true
+  },
+  {
+   "src": "Overlay/Demo/pl023_ct_win_y.tdemopkg",
+   "path": "Demo/pl023_ct_win_y.tdemopkg",
+   "md5": "9effe17ca390c7f7211c944ff085065d",
+   "size": 266399,
+   "steam_path": true
+  },
+  {
+   "src": "Overlay/Demo/pl023_evo_ct_sp_break01.tdemopkg",
+   "path": "Demo/pl023_evo_ct_sp_break01.tdemopkg",
+   "md5": "278962b1b82e957150e73e2286e708de",
+   "size": 885619,
+   "steam_path": true
+  },
+  {
+   "src": "Overlay/Demo/pl023_evo_ct_sp_break01_maxout.tdemopkg",
+   "path": "Demo/pl023_evo_ct_sp_break01_maxout.tdemopkg",
+   "md5": "63e58358b8d19f0ee5c8a444be1d72b1",
+   "size": 217204,
+   "steam_path": true
+  },
+  {
+   "src": "Overlay/Demo/pl023_evo_ct_sp_break02.tdemopkg",
+   "path": "Demo/pl023_evo_ct_sp_break02.tdemopkg",
+   "md5": "520f27871cdcca115e4efb51c6df3d36",
+   "size": 961939,
+   "steam_path": true
+  },
+  {
+   "src": "Overlay/Demo/pl023_evo_ct_sp_break02_maxout.tdemopkg",
+   "path": "Demo/pl023_evo_ct_sp_break02_maxout.tdemopkg",
+   "md5": "284657779a6c6526d1ffe3843fe2a20c",
+   "size": 231082,
+   "steam_path": true
+  },
+  {
+   "src": "Overlay/Demo/pl023_evo_ct_stage_atk_r_out.tdemopkg",
+   "path": "Demo/pl023_evo_ct_stage_atk_r_out.tdemopkg",
+   "md5": "3d33634ea2b6a7dbe513bb09f0f2ef66",
+   "size": 77470,
+   "steam_path": true
+  },
+  {
+   "src": "Overlay/Demo/pl023_evo_ct_stage_atk_u_out.tdemopkg",
+   "path": "Demo/pl023_evo_ct_stage_atk_u_out.tdemopkg",
+   "md5": "e61faf781c5b5ddc8746f405e4ea2e94",
+   "size": 76530,
+   "steam_path": true
+  },
+  {
+   "src": "Overlay/Demo/pl023_evo_ct_stage_dam_r_out.tdemopkg",
+   "path": "Demo/pl023_evo_ct_stage_dam_r_out.tdemopkg",
+   "md5": "0913239f36ca8f0d7a32bbb20fd06a40",
+   "size": 77971,
+   "steam_path": true
+  },
+  {
+   "src": "Overlay/Demo/pl023_evo_ct_stage_dam_u_out.tdemopkg",
+   "path": "Demo/pl023_evo_ct_stage_dam_u_out.tdemopkg",
+   "md5": "4c2ea765cb811ca552601fe4d0e5bd74",
+   "size": 78370,
+   "steam_path": true
+  },
+  {
+   "src": "Overlay/Demo/pl023_evo_ct_syunpo_out_just.tdemopkg",
+   "path": "Demo/pl023_evo_ct_syunpo_out_just.tdemopkg",
+   "md5": "8b11861f4980eac6706759f34d8ff3f6",
+   "size": 465496,
+   "steam_path": true
+  },
+  {
+   "src": "Overlay/Demo/pl023_evo_ct_win_y.tdemopkg",
+   "path": "Demo/pl023_evo_ct_win_y.tdemopkg",
+   "md5": "0d714a9db670e4638166651a0bf910da",
+   "size": 1114141,
+   "steam_path": true
+  },
+  {
+   "src": "Plugin/pl023rework.dll",
+   "path": "ReBalanceOfSouls/pl023rework.dll",
+   "md5": "2303e501d51d68a5c95da378d6c78ff7",
+   "size": 207360,
+   "steam_path": false
+  }
+ ],
+ "same_as_steam": [
+  "AiAttackData/pl023/pl023_atk_gr02_1.bin"
+ ]
+}

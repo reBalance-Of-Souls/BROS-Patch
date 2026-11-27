@@ -1,0 +1,13 @@
+0
+Zangetsu's Inner World: 0 = off in this version, 1 (or no file) = on.
+
+Read once at startup by ReBalanceOfSouls\pl005.dll (bros_roster.c), from
+<game>\Script\bros_innerworld.txt. With 0, the eight Inner World rows of the
+roster table stay stock: an evolve cutscene that changes area uses the game's
+own void demo room and the fight stays on the stage it started on, whoever
+evolves. V1.2 and V1.3 ship no such file and keep the Inner World.
+
+It lives in Script\ because Script\ is mirrored from the launched version on
+every install, so switching to another version removes it by itself.
+GameVersions/footprints.json declares it as pl005's, which keeps
+version_inherit from copying this 0 into V1.2 and V1.3.

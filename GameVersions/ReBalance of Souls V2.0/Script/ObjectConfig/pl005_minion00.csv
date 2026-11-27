@@ -1,0 +1,5 @@
+_csv0,name,bind_comp,bind_joint,resource_lod0,resource_lod1,resource_lod2,rend
+main,body,,,00HIGH/Model/chara/ad018_cos00_00,,,1
+sub0,head,body,neck,00HIGH/Model/chara/ad018_face00_00_ew,,,1
+sub1,hair,body,neck,00HIGH/Model/chara/ad018_hair00_00,,,1
+sub2,weapon0_0,body,weapon_R,00HIGH/Model/chara/ad018_wep00_00_00,,,1

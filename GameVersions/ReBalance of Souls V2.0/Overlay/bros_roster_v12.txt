@@ -1,0 +1,6 @@
+Bleach Rebirth of Souls Community Patch
+This file switches on the pl005 plugin's patch_v12_roster(): 39 grid cells,
+Zangetsu (pl005) is select row 37, the random panel is cell 38, and
+IsPlayableCharacter admits id 5. It is named after V1.2 because that is the
+roster table it selects; the loader only asks whether the file exists.
+Written by launcher/zangetsu_sync.py -- see GameVersions/footprints.json.

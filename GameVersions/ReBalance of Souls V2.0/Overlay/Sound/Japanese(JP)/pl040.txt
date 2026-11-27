@@ -1,0 +1,386 @@
+Event	ID	Name			Wwise Object Path	Notes
+	76232205	pl012_ct_syunpo_out_just_vo			\300_Chara_Main\pl012\pl012_01_voice\01_act\0_normal\pl012_ct_syunpo_out_just_vo	
+	85763325	pl012_guardbreak_vo			\300_Chara_Main\pl012\pl012_01_voice\01_act\0_normal\pl012_guardbreak_vo	
+	113070011	pl012_ct_sp_break02_2_vo_1			\300_Chara_Main\pl012\pl012_01_voice\01_act\1_evo\pl012_ct_sp_break02_2_vo_1	
+	160768922	pl012act00282_1			\300_Chara_Main\pl012\pl012_01_voice\01_act\1_evo\pl012act00282_1	
+	202864277	pl012_dam_break_hi_vo			\300_Chara_Main\pl012\pl012_01_voice\01_act\0_normal\pl012_dam_break_hi_vo	
+	243829772	pl012fev00201_1			\300_Chara_Main\pl012\pl012_01_voice\03_fev\pl012fev00201_1	
+	244271155	pl012fev00202_1			\300_Chara_Main\pl012\pl012_01_voice\03_fev\pl012fev00202_1	
+	249225929	pl012_sp_atk02_vo			\300_Chara_Main\pl012\pl012_01_voice\01_act\0_normal\pl012_sp_atk02_vo	
+	307832226	pl012_atk_hi_last_vo			\300_Chara_Main\pl012\pl012_01_voice\01_act\0_normal\pl012_atk_hi_last_vo	
+	478145093	pl012sys00208_1			\300_Chara_Main\pl012\pl012_01_voice\02_sys\1_evo\pl012sys00208_1	
+	479277988	pl012sys00201_1			\300_Chara_Main\pl012\pl012_01_voice\02_sys\1_evo\pl012sys00201_1	
+	479425053	pl012sys00200_1			\300_Chara_Main\pl012\pl012_01_voice\02_sys\1_evo\pl012sys00200_1	
+	479822443	pl012sys00202_1			\300_Chara_Main\pl012\pl012_01_voice\02_sys\1_evo\pl012sys00202_1	
+	479969472	pl012sys00205_1			\300_Chara_Main\pl012\pl012_01_voice\02_sys\1_evo\pl012sys00205_1	
+	480410759	pl012sys00206_1			\300_Chara_Main\pl012\pl012_01_voice\02_sys\1_evo\pl012sys00206_1	
+	504973198	pl012act00141			\300_Chara_Main\pl012\pl012_01_voice\01_act\0_normal\pl012act00141	
+	504973199	pl012act00140			\300_Chara_Main\pl012\pl012_01_voice\01_act\0_normal\pl012act00140	
+	517407957	pl012_evo_atk_ex01_ash_loop_Resume			\300_Chara_Main\pl012\pl012_00_se\pl012_evo_atk_ex01_ash_loop_Resume	
+	536508515	pl012_ktn_hi_last			\300_Chara_Main\pl012\pl012_00_se\ktn_normal\pl012_ktn_hi_last	
+	538528469	pl012act00160			\300_Chara_Main\pl012\pl012_01_voice\01_act\0_normal\pl012act00160	
+	538528471	pl012act00162			\300_Chara_Main\pl012\pl012_01_voice\01_act\0_normal\pl012act00162	
+	541522655	pl012_dam_parry_blown_lo_vo			\300_Chara_Main\pl012\pl012_01_voice\01_act\0_normal\pl012_dam_parry_blown_lo_vo	
+	544522861	pl012_dam_parry_blown_hi_vo			\300_Chara_Main\pl012\pl012_01_voice\01_act\0_normal\pl012_dam_parry_blown_hi_vo	
+	586913377	pl012_fev_nml_to_evo			\300_Chara_Main\pl012\pl012_01_voice\03_fev\pl012_fev_nml_to_evo	
+	635895239	pl012_evo_sp_atk02_ash_loop_Pause			\300_Chara_Main\pl012\pl012_00_se\pl012_evo_sp_atk02_ash_loop_Pause	
+	637670233	pl012act00151_1			\300_Chara_Main\pl012\pl012_01_voice\01_act\1_evo\pl012act00151_1	
+	637817294	pl012act00152_1			\300_Chara_Main\pl012\pl012_01_voice\01_act\1_evo\pl012act00152_1	
+	666579714	pl012_evo_atk_ex01_ash_loop_Pause			\300_Chara_Main\pl012\pl012_00_se\pl012_evo_atk_ex01_ash_loop_Pause	
+	789053488	pl012_evo_ct_sp_break02_Stop			\300_Chara_Main\pl012\pl012_02_demo\KIKON_02\pl012_evo_ct_sp_break02_Stop	
+	879238545	pl012_chara_select			\300_Chara_Main\pl012\pl012_01_voice\02_sys\0_normal\pl012_chara_select	
+	928088732	pl012_guard_hit_vo			\300_Chara_Main\pl012\pl012_01_voice\01_act\0_normal\pl012_guard_hit_vo	
+	965027004	pl012_atk_gr01_vo			\300_Chara_Main\pl012\pl012_01_voice\01_act\0_normal\pl012_atk_gr01_vo	
+	1071556204	pl012_ct_evolve_2P_Stop			\300_Chara_Main\pl012\pl012_02_demo\EVOLVE\pl012_ct_evolve_2P_Stop	
+	1115211185	pl012_atk_hi_vo			\300_Chara_Main\pl012\pl012_01_voice\01_act\0_normal\_Changed_Probability\pl012_atk_hi_vo	
+	1118173865	pl012_ktn_lo_last			\300_Chara_Main\pl012\pl012_00_se\ktn_normal\pl012_ktn_lo_last	
+	1234174650	pl012_ktn_ex			\300_Chara_Main\pl012\pl012_00_se\ktn_normal\pl012_ktn_ex	
+	1245544426	pl012_ct_start_2P			\300_Chara_Main\pl012\pl012_02_demo\START\pl012_ct_start_2P	
+	1253845322	pl012_fev_sub_evo			\300_Chara_Main\pl012\pl012_01_voice\03_fev\pl012_fev_sub_evo	
+	1263950292	pl012_sp_atk01_vo_1			\300_Chara_Main\pl012\pl012_01_voice\01_act\1_evo\pl012_sp_atk01_vo_1	
+	1318062792	pl012_ktn_hi			\300_Chara_Main\pl012\pl012_00_se\ktn_normal\pl012_ktn_hi	
+	1327254251	pl012_step_vo			\300_Chara_Main\pl012\pl012_01_voice\01_act\0_normal\pl012_step_vo	
+	1340881881	pl012_atk_add			\300_Chara_Main\pl012\pl012_00_se\pl012_atk_add	
+	1385173122	pl012_ktn_lo			\300_Chara_Main\pl012\pl012_00_se\ktn_normal\pl012_ktn_lo	
+	1385462654	pl012act00141_1			\300_Chara_Main\pl012\pl012_01_voice\01_act\1_evo\pl012act00141_1	
+	1385609687	pl012act00140_1			\300_Chara_Main\pl012\pl012_01_voice\01_act\1_evo\pl012act00140_1	
+	1407419894	pl012_ct_sp_break02_1_vo_1			\300_Chara_Main\pl012\pl012_01_voice\01_act\1_evo\pl012_ct_sp_break02_1_vo_1	
+	1516442875	pl012_ct_evolve_Stop			\300_Chara_Main\pl012\pl012_02_demo\EVOLVE\pl012_ct_evolve_Stop	
+	1520412796	pl012_evo_ct_win_y			\300_Chara_Main\pl012\pl012_02_demo\WIN\pl012_evo_ct_win_y	
+	1583233351	pl012_atk_ex_vo_1			\300_Chara_Main\pl012\pl012_01_voice\01_act\1_evo\pl012_atk_ex_vo_1	
+	1594089292	pl012_ct_evolve			\300_Chara_Main\pl012\pl012_02_demo\EVOLVE\pl012_ct_evolve	
+	1665982435	pl012_atk_lo_vo_1			\300_Chara_Main\pl012\pl012_01_voice\01_act\1_evo\_Changed_Probability\pl012_atk_lo_vo_1	
+	1705364324	pl012_atk_lo_last_vo_1			\300_Chara_Main\pl012\pl012_01_voice\01_act\1_evo\pl012_atk_lo_last_vo_1	
+	1800337079	pl012_syunpo_in_vo			\300_Chara_Main\pl012\pl012_01_voice\01_act\0_normal\pl012_syunpo_in_vo	
+	1822790364	pl012_atk_ex01_explo_Stop			\300_Chara_Main\pl012\pl012_00_se\pl012_atk_ex01_explo_Stop	
+	1823978031	pl012act00162_1			\300_Chara_Main\pl012\pl012_01_voice\01_act\1_evo\pl012act00162_1	
+	1852052121	pl012_ct_evolve_2P			\300_Chara_Main\pl012\pl012_02_demo\EVOLVE\pl012_ct_evolve_2P	
+	1884348391	pl012_dam_break_lo_vo			\300_Chara_Main\pl012\pl012_01_voice\01_act\0_normal\pl012_dam_break_lo_vo	
+	1952803129	pl012_atk_boost_vo			\300_Chara_Main\pl012\pl012_01_voice\01_act\0_normal\pl012_atk_boost_vo	
+	1963761927	pl012_ct_win_y			\300_Chara_Main\pl012\pl012_02_demo\WIN\pl012_ct_win_y	
+	1979248016	pl012_evo_ktn_lo_last			\300_Chara_Main\pl012\pl012_00_se\ktn_evo\pl012_evo_ktn_lo_last	
+	1981887676	pl012act00293_1			\300_Chara_Main\pl012\pl012_01_voice\01_act\1_evo\pl012act00293_1	
+	1982623153	pl012act00296_1			\300_Chara_Main\pl012\pl012_01_voice\01_act\1_evo\pl012act00296_1	
+	2055926282	pl012_ct_sp_break01_2_vo			\300_Chara_Main\pl012\pl012_01_voice\01_act\0_normal\pl012_ct_sp_break01_2_vo	
+	2108269610	pl012_dam_parry_hi_vo			\300_Chara_Main\pl012\pl012_01_voice\01_act\0_normal\_Changed_Probability\pl012_dam_parry_hi_vo	
+	2116876361	pl012_evo_sp_atk01_1			\300_Chara_Main\pl012\pl012_00_se\pl012_evo_sp_atk01_1	
+	2219360721	pl012_ktn_ex_last			\300_Chara_Main\pl012\pl012_00_se\ktn_normal\pl012_ktn_ex_last	
+	2279572281	pl012_evo_atk_ex01_ash_loop			\300_Chara_Main\pl012\pl012_00_se\pl012_evo_atk_ex01_ash_loop	
+	2336359657	pl012_atk_ex01_explo			\300_Chara_Main\pl012\pl012_00_se\pl012_atk_ex01_explo	
+	2368989808	pl012_win_evo			\300_Chara_Main\pl012\pl012_01_voice\02_sys\1_evo\pl012_win_evo	
+	2372194600	pl012_sp_atk01_vo			\300_Chara_Main\pl012\pl012_01_voice\01_act\0_normal\pl012_sp_atk01_vo	
+	2401090763	pl012_return_vo			\300_Chara_Main\pl012\pl012_01_voice\01_act\0_normal\pl012_return_vo	
+	2405080356	pl012_blk_boost_vo			\300_Chara_Main\pl012\pl012_01_voice\01_act\0_normal\pl012_blk_boost_vo	
+	2458979913	pl012act00142_1			\300_Chara_Main\pl012\pl012_01_voice\01_act\1_evo\pl012act00142_1	
+	2536718877	pl012_evo_ct_sp_break02			\300_Chara_Main\pl012\pl012_02_demo\KIKON_02\pl012_evo_ct_sp_break02	
+	2685519250	pl012act00282			\300_Chara_Main\pl012\pl012_01_voice\01_act\0_normal\pl012act00282	
+	2685519251	pl012act00283			\300_Chara_Main\pl012\pl012_01_voice\01_act\0_normal\pl012act00283	
+	2685519252	pl012act00284			\300_Chara_Main\pl012\pl012_01_voice\01_act\0_normal\pl012act00284	
+	2742854975	pl012_atk_ex_vo			\300_Chara_Main\pl012\pl012_01_voice\01_act\0_normal\pl012_atk_ex_vo	
+	2747947865	pl012_ct_start_2P_Stop			\300_Chara_Main\pl012\pl012_02_demo\START\pl012_ct_start_2P_Stop	
+	2783392962	pl012_ct_sp_break01_Stop			\300_Chara_Main\pl012\pl012_02_demo\KIKON_01\pl012_ct_sp_break01_Stop	
+	2789857189	pl012_win_nml			\300_Chara_Main\pl012\pl012_01_voice\02_sys\0_normal\pl012_win_nml	
+	2881814301	pl012_evo_ktn_ex			\300_Chara_Main\pl012\pl012_00_se\ktn_evo\pl012_evo_ktn_ex	
+	2898535978	pl012_atk_hi_last_vo_1			\300_Chara_Main\pl012\pl012_01_voice\01_act\1_evo\pl012_atk_hi_last_vo_1	
+	2911384560	pl012sys00209			\300_Chara_Main\pl012\pl012_01_voice\02_sys\0_normal\pl012sys00209	
+	2911384561	pl012sys00208			\300_Chara_Main\pl012\pl012_01_voice\02_sys\0_normal\pl012sys00208	
+	2911384568	pl012sys00201			\300_Chara_Main\pl012\pl012_01_voice\02_sys\0_normal\pl012sys00201	
+	2911384569	pl012sys00200			\300_Chara_Main\pl012\pl012_01_voice\02_sys\0_normal\pl012sys00200	
+	2911384570	pl012sys00203			\300_Chara_Main\pl012\pl012_01_voice\02_sys\0_normal\pl012sys00203	
+	2911384571	pl012sys00202			\300_Chara_Main\pl012\pl012_01_voice\02_sys\0_normal\pl012sys00202	
+	2911384572	pl012sys00205			\300_Chara_Main\pl012\pl012_01_voice\02_sys\0_normal\pl012sys00205	
+	2911384573	pl012sys00204			\300_Chara_Main\pl012\pl012_01_voice\02_sys\0_normal\pl012sys00204	
+	2911384574	pl012sys00207			\300_Chara_Main\pl012\pl012_01_voice\02_sys\0_normal\pl012sys00207	
+	2911384575	pl012sys00206			\300_Chara_Main\pl012\pl012_01_voice\02_sys\0_normal\pl012sys00206	
+	2932147319	pl012_evo_ktn_hi			\300_Chara_Main\pl012\pl012_00_se\ktn_evo\pl012_evo_ktn_hi	
+	2937183500	pl012act00271			\300_Chara_Main\pl012\pl012_01_voice\01_act\0_normal\pl012act00271	
+	2937183501	pl012act00270			\300_Chara_Main\pl012\pl012_01_voice\01_act\0_normal\pl012act00270	
+	2937183503	pl012act00272			\300_Chara_Main\pl012\pl012_01_voice\01_act\0_normal\pl012act00272	
+	2999257605	pl012_evo_ktn_lo			\300_Chara_Main\pl012\pl012_00_se\ktn_evo\pl012_evo_ktn_lo	
+	3012197344	pl012sys00102			\300_Chara_Main\pl012\pl012_01_voice\02_sys\0_normal\pl012sys00102	
+	3012197345	pl012sys00103			\300_Chara_Main\pl012\pl012_01_voice\02_sys\0_normal\pl012sys00103	
+	3012197346	pl012sys00100			\300_Chara_Main\pl012\pl012_01_voice\02_sys\0_normal\pl012sys00100	
+	3012197347	pl012sys00101			\300_Chara_Main\pl012\pl012_01_voice\02_sys\0_normal\pl012sys00101	
+	3012197348	pl012sys00106			\300_Chara_Main\pl012\pl012_01_voice\02_sys\0_normal\pl012sys00106	
+	3012197349	pl012sys00107			\300_Chara_Main\pl012\pl012_01_voice\02_sys\0_normal\pl012sys00107	
+	3012197350	pl012sys00104			\300_Chara_Main\pl012\pl012_01_voice\02_sys\0_normal\pl012sys00104	
+	3012197351	pl012sys00105			\300_Chara_Main\pl012\pl012_01_voice\02_sys\0_normal\pl012sys00105	
+	3012197354	pl012sys00108			\300_Chara_Main\pl012\pl012_01_voice\02_sys\0_normal\pl012sys00108	
+	3012197355	pl012sys00109			\300_Chara_Main\pl012\pl012_01_voice\02_sys\0_normal\pl012sys00109	
+	3030806911	pl012_ct_sp_break01_vo_1			\300_Chara_Main\pl012\pl012_01_voice\01_act\1_evo\pl012_ct_sp_break01_vo_1	
+	3055949386	pl012act00291_1			\300_Chara_Main\pl012\pl012_01_voice\01_act\1_evo\pl012act00291_1	
+	3056096547	pl012act00290_1			\300_Chara_Main\pl012\pl012_01_voice\01_act\1_evo\pl012act00290_1	
+	3109390028	pl012_evo_atk_ex01_ash_loop_Stop			\300_Chara_Main\pl012\pl012_00_se\pl012_evo_atk_ex01_ash_loop_Stop	
+	3231689039	pl012_ct_sp_break01_1_vo			\300_Chara_Main\pl012\pl012_01_voice\01_act\0_normal\pl012_ct_sp_break01_1_vo	
+	3365296060	pl012_dam_parry_lo_vo			\300_Chara_Main\pl012\pl012_01_voice\01_act\0_normal\_Changed_Probability\pl012_dam_parry_lo_vo	
+	3374336589	pl012_atk_gr02_vo			\300_Chara_Main\pl012\pl012_01_voice\01_act\0_normal\pl012_atk_gr02_vo	
+	3384651439	pl012_evo_sp_atk02_ash_loop_Stop			\300_Chara_Main\pl012\pl012_00_se\pl012_evo_sp_atk02_ash_loop_Stop	
+	3395117641	pl012_evo_atk_ashswing			\300_Chara_Main\pl012\pl012_00_se\pl012_evo_atk_ashswing	
+	3429660653	pl012_sp_atk02_vo_1			\300_Chara_Main\pl012\pl012_01_voice\01_act\1_evo\pl012_sp_atk02_vo_1	
+	3437620679	pl012_ct_sp_break01			\300_Chara_Main\pl012\pl012_02_demo\KIKON_01\pl012_ct_sp_break01	
+	3465176613	pl012fev00200_1			\300_Chara_Main\pl012\pl012_01_voice\03_fev\pl012fev00200_1	
+	3465323674	pl012fev00203_1			\300_Chara_Main\pl012\pl012_01_voice\03_fev\pl012fev00203_1	
+	3465868097	pl012fev00204_1			\300_Chara_Main\pl012\pl012_01_voice\03_fev\pl012fev00204_1	
+	3528402520	pl012_evo_ktn_ex_last			\300_Chara_Main\pl012\pl012_00_se\ktn_evo\pl012_evo_ktn_ex_last	
+	3567722066	pl012_ct_guard_com_vo			\300_Chara_Main\pl012\pl012_01_voice\01_act\0_normal\pl012_ct_guard_com_vo	
+	3594107264	pl012_evo_sp_atk02_ash_loop			\300_Chara_Main\pl012\pl012_00_se\pl012_evo_sp_atk02_ash_loop	
+	3599377043	pl012_atk_ash_v2			\300_Chara_Main\pl012\pl012_00_se\pl012_atk_ash_v2	
+	3667194356	pl012_chara_select_Stop			\300_Chara_Main\pl012\pl012_01_voice\02_sys\0_normal\pl012_chara_select_Stop	
+	3675272403	pl012_ct_guardbreak_vo			\300_Chara_Main\pl012\pl012_01_voice\01_act\0_normal\pl012_ct_guardbreak_vo	
+	3699197740	pl012sys00209_1			\300_Chara_Main\pl012\pl012_01_voice\02_sys\1_evo\pl012sys00209_1	
+	3700875058	pl012sys00203_1			\300_Chara_Main\pl012\pl012_01_voice\02_sys\1_evo\pl012sys00203_1	
+	3701316345	pl012sys00204_1			\300_Chara_Main\pl012\pl012_01_voice\02_sys\1_evo\pl012sys00204_1	
+	3701463406	pl012sys00207_1			\300_Chara_Main\pl012\pl012_01_voice\02_sys\1_evo\pl012sys00207_1	
+	3706717990	pl012_evo_ktn_hi_last			\300_Chara_Main\pl012\pl012_00_se\ktn_evo\pl012_evo_ktn_hi_last	
+	3725794960	pl012fev00201			\300_Chara_Main\pl012\pl012_01_voice\03_fev\pl012fev00201	
+	3725794961	pl012fev00200			\300_Chara_Main\pl012\pl012_01_voice\03_fev\pl012fev00200	
+	3725794962	pl012fev00203			\300_Chara_Main\pl012\pl012_01_voice\03_fev\pl012fev00203	
+	3725794963	pl012fev00202			\300_Chara_Main\pl012\pl012_01_voice\03_fev\pl012fev00202	
+	3725794965	pl012fev00204			\300_Chara_Main\pl012\pl012_01_voice\03_fev\pl012fev00204	
+	3826607768	pl012fev00102			\300_Chara_Main\pl012\pl012_01_voice\03_fev\pl012fev00102	
+	3826607769	pl012fev00103			\300_Chara_Main\pl012\pl012_01_voice\03_fev\pl012fev00103	
+	3826607770	pl012fev00100			\300_Chara_Main\pl012\pl012_01_voice\03_fev\pl012fev00100	
+	3826607771	pl012fev00101			\300_Chara_Main\pl012\pl012_01_voice\03_fev\pl012fev00101	
+	3826607774	pl012fev00104			\300_Chara_Main\pl012\pl012_01_voice\03_fev\pl012fev00104	
+	3832592278	pl012_evo_sp_atk02_ash_loop_Resume			\300_Chara_Main\pl012\pl012_00_se\pl012_evo_sp_atk02_ash_loop_Resume	
+	3838275907	pl012_atk_lo_vo			\300_Chara_Main\pl012\pl012_01_voice\01_act\0_normal\_Changed_Probability\pl012_atk_lo_vo	
+	3858722848	pl012act00150_1			\300_Chara_Main\pl012\pl012_01_voice\01_act\1_evo\pl012act00150_1	
+	3994267138	pl012_ct_win_y_Stop			\300_Chara_Main\pl012\pl012_02_demo\WIN\pl012_ct_win_y_Stop	
+	4044855768	pl012_boost_vo			\300_Chara_Main\pl012\pl012_01_voice\01_act\0_normal\pl012_boost_vo	
+	4122127125	pl012_ct_sp_break01_3_vo			\300_Chara_Main\pl012\pl012_01_voice\01_act\0_normal\pl012_ct_sp_break01_3_vo	
+	4127184940	pl012_ct_start_Stop			\300_Chara_Main\pl012\pl012_02_demo\START\pl012_ct_start_Stop	
+	4150272857	pl012_ct_start			\300_Chara_Main\pl012\pl012_02_demo\START\pl012_ct_start	
+	4230085509	pl012_atk_hi_vo_1			\300_Chara_Main\pl012\pl012_01_voice\01_act\1_evo\_Changed_Probability\pl012_atk_hi_vo_1	
+	4272244792	pl012_atk_lo_last_vo			\300_Chara_Main\pl012\pl012_01_voice\01_act\0_normal\pl012_atk_lo_last_vo	
+	4280495883	pl012_evo_ct_win_y_Stop			\300_Chara_Main\pl012\pl012_02_demo\WIN\pl012_evo_ct_win_y_Stop	
+
+Switch Group	ID	Name			Wwise Object Path	Notes
+	31520125	kikon_voice_sw			\Default Work Unit\kikon_voice_sw	
+
+Switch	ID	Name	Switch Group			Notes
+	3549962417	kikon_sw1	kikon_voice_sw			
+	3549962418	kikon_sw2	kikon_voice_sw			
+
+Game Parameter	ID	Name			Wwise Object Path	Notes
+	732110857	KikonHitEcho			\Default Work Unit\KikonHitEcho	
+	3530979832	PositionSwitch			\Default Work Unit\PositionSwitch	
+
+In Memory Audio	ID	Name	Audio source file		Wwise Object Path	Notes	Data Size
+	3573059	pl012act00150_1	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00150_1_1903D6BD.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\1_evo\pl012act00150_1		18434
+	8423324	pl012act00110_1	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00110_1_BD7C6E51.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\1_evo\pl012_atk_lo_last_vo_1\pl012act00110_1		6075
+	22160498	pl012act00100	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00100_74B9725B.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_atk_lo_vo\pl012act00100		2357
+	22292556	pl012act00163	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00163_BB677ABC.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_sp_atk02_vo\pl012act00163		17256
+	22331410	pl012act00242	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00242_0E0B491A.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_boost_vo\pl012act00242		7855
+	48105957	pl012act00272	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00272_CFE48CEA.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\_demo\_FX\pl012act00272		13617
+	55794514	act_ktn2_last	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\SFX\10_main_comse\common\act_ktn2_last 軽め刀最終段_F70F6087.wem		\Actor-Mixer Hierarchy\10_main_comse\comse\common\act_ktn2_last		11993
+	76363707	pl012act00372	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00372_F72BE347.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_dam_break_lo_vo\pl012act00372		10953
+	78416556	pl012_ct_start	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\SFX\pl012\_demo\pl012_ct_start 乱菊登場_36730053.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_02_demo\START\pl012_ct_start	PS4 7.1conv 	962428
+	80425721	pl012act00341	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00341_7060DF3F.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_dam_parry_blown_lo_vo\pl012act00341		4532
+	84734112	pl012act00121_1	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00121_1_1C3D5EC2.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\1_evo\pl012_atk_hi_vo_1\pl012act00121_1		5636
+	87754623	pl012act00310	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00310_20B09ADB.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\_demo\_FX\pl012_ct_guardbreak_vo\pl012act00310		5737
+	87976791	pl012_atk_ash3	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\SFX\pl012\_se\pl012_atk_ash3 乱菊灰３_942CB1DA.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_00_se\pl012_atk_ash\pl012_atk_ash3		13361
+	90372057	pl012sys00201	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012sys00201_4955F4DB.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\02_sys\0_normal\pl012_win_nml\pl012sys00201		36177
+	93558746	pl012fev00201	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012fev00201_BA72030C.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\03_fev\pl012fev00201		25363
+	94367815	pl012act00109	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00109_AB0936EB.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_atk_lo_vo\pl012act00109		2566
+	101141207	pl012act00192	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00192_84D572B3.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_step_vo\pl012act00192		2395
+	101396511	pl012sys00106	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012sys00106_4955F4DB.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\_demo\_FX\pl012_ct_sp_break01_1_vo\pl012sys00106		16473
+	107340211	pl012act00103	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00103_26AB2844.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_atk_lo_vo\pl012act00103		4307
+	107599281	act_ktn2	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\SFX\10_main_comse\act_ktn2 刀_振り2_4955F4DB.wem		\Actor-Mixer Hierarchy\10_main_comse\comse\common\act_ktn2\act_ktn2	act_ktn2 刀_振り2	8912
+	111690897	pl012act00131_1	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00131_1_269EA6E3.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\1_evo\pl012_atk_hi_last_vo_1\pl012act00131_1		6473
+	120508595	pl012act00271	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00271_9425179F.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\_demo\_FX\pl012act00271		14113
+	121267589	pl012fev00104	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012fev00104_9BE80AD8.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\03_fev\pl012_fev_nml_to_evo\pl012fev00104		13432
+	123692253	pl012act00172	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00172_5D5A7AA3.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_atk_gr02_vo\pl012act00172		6032
+	125145233	pl012act00182	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00182_154BB06C.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_atk_gr01_vo\pl012act00182		9216
+	127536117	pl012act00380	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00380_7135DFE0.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\_demo\_FX\pl012_dam_break_hi_vo\pl012act00380		8945
+	128472042	pl012fev00201_1	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012fev00201_1_EA4AC4C7.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\03_fev\pl012_fev_sub_evo\pl012fev00201_1		29724
+	128661999	pl012act00240	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00240_459650C3.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_boost_vo\pl012act00240		7215
+	134819212	pl012act00283	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00283_0F3CB15E.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\_demo\_FX\pl012_ct_sp_break01_3_vo\pl012act00283		14046
+	136055109	pl012sys00109	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012sys00109_22035E73.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\02_sys\0_normal\pl012_chara_select\pl012sys00109		19823
+	142755853	pl012act00381	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00381_D30D53C7.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\_demo\_FX\pl012_dam_break_hi_vo\pl012act00381		10842
+	143036411	pl012_atk_add1	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\SFX\pl012\_se\pl012_atk_add1 乱菊攻撃エフェクト音１_1A8FC8F9.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_00_se\pl012_atk_add\pl012_atk_add1		6087
+	145897082	pl012act00311	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00311_CED694FF.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\_demo\_FX\pl012_ct_guardbreak_vo\pl012act00311		6033
+	164971794	act_rei_m_swing3	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\SFX\10_main_comse\common\act_rei_m_swing3 霊圧技振り音中３_A867C27B.wem		\Actor-Mixer Hierarchy\10_main_comse\comse\common\swing\act_rei_m_swing\act_rei_m_swing3		18025
+	172952042	pl012act00212	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00212_13709487.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\_demo\_FX\pl012_ct_syunpo_out_just_vo\pl012act00212		9230
+	174474094	pl012act00132	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00132_1A46A902.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_atk_hi_last_vo\pl012act00132		4370
+	176075109	ct_evolve_cmr_2P	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\SFX\10_main_comse\demo_com\ct_evolve_cmr 覚醒 カメラ_330D381A.wem		\Actor-Mixer Hierarchy\10_main_comse\comse\demo_com\ct_evolve_cmr_2P	PS4 7.1conv 	79652
+	176223722	pl012act00302	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00302_DE4A9B9A.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\_demo\pl012_ct_guard_com_vo\pl012act00302		13806
+	181968590	pl012act00324	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00324_EBFA2EFE.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_dam_parry_lo_vo\pl012act00324		1927
+	188368020	pl012act00111_1	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00111_1_023E5690.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\1_evo\pl012_atk_lo_last_vo_1\pl012act00111_1		4475
+	190683392	pl012act00350	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00350_EE28EA9F.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_dam_parry_blown_hi_vo\pl012act00350		6608
+	194473456	pl012act00131	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00131_CD2AF689.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_atk_hi_last_vo\pl012act00131		3534
+	195654159	pl012fev00102	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012fev00102_2C07DD59.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\03_fev\pl012_fev_nml_to_evo\pl012fev00102		20044
+	197451449	pl012act00222	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00222_64494D3F.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_guard_hit_vo\pl012act00222		7743
+	215458091	pl012act00200	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00200_34D6D225.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_syunpo_in_vo\pl012act00200		1982
+	215682070	pl012fev00204	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012fev00204_65FADE95.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\03_fev\pl012fev00204		22172
+	217950682	pl012_evo_atk_ashswing	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\SFX\pl012\_se\pl012_evo_atk_ashswing 乱菊覚醒灰振り_72248539.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_00_se\pl012_evo_atk_ashswing		13259
+	231612262	pl012act00142	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00142_760CB536.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_atk_ex_vo\pl012act00142		10136
+	238246035	pl012sys00104	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012sys00104_43B1C9E8.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\02_sys\0_normal\pl012_chara_select\pl012sys00104		23304
+	238394139	pl012sys00101	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012sys00101_9FAECE5D.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\02_sys\0_normal\pl012_chara_select\pl012sys00101		15772
+	240169680	pl012act00170	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00170_A53598C0.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_atk_gr02_vo\pl012act00170		4804
+	243884594	pl012act00114	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00114_D6048B74.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_atk_lo_last_vo\pl012act00114		6306
+	245497638	pl012act00104	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00104_8C7CA1FD.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_atk_lo_vo\pl012act00104		3235
+	246489336	pl012act00122_1	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00122_1_A1C1FD18.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\1_evo\pl012_atk_hi_vo_1\pl012act00122_1		7501
+	254980055	pl012act00301	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00301_36DC6668.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\_demo\pl012_ct_guard_com_vo\pl012act00301		12074
+	257167524	pl012act00290_1	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00290_1_B7DD1464.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\1_evo\_demo\_FX\pl012_ct_sp_break02_2_vo_1\pl012act00290_1		13983
+	260779259	pl012sys00102	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012sys00102_03ED6CE8.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\02_sys\0_normal\pl012_chara_select\pl012sys00102		24485
+	266836884	pl012act00322	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00322_940AEA1B.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_dam_parry_lo_vo\pl012act00322		1933
+	268159734	pl012act00362	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00362_4141421D.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_return_vo\pl012act00362		4266
+	270126481	pl012act00280	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00280_EB262267.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\_demo\_FX\pl012_ct_sp_break01_2_vo\pl012act00280		2332
+	274745279	act_rei_m_swing1	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\SFX\10_main_comse\common\act_rei_m_swing1 霊圧技振り音中１_026716A6.wem		\Actor-Mixer Hierarchy\10_main_comse\comse\common\swing\act_rei_m_swing\act_rei_m_swing1		17792
+	275917174	pl012_atk_ex01_explo_1	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\SFX\pl012\_se\pl012_atk_ex01_explo_1 乱菊赤火砲１_717D72A1.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_00_se\pl012_atk_ex01_explo\pl012_atk_ex01_explo_1		26882
+	279720370	act_ktn_s_swing2	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\SFX\10_main_comse\common\act_ktn_s_swing2 武器振り音短２_A55280AE.wem		\Actor-Mixer Hierarchy\10_main_comse\comse\common\swing\act_ktn_s_swing\act_ktn_s_swing2		1986
+	280059983	pl012_evo_sp_atk02_ash_loop	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\SFX\pl012\_se\pl012_evo_sp_atk02_ash_loop1 乱菊霊圧技２灰ループ_B0CBB599.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_00_se\pl012_evo_sp_atk02_ash_loop		309981
+	282038835	pl012act00294_1	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00294_1_5BB12BA3.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\1_evo\_demo\_FX\pl012_ct_sp_break02_1_vo_1\pl012act00294_1		11796
+	282630679	ct_start_cmr	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\SFX\10_main_comse\demo_com\ct_start_cmr 【共通】登場 カメラ_4955F4DB.wem		\Actor-Mixer Hierarchy\10_main_comse\comse\demo_com\ct_start_cmr	ct_start_cmr 【共通】登場 カメラ	90908
+	286447251	pl012act00252	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00252_FDA844C1.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_blk_boost_vo\pl012act00252		8913
+	294207624	pl012act00371	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00371_A5132E78.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_dam_break_lo_vo\pl012act00371		7150
+	295708521	pl012act00370	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00370_40FD1655.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_dam_break_lo_vo\pl012act00370		7232
+	314863712	pl012sys00209_1	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012sys00209_1_4955F4DB.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\02_sys\1_evo\pl012_win_evo\pl012sys00209_1		23900
+	319897287	pl012_atk_ash1	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\SFX\pl012\_se\pl012_atk_ash1 乱菊灰１_52432A81.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_00_se\pl012_atk_ash\pl012_atk_ash1		11797
+	322576447	pl012act00100_1	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00100_1_F151D630.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\1_evo\pl012_atk_lo_vo_1\pl012act00100_1		2766
+	323163405	pl012act00101	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00101_C73AABFB.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_atk_lo_vo\pl012act00101		2903
+	327205044	pl012act00262	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00262_C4F7588D.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_atk_boost_vo\pl012act00262		8417
+	328592800	pl012act00250	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00250_A829EE85.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_blk_boost_vo\pl012act00250		10618
+	329331563	pl012_ct_sp_break01	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\SFX\pl012\_demo\pl012_ct_sp_break01 乱菊毀魂技_2538253B.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_02_demo\KIKON_01\pl012_ct_sp_break01	PS4 7.1conv 	515774
+	340554573	pl012act00122	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00122_67726794.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_atk_hi_vo\pl012act00122		6350
+	340626574	pl012sys00105	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012sys00105_25C453AF.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\02_sys\0_normal\pl012_chara_select\pl012sys00105		14630
+	340931986	pl012sys00201_1	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012sys00201_1_4955F4DB.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\02_sys\1_evo\pl012_win_evo\pl012sys00201_1		17273
+	342506063	pl012sys00203_1	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012sys00203_1_4955F4DB.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\02_sys\1_evo\pl012_win_evo\pl012sys00203_1		25386
+	343310755	pl012sys00205_1	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012sys00205_1_4955F4DB.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\02_sys\1_evo\pl012_win_evo\pl012sys00205_1		25938
+	343779693	pl012fev00202	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012fev00202_433A63BA.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\03_fev\pl012fev00202		18726
+	358210428	pl012act00162	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00162_EBFD91EF.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012act00162		26990
+	363938043	pl012_ct_evolve	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\SFX\pl012\_demo\pl012_ct_evolve 乱菊覚醒_4955F4DB.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_02_demo\EVOLVE\pl012_ct_evolve	PS4 7.1conv 	1346993
+	378249178	pl012sys00206	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012sys00206_4955F4DB.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\02_sys\0_normal\pl012_win_nml\pl012sys00206		14313
+	379275752	pl012act00161	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00161_9A81A699.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_sp_atk02_vo\pl012act00161		12371
+	379803145	pl012_atk_ash2	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\SFX\pl012\_se\pl012_atk_ash2 乱菊灰２_6118B9FF.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_00_se\pl012_atk_ash\pl012_atk_ash2		12640
+	381815143	pl012act00382	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00382_4111FDE9.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\_demo\_FX\pl012_dam_break_hi_vo\pl012act00382		9301
+	384729037	pl012sys00108	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012sys00108_4955F4DB.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\02_sys\0_normal\pl012sys00108		21491
+	398023206	pl012sys00200	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012sys00200_4955F4DB.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\02_sys\0_normal\pl012_win_nml\pl012sys00200		35066
+	399458793	pl012act00141	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00141_593F6DE7.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012act00141		11255
+	411053796	pl012act00312	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00312_42650FB6.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\_demo\_FX\pl012_ct_guardbreak_vo\pl012act00312		6937
+	419239624	pl012act00321	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00321_FEF8FD3C.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_dam_parry_lo_vo\pl012act00321		2193
+	424370852	pl012sys00203	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012sys00203_4955F4DB.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\02_sys\0_normal\pl012_win_nml\pl012sys00203		33808
+	430186028	pl012act00360	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00360_13EA4F16.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_return_vo\pl012act00360		3401
+	430402262	pl012act00220	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00220_0D0E51F7.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_guard_hit_vo\pl012act00220		16119
+	438452589	pl012act00130_1	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00130_1_6F083C14.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\1_evo\pl012_atk_hi_last_vo_1\pl012act00130_1		10167
+	440204054	pl012_evo_atk_ex01_ash_loop	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\SFX\pl012\_se\pl012_evo_atk_ex01_ash_loop1 乱菊己有技灰ループ_B0CBB599.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_00_se\pl012_evo_atk_ex01_ash_loop		293379
+	440650464	pl012act00102	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00102_437744B7.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_atk_lo_vo\pl012act00102		2681
+	450134321	pl012act00152_1	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00152_1_3C1C8BE6.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\1_evo\pl012_sp_atk01_vo_1\pl012act00152_1		19251
+	455801752	pl012act00210	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00210_52CFB398.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\_demo\_FX\pl012_ct_syunpo_out_just_vo\pl012act00210		7407
+	457839309	pl012act00260	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00260_11019D33.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_atk_boost_vo\pl012act00260		11470
+	459580434	pl012act00201	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00201_BCD20592.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_syunpo_in_vo\pl012act00201		8975
+	463002103	pl012act00282	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00282_2B296829.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\_demo\_FX\pl012act00282		11426
+	463850232	pl012act00295_1	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00295_1_0621B216.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\1_evo\_demo\_FX\pl012_ct_sp_break02_1_vo_1\pl012act00295_1		9336
+	464968679	pl012act00281_1	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00281_1_538BA017.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\1_evo\_demo\_FX\pl012_ct_sp_break01_vo_1\pl012act00281_1		6801
+	466736567	pl012act00261	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00261_FDBA2029.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_atk_boost_vo\pl012act00261		12812
+	474745141	pl012act00280_1	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00280_1_1BAB3394.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\1_evo\_demo\_FX\pl012_ct_sp_break01_vo_1\pl012act00280_1		10642
+	482148782	pl012act00161_1	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00161_1_78D09BD5.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\1_evo\pl012_sp_atk02_vo_1\pl012act00161_1		20515
+	483520920	pl012fev00204_1	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012fev00204_1_C20EDEE3.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\03_fev\pl012_fev_sub_evo\pl012fev00204_1		26517
+	485377332	pl012act00130	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00130_7B5493C9.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_atk_hi_last_vo\pl012act00130		4875
+	489655602	pl012act00113	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00113_D781A390.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_atk_lo_last_vo\pl012act00113		5055
+	489860224	pl012act00111	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00111_E1701024.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_atk_lo_last_vo\pl012act00111		6295
+	505730803	pl012act00320	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00320_93A8B88D.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_dam_parry_lo_vo\pl012act00320		2210
+	509387518	act_ktn1_big	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\SFX\10_main_comse\act_ktn1_big 大刀_大振り１_EAF06C80.wem		\Actor-Mixer Hierarchy\10_main_comse\comse\common\act_ktn2\act_ktn1_big\act_ktn1_big		8127
+	534793210	pl012act00283_1	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00283_1_1A5D38FC.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\1_evo\_demo\_FX\pl012_ct_sp_break02_2_vo_1\pl012act00283_1		8741
+	535737804	pl012sys00208_1	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012sys00208_1_4955F4DB.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\02_sys\1_evo\pl012_win_evo\pl012sys00208_1		26736
+	543102262	act_com_last_swing	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\SFX\10_main_comse\common\act_com_last_swing 汎用最終段付加音_69AD0A3F.wem		\Actor-Mixer Hierarchy\10_main_comse\comse\common\swing\act_com_last_swing		22034
+	551707688	pl012fev00203_1	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012fev00203_1_D7F9143F.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\03_fev\pl012_fev_sub_evo\pl012fev00203_1		27251
+	556263111	pl012_evo_sp_atk01_1	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\SFX\pl012\_se\pl012_evo_sp_atk01_1 乱菊覚醒霊圧技１_4955F4DB.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_00_se\pl012_evo_sp_atk01_1		21344
+	561938809	pl012act00284	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00284_3B93D461.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\_demo\_FX\pl012_ct_sp_break01_3_vo\pl012act00284		11213
+	564290087	pl012act00171	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00171_3841E16E.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_atk_gr02_vo\pl012act00171		6902
+	565370798	pl012act00323	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00323_24E9FCC9.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_dam_parry_lo_vo\pl012act00323		2233
+	566852600	pl012act00241	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00241_446E9EAA.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_boost_vo\pl012act00241		12108
+	571048241	pl012_evo_ct_win_y	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\SFX\pl012\_demo\pl012_evo_ct_win_y 乱菊覚醒勝利_ECECAAED.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_02_demo\WIN\pl012_evo_ct_win_y	PS4 7.1conv 	619927
+	571430340	pl012act00123	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00123_3F9C0789.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_atk_hi_vo\pl012act00123		9062
+	579094103	pl012act00282_1	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00282_1_EFD9E29F.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\1_evo\_demo\_FX\pl012act00282_1		10182
+	582369611	pl012act00352	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00352_7F9A6A3E.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_dam_parry_blown_hi_vo\pl012act00352		7736
+	603146921	pl012act00180	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00180_2377DF11.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_atk_gr01_vo\pl012act00180		3067
+	603528255	pl012act00112	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00112_EF82B478.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_atk_lo_last_vo\pl012act00112		3865
+	606657505	pl012act00361	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00361_0C1686A8.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_return_vo\pl012act00361		3852
+	608312917	pl012_atk_ash_v2	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\SFX\pl012\_se\pl012_atk_ash_v2 乱菊灰長め_7866A212.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_00_se\pl012_atk_ash_v2		34400
+	632522116	pl012act00211	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00211_523EC55B.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\_demo\_FX\pl012_ct_syunpo_out_just_vo\pl012act00211		9980
+	633330127	pl012sys00208	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012sys00208_4955F4DB.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\02_sys\0_normal\pl012_win_nml\pl012sys00208		19531
+	634091410	pl012act00105	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00105_185AF09E.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_atk_lo_vo\pl012act00105		2315
+	636825339	pl012_atk_add3	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\SFX\pl012\_se\pl012_atk_add3 乱菊攻撃エフェクト音３_E46B7410.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_00_se\pl012_atk_add\pl012_atk_add3		6089
+	639672631	pl012fev00101	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012fev00101_B6786FE4.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\03_fev\pl012_fev_nml_to_evo\pl012fev00101		13834
+	644878757	act_ktn_s_swing3	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\SFX\10_main_comse\common\act_ktn_s_swing3 武器振り音短３_70776C2B.wem		\Actor-Mixer Hierarchy\10_main_comse\comse\common\swing\act_ktn_s_swing\act_ktn_s_swing3		2069
+	653299255	pl012act00108	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00108_DB1DDE24.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_atk_lo_vo\pl012act00108		2017
+	661078005	pl012act00191	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00191_90835EDD.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_step_vo\pl012act00191		2334
+	672330114	pl012fev00200	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012fev00200_508D24DF.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\03_fev\pl012fev00200		19543
+	685714524	act_foley_sword1_2	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\SFX\10_main_comse\2_bsr_ワンショット系 刀ぶつかり合い 中2_38F6FD2C.wem		\Actor-Mixer Hierarchy\10_main_comse\comse\common\act_ktn2\act_ktn1_big\act_foley_sword1_2	act_foley_sword1_2 2_bsr_ワンショット系 刀ぶつかり合い 中2	6116
+	689826918	pl012_atk_add2	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\SFX\pl012\_se\pl012_atk_add2 乱菊攻撃エフェクト音２_B3423001.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_00_se\pl012_atk_add\pl012_atk_add2		5879
+	696173220	pl012act00230	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00230_9191932C.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\_demo\_FX\pl012_guardbreak_vo\pl012act00230		4427
+	699703937	pl012act00342	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00342_FAD518E7.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_dam_parry_blown_lo_vo\pl012act00342		6449
+	702575663	pl012act00132_1	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00132_1_87605480.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\1_evo\pl012_atk_hi_last_vo_1\pl012act00132_1		5568
+	702861492	pl012act00332	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00332_21ED3AA8.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_dam_parry_hi_vo\pl012act00332		13435
+	706396975	pl012sys00206_1	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012sys00206_1_4955F4DB.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\02_sys\1_evo\pl012_win_evo\pl012sys00206_1		31934
+	712572170	pl012act00296_1	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00296_1_490922C3.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\1_evo\_demo\_FX\pl012act00296_1		11245
+	713929007	pl012sys00207_1	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012sys00207_1_4955F4DB.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\02_sys\1_evo\pl012_win_evo\pl012sys00207_1		21021
+	716190999	pl012act00300	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00300_9907D6B9.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\_demo\pl012_ct_guard_com_vo\pl012act00300		12463
+	720894927	pl012sys00204	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012sys00204_4955F4DB.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\02_sys\0_normal\pl012_win_nml\pl012sys00204		17059
+	722094107	pl012fev00100	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012fev00100_8DEF53C8.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\03_fev\pl012_fev_nml_to_evo\pl012fev00100		10549
+	729658281	pl012act00330	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00330_91EE79A9.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_dam_parry_hi_vo\pl012act00330		8315
+	746042540	pl012act00325	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00325_9A764292.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_dam_parry_lo_vo\pl012act00325		2373
+	748303611	pl012act00281	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00281_4B604C15.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\_demo\_FX\pl012_ct_sp_break01_2_vo\pl012act00281		3684
+	756079718	pl012act00142_1	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00142_1_326C4F5C.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\1_evo\pl012_atk_ex_vo_1\pl012act00142_1		7417
+	759039270	pl012act00162_1	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00162_1_8DC7B3C1.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\1_evo\pl012act00162_1		21937
+	765936347	pl012act00151_1	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00151_1_DA207FA8.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\1_evo\pl012_sp_atk01_vo_1\pl012act00151_1		13231
+	767740734	pl012sys00202	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012sys00202_4955F4DB.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\02_sys\0_normal\pl012_win_nml\pl012sys00202		18656
+	770359375	pl012act00251	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00251_B920AEDD.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_blk_boost_vo\pl012act00251		8558
+	781549027	pl012fev00203	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012fev00203_A21F97A5.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\03_fev\pl012fev00203		26787
+	785291040	pl012act00291_1	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00291_1_531F71E7.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\1_evo\_demo\_FX\pl012act00291_1		12798
+	785954738	pl012sys00205	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012sys00205_4955F4DB.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\02_sys\0_normal\pl012_win_nml\pl012sys00205		25100
+	787670633	act_ktn_s_swing1	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\SFX\10_main_comse\common\act_ktn_s_swing1 武器振り音短１_F00FDA3C.wem		\Actor-Mixer Hierarchy\10_main_comse\comse\common\swing\act_ktn_s_swing\act_ktn_s_swing1		2429
+	791832845	pl012sys00107	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012sys00107_657311E6.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\02_sys\0_normal\pl012_chara_select\pl012sys00107		20495
+	791974173	pl012act00293_1	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00293_1_6A611390.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\1_evo\_demo\_FX\pl012act00293_1		5236
+	805027264	pl012act00101_1	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00101_1_69A7B4B8.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\1_evo\pl012_atk_lo_vo_1\pl012act00101_1		2344
+	806400084	pl012act00181	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00181_D395B570.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_atk_gr01_vo\pl012act00181		4693
+	810378476	pl012sys00202_1	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012sys00202_1_4955F4DB.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\02_sys\1_evo\pl012_win_evo\pl012sys00202_1		22512
+	817498529	pl012fev00202_1	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012fev00202_1_92ACA68A.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\03_fev\pl012_fev_sub_evo\pl012fev00202_1		29275
+	818775905	pl012act00221	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00221_BB193A13.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_guard_hit_vo\pl012act00221		9870
+	830233481	pl012act00140	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00140_FCB1571B.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012act00140		17126
+	831017432	pl012act00112_1	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00112_1_FC928EC3.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\1_evo\pl012_atk_lo_last_vo_1\pl012act00112_1		6517
+	851432705	pl012act00106	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00106_252E5231.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_atk_lo_vo\pl012act00106		3979
+	864935488	pl012act00340	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00340_F4395AEE.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_dam_parry_blown_lo_vo\pl012act00340		2484
+	870784794	pl012_evo_ct_sp_break02	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\SFX\pl012\_demo\pl012_evo_ct_sp_break02 乱菊覚醒毀魂技２_685495FA.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_02_demo\KIKON_02\pl012_evo_ct_sp_break02	PS4 7.1conv 	798055
+	871844182	pl012sys00200_1	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012sys00200_1_4955F4DB.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\02_sys\1_evo\pl012_win_evo\pl012sys00200_1		29221
+	878217708	pl012act00150	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00150_DD6FB604.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_sp_atk01_vo\pl012act00150		10500
+	882443193	pl012act00143	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00143_EE0B6BB2.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_atk_ex_vo\pl012act00143		9721
+	882964877	pl012act00232	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00232_25F26DC5.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\_demo\_FX\pl012_guardbreak_vo\pl012act00232		6702
+	894444504	pl012act00151	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00151_96B8665D.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_sp_atk01_vo\pl012act00151		12628
+	910535899	pl012act00120_1	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00120_1_D9822F21.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\1_evo\pl012_atk_hi_vo_1\pl012act00120_1		8362
+	918228271	pl012act00331	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00331_FE739ECC.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_dam_parry_hi_vo\pl012act00331		7461
+	921232939	pl012act00335	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00335_3FCFC4A2.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_dam_parry_hi_vo\pl012act00335		11555
+	922239327	pl012act00134	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00134_950DED1E.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_atk_hi_last_vo\pl012act00134		6834
+	930498785	ct_evolve_cmr	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\SFX\10_main_comse\demo_com\ct_evolve_cmr 覚醒 カメラ_B1938662.wem		\Actor-Mixer Hierarchy\10_main_comse\comse\demo_com\ct_evolve_cmr	PS4 7.1conv 	248787
+	934271862	pl012_ct_win_y	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\SFX\pl012\_demo\pl012_ct_win_y 乱菊勝利_2538253B.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_02_demo\WIN\pl012_ct_win_y	PS4 7.1conv 	534412
+	934569129	pl012act00190	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00190_F2E6706B.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_step_vo\pl012act00190		2594
+	935404356	pl012sys00100	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012sys00100_A749CC95.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\02_sys\0_normal\pl012_chara_select\pl012sys00100		13585
+	936820132	pl012act00334	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00334_2706DC62.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_dam_parry_hi_vo\pl012act00334		6849
+	937739798	pl012act00121	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00121_9D81FB1A.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_atk_hi_vo\pl012act00121		6961
+	948697421	pl012act00351	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00351_B5D9D24E.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_dam_parry_blown_hi_vo\pl012act00351		3697
+	950237733	pl012sys00103	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012sys00103_4955F4DB.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\_demo\_FX\pl012_ct_sp_break01_1_vo\pl012sys00103		15680
+	952930585	pl012act00333	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00333_FC7FEA41.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_dam_parry_hi_vo\pl012act00333		5205
+	953779021	pl012sys00209	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012sys00209_4955F4DB.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\02_sys\0_normal\pl012_win_nml\pl012sys00209		27468
+	955419732	act_rei_m_swing2	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\SFX\10_main_comse\common\act_rei_m_swing2 霊圧技振り音中２_65F54FE3.wem		\Actor-Mixer Hierarchy\10_main_comse\comse\common\swing\act_rei_m_swing\act_rei_m_swing2		18681
+	961503021	pl012_atk_ex01_explo_3	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\SFX\pl012\_se\pl012_atk_ex01_explo_3 乱菊赤火砲３_C4D0197E.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_00_se\pl012_atk_ex01_explo\pl012_atk_ex01_explo_3		28099
+	961531895	pl012_atk_ex01_explo_2	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\SFX\pl012\_se\pl012_atk_ex01_explo_2 乱菊赤火砲２_31E09187.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_00_se\pl012_atk_ex01_explo\pl012_atk_ex01_explo_2		26708
+	962687215	pl012act00141_1	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00141_1_063CFEE3.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\1_evo\pl012_atk_ex_vo_1\pl012act00141_1		3942
+	964622576	pl012act00124	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00124_46F7B028.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_atk_hi_vo\pl012act00124		7995
+	966201956	pl012act00120	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00120_D431F5AD.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_atk_hi_vo\pl012act00120		8437
+	969333695	pl012_ct_start_2P	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\SFX\pl012\_demo\pl012_ct_start 乱菊登場_07410A63.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_02_demo\START\pl012_ct_start_2P	PS4 7.1conv 	600787
+	969345543	pl012fev00103	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012fev00103_AE86E1B0.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\03_fev\pl012_fev_nml_to_evo\pl012fev00103		13283
+	971878730	pl012act00160_1	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00160_1_29889065.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\1_evo\pl012_sp_atk02_vo_1\pl012act00160_1		13149
+	973368856	pl012sys00204_1	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012sys00204_1_4955F4DB.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\02_sys\1_evo\pl012_win_evo\pl012sys00204_1		18904
+	991185019	pl012act00107	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00107_84D7FF7C.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_atk_lo_vo\pl012act00107		2753
+	1006573119	pl012act00140_1	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00140_1_E9159295.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\1_evo\pl012_atk_ex_vo_1\pl012act00140_1		10767
+	1016379785	pl012act00231	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00231_A3F2EB29.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\_demo\_FX\pl012_guardbreak_vo\pl012act00231		9338
+	1018272791	pl012fev00200_1	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012fev00200_1_9CE309A5.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\03_fev\pl012_fev_sub_evo\pl012fev00200_1		17239
+	1019267470	act_ktn1	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\SFX\10_main_comse\act_ktn1 刀_振り１_45F2819F.wem		\Actor-Mixer Hierarchy\10_main_comse\comse\common\act_ktn2\act_ktn1_big\act_ktn1	act_ktn1 刀_振り１	8411
+	1035768592	pl012act00110	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00110_43EA50B7.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_atk_lo_last_vo\pl012act00110		4107
+	1043108626	pl012act00270	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00270_306915D0.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\_demo\_FX\pl012act00270		10116
+	1043492801	pl012sys00207	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012sys00207_4955F4DB.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\02_sys\0_normal\pl012_win_nml\pl012sys00207		23103
+	1043595929	pl012act00202	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00202_F6F0FC34.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_syunpo_in_vo\pl012act00202		2766
+	1055551712	pl012act00133	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00133_F8E97D6D.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012_atk_hi_last_vo\pl012act00133		8919
+	1064039348	pl012act00160	C:\Users\k_sugiyama\ProjectData\BSR\bin\.cache\Windows\Voices\Japanese(JP)\300_Chara_Main\pl012\pl012act00160_A765A68C.wem		\Actor-Mixer Hierarchy\300_Chara_Main\pl012\pl012\pl012_01_voice\01_act\0_normal\pl012act00160		9910
+
