@@ -6,58 +6,55 @@
 
 Universal Changes:
 	Flashstep :
-		vanish : 30 frames for every character, invincible the whole time (a few characters had 18 to 36)
+		startup : 30 frames for every character, invincible the whole time (a few characters had 18 to 36)
 		reappear : 24 frames of recovery for every character (was 20 to 30)
 		whole flashstep : 54 frames for every character (was 40 to 66)
-		a flashstep pressed in the last 3 frames of blockstun now comes out on the first free frame (it used to be lost)
+		a flashstep pressed in the last 3 frames of blockstun now comes out on the first free frame
 	Flashstep follow-ups :
 		damage -25% on every flashstep follow-up and on its up / down finishers
 	Pushback on hit :
 		the slide of a light hit reaction and the recoil after a Sig are now the same on every character (they used to depend on the size of the character who got hit)
 		pushback on block is unchanged
 	Diminishing returns :
-		after each SP move in a combo, the attacker gains less Reverse gauge (Fighting Spirit is no longer reduced) for the rest of the combo : -25% after the 1st SP, -50% after the 2nd, -75% after the 3rd
-		the hits of the SP itself still count at the previous rate
-		the combo ends when the opponent leaves hitstun ; a Yellow Reverse resets it
-	Losing a Konpaku :
-		no Fighting Spirit for a Konpaku lost while Awakened or Reawakened
-		in base form, the Fighting Spirit it gives is capped : the one who lost the Konpaku never ends up with a fuller bar than the one who took it
+		after each SP move in a combo, the attacker gains less Reverse gauge for the rest of the combo : -25% after the 1st SP, -50% after the 2nd, -75% after the 3rd
+		a Yellow Reverse removes the penalty
+	Fighting Spirit gain on death :
+		when Awakened / Reawakened : 0.1 -> 0 (base still stays at 0.1)
+		in base form, the Fighting Spirit gain on death is capped : the one who lost the Konpaku never ends up with a fuller bar than the one who took it
 	Reverse :
 		a Reverse done while the opponent is in hitstun is now the Yellow (Chain) Reverse instead of the White one ; Kikon > hold > Reverse stays White
-		White Reverse Fighting Spirit gain : 0.0013 -> 0.00125 a frame (the original game's value)
+		White Reverse Fighting Spirit gain : 0.0013 -> 0.00125 a frame
 	Low HP damage bonus (under 30% HP) : +20% -> +15%
 	Grabs :
 		a grab tech pressed up to 6 frames before the grab connects now techs it ; counter and punish grabs still cannot be teched
 		online, the grab tech window is the same 12 frames for every player
 		grab tech works while holding Step / Dash
 		no SP1 / SP2 out of a held-grab run, for the rest of that run ; an SP out of a normal dash is unchanged
-	Awakening and Reawakening :
-		buttons pressed in the first 30 frames of your own Awakening / Reawakening are ignored (a grab pressed then used to come out and whiff right after it)
 
 Ichigo Kurosaki:
 	EVO :
 		Dash light : blockstun 18 -> 19
 		Sig (2nd part) : hitstun 32 -> 36
-		SP1 (enhanced) :
-			out of neutral it is now the 2-projectile version (300 + 300 damage, refills the Reverse gauge) instead of 750 + 750
-			the 750 + 750 version now refills the Reverse gauge too
-		Side steps in Reverse : speed x1.2 on the whole step -> x0.78 on its first 10 frames
+		SP1 (enhanced) : now refills the Reverse gauge
+		White Reverse :
+			Side step :
+				adjusted the invincibility frames to be the same as the non-White Reverse version (the invincibility frames during White Reverse used to be worse)
 
 Ichigo Kurosaki (Bankai):
 	EVO :
 		Tilt : unique gauge gain 150 -> 375
 	REAWAKENED :
-		Konpaku : 10 -> 9 (the standard 9)
+		Konpaku : 2 -> 1
 
 Ichigo Kurosaki (Final Getsugatensho):
-	Fighting Spirit needed for Spirit Drive in Kikon Channel : 4.5 -> 4.6 (slightly slower)
+	Fighting Spirit needed for Spirit Drive in Sublimation : 4.5 -> 4.6
 	BASE :
 		Tilt (3rd part) : hitstun 35 -> 33
-	Strike Back : on a multi-hit Strike Back, the opponent's extra hitstop now comes on the last hit
+	The extra hitstun from Strike Back now comes on the last hit, meaning you can combo Tilt (Strike Back) into Light 1
 
 Uryu Ishida:
-	Fighting Spirit needed for Kikon Channel : 4.75 -> 3.75 (faster)
-	Fighting Spirit needed to Reawaken : 2 -> 3 (slower)
+	Fighting Spirit needed to reach Sublimation : 4.75 -> 3.75
+	Fighting Spirit needed to Reawaken : 2 -> 3
 
 Yasutora Sado:
 	BASE AND EVO :
@@ -75,14 +72,11 @@ Kisuke Urahara:
 		Light 3 : hitstun 28 -> 30
 		Light 3 (during SP2) : 2nd hit blockstun 28 -> 27
 		Side steps : invincible 1 frame earlier (frame 7 -> 6, during SP2 5 -> 4)
-		Dash light : can no longer be cancelled into Hakugeki
-	BASE :
-		Heavy 1 (during SP2) : can no longer be cancelled into Hakugeki on whiff
 	EVO :
 		Heavy 1 (during SP2) : recovery 55 -> 46
 
 Yoruichi Shihoin:
-	Fighting Spirit needed to Awaken : 3 -> 3.2 (slower)
+	Fighting Spirit needed to Awaken : 3 -> 3.2
 	BASE :
 		SP1 :
 			first hit : 4 hits of 175 -> 1 hit of 250
@@ -102,24 +96,24 @@ Rukia Kuchiki:
 		Heavy 2 : guard damage 200 -> 100
 		Tilt : the 2nd hit can no longer catch an opponent who side-stepped through the 1st
 	BASE :
-		Sig : can no longer be cancelled into Hakugeki
 		Flashstep follow-up finishers (up / down) : now the same as Awakened : hitstun 30 -> 35, recovery 54 -> 69, combo window 34-54 -> 34-69
 	EVO :
 		SP2 (Hakuren) : 3 levels
 			SP gauge cost : 50 / 75 / 100 (level 1 / 2 / 3)
 			Reverse gauge refill : 0.10 / 0.15 / 0.20 (was always 0.20)
+			you still need to have 100 SP to start it, whatever the level
 
 Rangiku Matsumoto:
 	BASE AND EVO :
 		Backstep : distance x0.85
-		Backstep > backstep : from frame 42 (was 38)
-		Backstep > SP1 : from frame 30 (was 27)
+		Backstep : a second backstep out of it comes out from frame 42 (was 38)
+		Backstep : SP1 out of it comes out from frame 30 (was 27)
 	EVO :
 		SP chain : can now go into the Tilt
 
 Genryusai Shigekuni Yamamoto:
-	Fighting Spirit needed to Awaken : 3.5 -> 3.4 (faster)
-	Fighting Spirit needed for Kikon Channel : 3.75 -> 2.88 (faster)
+	Fighting Spirit needed to Awaken : 3.5 -> 3.4
+	Fighting Spirit needed to reach Sublimation : 3.75 -> 2.88
 	BASE AND EVO :
 		SP2 (blast) : hitstun 66 -> 76
 		Held grab : he can now chase the opponent with a held grab like everyone else, at 0.6x his dash speed ; his dash button still gives no run
@@ -127,7 +121,7 @@ Genryusai Shigekuni Yamamoto:
 		Tilt (2nd part) : blockstun 30 -> 31
 	EVO :
 		Tilt :
-			startup speed x1 -> x0.6 (slower)
+			startup speed x1 -> x0.6
 			unique gauge gain 0.1 -> 0.08, 2nd part 0.2 -> 0.16
 			2nd part : hitstun 52 -> 48, blockstun 36 -> 31
 			Inferno gauge gain from its flames -20% (0.0075 -> 0.006)
@@ -135,23 +129,25 @@ Genryusai Shigekuni Yamamoto:
 	Hellfire : a Kikon that kills a fighter who revives now ends Hellfire, as a Kikon that does not kill does
 
 Soi Fon:
-	Fighting Spirit needed to Awaken : 4.25 -> 4 (faster)
+	Fighting Spirit needed to Awaken : 4.25 -> 4
 	BASE AND EVO :
 		Dash light : recovery 32 -> 37, hitstun 23 -> 28, blockstun 20 -> 25, combo window 21-32 -> 26-37
-		Sig with 0 Anken : opening the menu no longer cancels the wind-up ; she gets her 4 Anken
+		Sig with 0 Anken : opening the menu no longer cancels the wind-up
 	EVO :
 		Heavy 2 (last hits) : hitstun 42 -> 43 and 48 -> 49
 		SP1 (1st and 2nd levels) : blockstun 20 -> 59 and 24 -> 61 (now -5 on block, as the 3rd level)
 
 Gin Ichimaru:
 	BASE :
-		less hitstop on block : Dash light 14 / 8 -> 6, Heavy 1 14 / 8 -> 6, Tilt 14 / 10 -> 6, Sig 2 -> 1, small changes on Heavy 2
-		SP1 (counter) : the counter-attack now hits wherever the opponent is (it no longer needs the teleport to connect)
+		SP1 (counter) : the counter-attack now hits wherever the opponent is
 		Sig : keeps aiming at the opponent until it is released
 	EVO :
-		less hitstop on block : Dash light 14 -> 8, Heavy 1 14 / 8 -> 6, Heavy 2 18 -> 8, Tilt 16 / 12 -> 10, Light 2 14 -> 6, Light 3 14 -> 6
-		SP1 (counter) : now hits wherever the opponent is, as in base form
-		Sig (2nd and 3rd parts) : recovery 200 -> 57 and 200 -> 52 ; the 2nd part can be step cancelled on hit only (was on hit or block)
+		SP1 (counter) : now hits wherever the opponent is
+		Sig (level 2) :
+			recovery 200 -> 57
+			can be step cancelled on hit only (was on hit or block)
+		Sig (level 3) :
+			recovery 200 -> 52
 
 Retsu Unohana:
 	BASE :
@@ -160,13 +156,12 @@ Retsu Unohana:
 	EVO :
 		Light 1 : pushback on block 0.6 -> 0.5
 		Dash light : whiff recovery 33 -> 53 (unchanged on hit or block)
-		SP2 (4th part) : now tracks the opponent
+		SP2 (during Sublimation / Spirit Drive) : now properly tracks the opponent during the whole move (used to sometimes be stuck on the wall or randomly drop)
 		Backstep : now invincible to grabs, and to Reverse on frames 0-22
-		Sig 3 (2nd and 3rd parts) : can now go into Light 4, Heavy 4 and Sig 4
 
 Sosuke Aizen:
 	REAWAKENED :
-		Konpaku : 10 -> 9 (the standard 9)
+		Konpaku : 2 -> 1
 
 Sajin Komamura:
 	BASE :
@@ -210,7 +205,7 @@ Kenpachi Zaraki:
 		SP1 : Fighting Spirit gain +20%
 		SP2 : now plays like his base SP2 : no invincibility, chip damage 0.005 -> 0.2, hitstop 20 -> 12, blockstun 30 -> 22 (1st part) and 28 (2nd part)
 		Sig : no Fighting Spirit when it is blocked
-	KIKON CHANNEL :
+	IN SUBLIMATION :
 		faster Light 1 (startup 8 -> 7), Heavy 1 (19 -> 17), Dash light (12 -> 10) and Tilt (33 -> 30, armor from frame 6 instead of 8)
 		SP2 : the old Awakened SP2 (invincible on frames 0-62)
 		Kikon : Konpaku damage 5 -> 4
@@ -223,8 +218,6 @@ Mayuri Kurotsuchi:
 Kaien Shiba:
 	BASE AND EVO :
 		SP2 : the enhanced mode now starts on frame 1 of the follow-up (was frame 57), so a kill mid-string still grants it ; its timer only runs once Kaien has control back (and not during a Kikon cutscene)
-	BASE :
-		SP1, Dash light, Lights, Sig and Heavy 2 : can no longer be cancelled into Hakugeki
 
 Shinji Hirako:
 	BASE AND EVO :
@@ -235,7 +228,7 @@ Shinji Hirako:
 		Front step : recovery 32 -> 25
 		Flashstep follow-up 1 : blockstun 20 -> 25
 	IN SAKANADE :
-		Sig tilt (forward + Sig) : whiff recovery 136 -> 117 (no more flashstep back to his stance at the end)
+		Sig tilt (forward + Sig) : whiff recovery 136 -> 117
 		Sig > forward + Sig : plays a quicker Sig tilt (no walk-in, 600 damage), from frame 14 of the Sig
 		the Sig cancels into the Tilt and into the Sig tilt until its frame 45
 		Dash light and Light 3 : cancel into SP2, the Sig and the Sig tilt on hit or block
@@ -243,7 +236,7 @@ Shinji Hirako:
 		SP2 : a command grab, but a plain strike on an opponent in hitstun (so a Dash light / Light 3 cancelled into it now connects)
 
 Coyote Starrk:
-	his wolves can now be perfect flashstepped, like almost every other attack
+	his wolves can now be perfect flashstepped
 	BASE AND EVO :
 		SP2 : recovery 80 -> 90 in neutral (still 80 in a combo or a blockstring)
 		SP2 timestop : the opponent is now fully stopped (was slowed to 10% speed)
@@ -260,13 +253,13 @@ Ulquiorra Cifer:
 		Heavy 2 (last hit) : hitstun 52 -> 49 (base), 40 -> 37 (Awakened and Reawakened)
 
 Nnoitora Gilga:
-	Fighting Spirit needed to Awaken : 3 -> 3.15 (slower)
+	Fighting Spirit needed to Awaken : 3 -> 3.15
 
 Grimmjow Jaegerjaquez:
 	BASE AND EVO :
 		Flashstep follow-up finishers (up / down) : 3rd hit damage 960 -> 540
 		Sig (release) : no longer unblockable
-		Annihilation : the Sig at full gauge, from neutral or from Light 3 on hit or block ; it no longer starts by itself
+		Annihilation : the Sig at full gauge no longer activates automatically. It can now be activated manually, either in neutral or after a Light 3 (on hit or block)
 
 Szayelaporro Granz:
 	BASE AND EVO :
@@ -293,7 +286,7 @@ Ichibe Hyosube:
 		SP1 : hitstun 58 -> 56 (Awakened 70 -> 68)
 
 Ichigo Kurosaki (Thousand-Year Blood War):
-	Fighting Spirit needed to Awaken : 3.25 -> 3.15 (faster)
+	Fighting Spirit needed to Awaken : 3.25 -> 3.15
 	BASE AND EVO :
 		Light 2 (2nd hit) : pushback on block x1.25
 		Light 3 (2nd hit) : blockstun 30 -> 32
@@ -304,6 +297,6 @@ Yhwach:
 		SP2 : recovery 88 -> 90 in neutral, 80 in a combo or a blockstring
 		Flashstep follow-up 2 : SP gauge gain on hit 1.75 -> the standard value
 	Kaiser level :
-		starts at 0 (was 1), Reawakening at level 8 (was 9), as in the original game
+		starts at 0 (was 1), Reawakening at level 8 (was 9)
 		weak Sig from Kaiser level 1 (was 3)
 		Reverse usable from Kaiser level 0

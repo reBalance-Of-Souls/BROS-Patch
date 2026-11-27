@@ -25,7 +25,7 @@ Tag Battle:
 	2v2, 4 players:
 		Two players a team, one character each. The first to join a team starts the fight, the other one on the bench.
 	Tag:
-		Press two of Light, Heavy and Signature together, or your Rapid Reverse button.
+		Press two of Light, Heavy and Signature together.
 	Tag in neutral:
 		Free, from standing, walking, running, a step or a dash. The opponent freezes while your partner comes in, then your partner has a short recovery where it cannot act or guard: it can be punished.
 	Tag in a combo:
@@ -36,8 +36,6 @@ Tag Battle:
 		A character with no Konpaku left is out and its partner comes in. A side with no character left loses.
 	Gauges:
 		SP, Reverse, Fighting Spirit, HP and Konpaku are each character's own.
-	Rapid Reverse:
-		Only once your partner is out: until then, its input is the tag.
 
 Team Battle:
 	One after the other:
@@ -51,7 +49,7 @@ Team Battle:
 	Timer:
 		The round timer starts again at each KO.
 	The rest:
-		Rapid Reverse works as in a normal match. No tag, no Kikon switch.
+		No tag, no Kikon switch.
 
 Multiplayer Team Battle:
 	A player a character:
@@ -78,18 +76,39 @@ Multiplayer Team Battle:
 Motion inputs:
 	Same game, new inputs:
 		Moves, damage and combos are the normal ones: only the way you do them changes. Directions in numpad notation (6 is forward).
+	The numbers:
+		1: down-back
+		2: down
+		3: down-forward
+		4: back
+		6: forward
+		7: up-back
+		8: up
+		9: up-forward
+		Example: 236 is down, down-forward, forward
 	Directions:
 		With 2D Camera: read on the screen, 6 is toward your opponent. With the normal camera: read on the stick as you hold it (6 is right, 8 is up), whatever your side.
 	Signature:
-		236 + Light. Forward Signature: 623 + Light, back Signature: 421 + Light, for the characters that have one. Wherever a move waits for the Signature button (its next hit, a follow-up): 236 + Light.
+		Signature: 236 + Light
+		Forward Signature: 623 + Light (for the characters that have one)
+		Back Signature: 421 + Light (for the characters that have one)
+		Wherever a move waits for the Signature button (its next hit, a follow-up): 236 + Light
 	Specials:
-		Reverse: 214 + Light. Hoho: 623 + Heavy. Tilt: 236 + Heavy (forward + Heavy is a plain Heavy). SP1: 236236 + Light. SP2: 236236 + Heavy.
+		Reverse: 214 + Light
+		Hoho: 623 + Heavy
+		Tilt: 236 + Heavy (forward + Heavy is a plain Heavy)
+		SP1: 236236 + Light
+		SP2: 236236 + Heavy
 	Kikon:
-		214 + Heavy. To charge it, keep Heavy held, or do 214 + Heavy again and hold it, during its opening.
+		Kikon: 214 + Heavy
+		To charge it: keep Heavy held, or do 214 + Heavy again and hold it, during its opening
 	Halibel and Yhwach:
-		Halibel's side Signatures: 8 or 2 + Light with 2D Camera, 4 or 6 + Light with the normal camera. Yhwach's back SP1: 214214 + Light, his forward SP1: 41236 + Light.
+		Halibel's side Signatures with 2D Camera: 8 or 2 + Light
+		Halibel's side Signatures with the normal camera: 4 or 6 + Light
+		Yhwach's back SP1: 214214 + Light
+		Yhwach's forward SP1: 41236 + Light
 	Buttons:
-		The Signature and Kikon buttons and the SP trigger do nothing. Light, Heavy, Guard, Dash, Grab, Awakening (L3 + R3) and Rapid Reverse (Light + Heavy) stay. No motion dashes.
+		The Signature and Kikon buttons and the SP trigger do nothing. Light, Heavy, Guard, Dash, Grab and Awakening (L3 + R3) stay. No motion dashes.
 	For everyone:
 		The room owner turns it on: every player in the room plays with it.
 
