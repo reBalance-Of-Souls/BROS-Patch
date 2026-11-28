@@ -65,6 +65,18 @@ CHANGED SOUNDS (changed_sounds, sound_warning; 2026-11-28)
   only (Sound/ is 46,000 files, under a second). A list the player already said No to is not asked again until it
   changes (Json/sound_check.json in the repo). Nothing is listed without a real Steam list.
 
+STEAM'S CUTSCENES KEPT (keep_stock_demos, over_steam_demos, stock_copy; 2026-11-28)
+  The tables above name V1.6's and V1.7's cutscenes only. A Dev build's (Byakuya's Demo/pl022_ct_evolve.tdemopkg)
+  stays over the game's own when the same game folder goes back to the public build: the public launcher knows neither
+  that file nor where Steam's went, and that one file gave the player an online pool of his own (two players on
+  2026-11-28, both switching between the Dev and the public build). So:
+    * before an overlay writes them, install_overlay keeps a copy of Steam's own Demo/ files it is about to replace
+      (<game>/_launcher_stock/Demo/..., once, only a file whose size and SHA-1 are Steam's; about 120 MB);
+    * at the leftovers step, a counted Demo/ file at a Steam path the version being launched does not ship, whose size
+      is not Steam's, is treated as another version's cutscene (fix_demo above): put back from that copy, proven by
+      Steam's SHA-1, else listed for Steam's verify.
+  Sizes only for the check (a same-size change is not seen). Nothing is kept or listed without a real Steam list.
+
 USE
   mark_start() when a launch begins (before anything is installed); clean(game, keep_plugin_txt, keep_root,
   other_root_markers, log), fix_demo(game, others, steam, sources, log) and fix_unknown_demos(game, versions_dir, steam,
@@ -528,6 +540,76 @@ def sound_ack(base_dir, changed):
             f.write(hashlib.sha256("\n".join(changed).encode("utf-8")).hexdigest() + "\n")
     except OSError:
         pass
+
+
+STOCK = "_launcher_stock"                                       # Steam's own cutscenes, kept before an overlay writes
+
+
+def _real_list(steam_files):
+    return bool(steam_files) and len(steam_files) >= 1000 and "bleach_rebirth_of_souls.exe" in steam_files
+
+
+def keep_stock_demos(game, steam_files, rels, log=print):
+    """Before an overlay writes rels (game-relative paths): a copy of each Steam Demo/ file among them whose file is
+    still Steam's (size, and SHA-1 when the list has one), kept once under <game>/_launcher_stock/ (module docstring,
+    STEAM'S CUTSCENES KEPT). Returns how many were kept now. Never raises."""
+    n = 0
+    try:
+        if not _real_list(steam_files):
+            return 0
+        for rel in rels:
+            k = rel.replace("\\", "/").lower()
+            ent = steam_files.get(k) if k.startswith("demo/") else None
+            if ent is None:
+                continue
+            path, size, sha = ent
+            kept = os.path.join(game, STOCK, *path.split("/"))
+            src = os.path.join(game, *path.split("/"))
+            try:
+                if os.path.isfile(kept) and os.path.getsize(kept) == size:
+                    continue
+                if not os.path.isfile(src) or os.path.getsize(src) != size or (sha and _hash(src, "sha1") != sha):
+                    continue
+                os.makedirs(os.path.dirname(kept), exist_ok=True)
+                shutil.copy2(src, kept + ".lo_tmp")
+                os.replace(kept + ".lo_tmp", kept)
+                n += 1
+            except OSError as e:
+                log("[leftovers] Steam's %s could not be kept: %s" % (path, e))
+        if n:
+            log("[leftovers] %d of Steam's cutscene(s) kept in %s/ before the patch writes over them" % (n, STOCK))
+    except Exception as e:
+        log("[leftovers] Steam's cutscenes not kept: %s" % e)
+    return n
+
+
+def over_steam_demos(game, steam_files, shipped):
+    """others (for fix_demo) -- {game-relative 'Demo/...' path: [(size, SHA-256)]} -- for the Steam Demo/ paths not in
+    shipped (lower game-relative paths the version being launched writes) whose file is not Steam's size (module
+    docstring, STEAM'S CUTSCENES KEPT). {} without a real Steam list. Never raises."""
+    out = {}
+    try:
+        if not _real_list(steam_files):
+            return out
+        for k, (path, size, _sha) in steam_files.items():
+            if not k.startswith("demo/") or k in shipped:
+                continue
+            p = os.path.join(game, *path.split("/"))
+            try:
+                have = os.path.getsize(p)
+                if have != size:
+                    out[path] = [(have, _hash(p, "sha256"))]
+            except OSError:
+                continue
+    except Exception:
+        pass
+    return out
+
+
+def stock_copy(game, rel):
+    """[the kept copy of Steam's rel] when there is one (a source for fix_demo, which proves it by SHA-1)."""
+    p = os.path.join(game, STOCK, *rel.replace("\\", "/").split("/"))
+    return [p] if os.path.isfile(p) else []
 
 
 def main(argv):

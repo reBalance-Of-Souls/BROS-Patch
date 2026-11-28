@@ -939,6 +939,14 @@ try:
             if _snd_over:
                 pairs = [(_snd_over.get(rel, src), rel) for src, rel in pairs]
         wanted = set(rel for _s, rel in pairs)
+        # Steam's own cutscenes, kept before this version writes over them: the build that comes next (the public one
+        # after a Dev start) puts them back from there (leftovers.py, STEAM'S CUTSCENES KEPT; 2026-11-28).
+        if _leftovers and _vanilla_revert:
+            try:
+                _leftovers.keep_stock_demos(
+                    game_path, _vanilla_revert.steam_list(BASE_DIR, game_path).files, wanted, print)
+            except Exception as e:
+                print(f"[leftovers] Steam's cutscenes not kept: {e}")
 
         for rel in prev:
             if rel in wanted:
@@ -2133,10 +2141,19 @@ try:
                         _od = _leftovers.other_demos(_gv, version_chain(gameVersion))
                         for _r, _c in _leftovers.known_other_demos().items():
                             _od.setdefault(_r, []).extend(_c)
+                        # A Steam cutscene not Steam's size at a path this version does not write: another build's
+                        # too (a Dev build's Byakuya evolve, 2026-11-28), put back from the copy install_overlay kept
+                        # (leftovers.py, STEAM'S CUTSCENES KEPT).
+                        if _vanilla_revert:
+                            _ship = set(_r.lower() for _s, _r in _overlay_pairs(gameVersion))
+                            for _r, _c in _leftovers.over_steam_demos(
+                                    game_path, _vanilla_revert.steam_list(BASE_DIR, game_path).files, _ship).items():
+                                _od.setdefault(_r, []).extend(_c)
                         _left = _leftovers.fix_demo(
                             game_path, _od,
                             (lambda: _vanilla_revert.steam_list(BASE_DIR, game_path)) if _vanilla_revert else None,
-                            (lambda _r: _vanilla_revert._stock_sources(BASE_DIR, game_path, _r))
+                            (lambda _r: _vanilla_revert._stock_sources(BASE_DIR, game_path, _r)
+                             + _leftovers.stock_copy(game_path, _r))
                             if _vanilla_revert else None, print)
                         # A cutscene that neither Steam nor any version ships (an older build's): to the quarantine
                         # too (leftovers.py, UNKNOWN CUTSCENES; 2026-11-27).
