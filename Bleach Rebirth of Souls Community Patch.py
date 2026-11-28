@@ -239,6 +239,15 @@ try:
     except Exception:
         _leftovers = None
 
+    # A player's own sound files -- a music mod -- kept and merged with the version's (launcher/sound_merge.py,
+    # 2026-11-28; Berg: "not overwrite their already installed music mod, but incorporate it dynamically into our
+    # changes"): install_overlay installs the merged banks and his songs instead of the version's files. Optional the
+    # same way: without it the version's own sound files are installed, as before.
+    try:
+        from launcher import sound_merge as _sound_merge
+    except Exception:
+        _sound_merge = None
+
     # The vanilla revert (launcher/vanilla_revert.py, V1.5 delivery B.1, 2026-11-02): Vanilla is the game as Steam
     # ships it, proven file by file against Steam's own file list, then only the player's own choices. Optional the
     # same way: without it a vanilla start does what it did before.
@@ -919,6 +928,16 @@ try:
         orphans = []
         kept = []
         pairs = _overlay_pairs(gameVersion)
+        # The player's own sound files (launcher/sound_merge.py): a merged bank, or his song, takes the place of the
+        # version's file; everything below (the backup, the record, the revert) works on it as on any overlay file.
+        if _sound_merge and any(rel.lower().startswith("sound/") for _s, rel in pairs):
+            try:
+                _steam = _vanilla_revert.steam_list(BASE_DIR, game_path) if _vanilla_revert else None
+            except Exception:
+                _steam = None
+            _snd_over = _sound_merge.prepare(game_path, BASE_DIR, pairs, _backup_root(), _steam, print)
+            if _snd_over:
+                pairs = [(_snd_over.get(rel, src), rel) for src, rel in pairs]
         wanted = set(rel for _s, rel in pairs)
 
         for rel in prev:
@@ -2117,7 +2136,9 @@ try:
                             print)
                         # A sound mod's files where the game's own should be (leftovers.py, CHANGED SOUNDS; 2026-11-28,
                         # a player's music mod left 80 Sound/Media/*.wem: Zangetsu's SP2 froze the game, awakenings
-                        # crashed): only Steam's verify puts them back, the launcher asks below.
+                        # crashed). Listed only: the mod is kept, and the version's banks follow its files
+                        # (launcher/sound_merge.py, the same day; Berg: "not overwrite their already installed music
+                        # mod"), so Steam's verify is no longer asked for.
                         if _vanilla_revert:
                             _snd = _leftovers.changed_sounds(
                                 game_path, _vanilla_revert.steam_list(BASE_DIR, game_path).files, BASE_DIR)
@@ -2141,7 +2162,9 @@ try:
                     except Exception as e:
                         print(f"[leftovers] could not open Steam's verify: {e}")
                     return
-                if _snd and _leftovers.sound_warning(BASE_DIR, _snd):
+                if _snd and not _sound_merge and _leftovers.sound_warning(BASE_DIR, _snd):
+                    # Only a launcher without sound_merge.py still asks for Steam's verify (it would install banks
+                    # that do not follow the mod's files).
                     if messagebox.askyesno(
                             "Game sound files changed",
                             f"{len(_snd)} of the game's sound files are not the ones Steam installed (for example "
