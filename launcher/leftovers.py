@@ -56,6 +56,15 @@ UNKNOWN CUTSCENES (fix_unknown_demos; 2026-11-27, after fix_demo)
   path Steam or a version ships is never touched here. Nothing moves without a real Steam list (more than 1,000 paths,
   the game's exe among them): with no list every stock cutscene would look unknown.
 
+CHANGED SOUNDS (changed_sounds, sound_warning; 2026-11-28)
+  A sound mod rewrites the game's own Sound/ files (a player's music mod: 80 Sound/Media/*.wem). A patched start never
+  puts them back -- only a vanilla start proves stock files, and the launcher has no copy of them -- and the patch's
+  banks (pl015.bnk...) then read media they were not made for: Zangetsu's SP2 froze the game 30-40 s, awakenings
+  crashed. So a patched start lists the Steam Sound/ paths no repo folder writes (GameVersions, Reworks, GameModes:
+  <x>/<y>/Root|Overlay/Sound) whose file is missing or not Steam's size, and the launcher offers Steam's verify. Sizes
+  only (Sound/ is 46,000 files, under a second). A list the player already said No to is not asked again until it
+  changes (Json/sound_check.json in the repo). Nothing is listed without a real Steam list.
+
 USE
   mark_start() when a launch begins (before anything is installed); clean(game, keep_plugin_txt, keep_root,
   other_root_markers, log), fix_demo(game, others, steam, sources, log) and fix_unknown_demos(game, versions_dir, steam,
@@ -447,6 +456,78 @@ def fix_unknown_demos(game, versions_dir, steam, log=print):
     except Exception as e:
         log("[leftovers] unknown cutscenes not checked: %s" % e)
     return moved
+
+
+SOUND = "Sound"
+SOUND_ACK = ("Json", "sound_check.json")
+
+
+def _repo_sounds(base_dir):
+    """The lower 'sound/...' paths a repo folder can write: <base>/{GameVersions,Reworks,GameModes}/*/{Root,Overlay}/Sound."""
+    out = set()
+    for top in ("GameVersions", "Reworks", "GameModes"):
+        td = os.path.join(base_dir, top)
+        for v in (os.listdir(td) if os.path.isdir(td) else []):
+            for sub in ("Root", "Overlay"):
+                sd = os.path.join(td, v, sub, SOUND)
+                for dp, _ds, fs in os.walk(sd):
+                    rel = os.path.relpath(dp, sd).replace(os.sep, "/")
+                    pre = "sound/" if rel == "." else "sound/" + rel.lower() + "/"
+                    out.update(pre + f.lower() for f in fs)
+    return out
+
+
+def changed_sounds(game, steam_files, base_dir):
+    """-> sorted Steam 'Sound/...' paths (Steam's spelling) that no repo folder writes and whose file in the game
+    folder is missing or not Steam's size (module docstring, CHANGED SOUNDS). [] when steam_files is not a real list.
+    Never raises."""
+    if not steam_files or len(steam_files) < 1000 or "bleach_rebirth_of_souls.exe" not in steam_files:
+        return []
+    try:
+        ours = _repo_sounds(base_dir)
+        disk = {}
+        root = os.path.join(game, SOUND)
+        stack = [(root, "sound/")]
+        while stack:
+            d, pre = stack.pop()
+            try:
+                with os.scandir(d) as it:
+                    for e in it:
+                        if e.is_dir(follow_symlinks=False):
+                            stack.append((e.path, pre + e.name.lower() + "/"))
+                        else:
+                            disk[pre + e.name.lower()] = e.stat().st_size
+            except OSError:
+                continue
+        out = []
+        for k, v in steam_files.items():
+            if k.startswith("sound/") and k not in ours and disk.get(k) != v[1]:
+                out.append(v[0])
+        return sorted(out)
+    except Exception:
+        return []
+
+
+def sound_warning(base_dir, changed):
+    """True when the player should be asked about `changed` (not empty, not the list already answered No to)."""
+    if not changed:
+        return False
+    try:
+        with open(os.path.join(base_dir, *SOUND_ACK), "r", encoding="utf-8") as f:
+            return f.read().strip() != hashlib.sha256("\n".join(changed).encode("utf-8")).hexdigest()
+    except OSError:
+        return True
+
+
+def sound_ack(base_dir, changed):
+    """Remember that the player said No to `changed` (asked again once the list changes). Never raises."""
+    try:
+        p = os.path.join(base_dir, *SOUND_ACK)
+        os.makedirs(os.path.dirname(p), exist_ok=True)
+        with open(p, "w", encoding="utf-8") as f:
+            f.write(hashlib.sha256("\n".join(changed).encode("utf-8")).hexdigest() + "\n")
+    except OSError:
+        pass
 
 
 def main(argv):

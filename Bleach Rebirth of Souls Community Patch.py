@@ -2072,7 +2072,7 @@ try:
                 # file this version does not ship, and another version's marker beside the exe, go to
                 # _launcher_quarantine/leftovers/ -- each one gave a tester an online pool of his own. Never stops a
                 # launch.
-                _left = []
+                _left, _snd = [], []
                 if _leftovers:
                     try:
                         _keep_txt, _keep_root, _others = set(), set(), set()
@@ -2115,6 +2115,15 @@ try:
                             game_path, _gv,
                             (lambda: _vanilla_revert.steam_list(BASE_DIR, game_path)) if _vanilla_revert else None,
                             print)
+                        # A sound mod's files where the game's own should be (leftovers.py, CHANGED SOUNDS; 2026-11-28,
+                        # a player's music mod left 80 Sound/Media/*.wem: Zangetsu's SP2 froze the game, awakenings
+                        # crashed): only Steam's verify puts them back, the launcher asks below.
+                        if _vanilla_revert:
+                            _snd = _leftovers.changed_sounds(
+                                game_path, _vanilla_revert.steam_list(BASE_DIR, game_path).files, BASE_DIR)
+                            if _snd:
+                                print(f"[leftovers] {len(_snd)} sound file(s) are not Steam's (a sound mod's?): "
+                                      + ", ".join(_snd[:5]))
                     except Exception as e:
                         print(f"[leftovers] not checked: {e}")
                 if _left and messagebox.askyesno(
@@ -2132,6 +2141,24 @@ try:
                     except Exception as e:
                         print(f"[leftovers] could not open Steam's verify: {e}")
                     return
+                if _snd and _leftovers.sound_warning(BASE_DIR, _snd):
+                    if messagebox.askyesno(
+                            "Game sound files changed",
+                            f"{len(_snd)} of the game's sound files are not the ones Steam installed (for example "
+                            f"{_snd[0]}): a sound or music mod changed them. With them the game can freeze or crash "
+                            f"(a special move, an awakening), and the launcher has no copy of the originals to put "
+                            f"back.\n\nYes: open Steam's \"Verify integrity of game files\" now and stop here -- "
+                            f"launch again when Steam has finished.\nNo: launch anyway (you will not be asked again "
+                            f"for these files).",
+                            icon="warning"):
+                        print("[leftovers] Steam's verify opened for the changed sound files; the game was NOT "
+                              "started -- launch again when Steam has finished")
+                        try:
+                            open_file(_leftovers.VERIFY_URL)
+                        except Exception as e:
+                            print(f"[leftovers] could not open Steam's verify: {e}")
+                        return
+                    _leftovers.sound_ack(BASE_DIR, _snd)
                 # The content pool, last: everything that decides a match is in place now -- the version, the loader,
                 # the plugins, the Zangetsu, Rapid Reverse and developer-tools switches. Every version and every game
                 # mode (FORMAT 2,
