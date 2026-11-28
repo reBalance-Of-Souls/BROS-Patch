@@ -32,6 +32,23 @@ THE SAVE (self-describing; no checksum: every byte belongs to the tree):
     status(base_dir, game_path, chara="pl002")   -> (ok, text, results)   every save of the player, read only
     unlock(base_dir, game_path, chara="pl002")   -> (ok, text, results)   the same, and the flag set where it is not
 CLI (a developer's check):  python launcher\\save_unlock.py status|unlock [--game <game folder>] [--chara pl002]
+
+THE ONLINE CHARACTER AT A VANILLA START (2026-11-28)
+Berg: "if you also had zangetsu selected from v2.0 and then go online from vanilla, you would be stuck unable to go
+online. You have to go through ranked, and then change characters from there to play. I want to make it convenient
+and just switch you to pl000 selected online when you switch to vanilla."
+  * savedata.bin: onlinematch (SaveOnlineMatch) holds MyChara and MyCostume (int): the character and costume the
+    online menus start from (Ranked's character select writes them). MyChara is the character's id, pl<id>
+    (the save that "Unlock Dangai Ichigo" used to copy has 2, Dangai Ichigo).
+  * The characters only the patch makes playable: the Steam game's IsPlayableCharacter refuses them, the patch's
+    roster tables admit them (Files/Matchmaking/bros_roster.c): 5 Zangetsu (V2.0, the CP), 15 Yumichika, 34 Orihime,
+    and 9 with Orihime (V1.2 with her, V1.7).
+  * A vanilla start (the launcher, after vanilla_revert's proof) sets MyChara to 0 (pl000, Ichigo) and MyCostume to 0
+    in every save whose MyChara is one of those -- the same way as the unlock: a backup first, the file written whole,
+    read back, parsed again, and exactly those 8 bytes changed, or the original is put back. Any other character is
+    left as it is.
+    vanilla_online(game_path)                    -> (ok, text, results)   every save; changes only those
+CLI:  python launcher\\save_unlock.py online|online-reset [--game <game folder>]   (online: read only)
 """
 import datetime
 import json
@@ -476,6 +493,119 @@ def unlock(base_dir, game_path, chara="pl002", appdata=None, backup_dir=None, lo
     return _run(base_dir, game_path, chara, True, appdata, backup_dir, log)
 
 
+# ------------------------------------------------------------------------------------ the online character
+ONLINE_VARIABLE = "onlinematch"                                 # the root field: SaveOnlineMatch
+ONLINE_FIELDS = ("MyChara", "MyCostume")                        # int, int
+VANILLA_ONLINE_CHARA = 0                                        # pl000, Ichigo (Berg, 2026-11-28)
+# The characters only the patch makes playable (bros_roster.c's tables: "IsPlayableCharacter admits ids 5 and 15",
+# "... ids 5, 9 and 34", "... ids 5, 9, 15 and 34"). A new added character goes here too.
+PATCH_ONLY_CHARAS = {5: "Zangetsu", 9: "id 9 (with Orihime)", 15: "Yumichika", 34: "Orihime"}
+
+
+def online_slots(data, decl):
+    """[(offset, value)] of onlinematch's MyChara and MyCostume in a save (ints, 4 bytes each)."""
+    root = parse_save(data, decl)
+    otype, ocount = decl.field(ONLINE_VARIABLE)
+    if otype not in decl.struct_by_name or ocount != 1:
+        raise SaveError("define.bin's %s is not one struct" % ONLINE_VARIABLE)
+    tag, _flds = decl.struct_by_name[otype]
+    found = [e for e in root if e[1] == ghash(ONLINE_VARIABLE)]
+    if len(found) != 1:
+        raise SaveError("the save holds %d %s" % (len(found), ONLINE_VARIABLE))
+    th, _nh, idx, _off, kids = found[0]
+    if th != ghash(tag) or idx != 0 or not isinstance(kids, list):
+        raise SaveError("the save's %s is not a %s" % (ONLINE_VARIABLE, tag))
+    out = []
+    for name in ONLINE_FIELDS:
+        hit = [k for k in kids if k[1] == ghash(name)]
+        if len(hit) != 1:
+            raise SaveError("the save's %s holds %d %s" % (ONLINE_VARIABLE, len(hit), name))
+        kth, _knh, kidx, _koff, body = hit[0]
+        if kth not in (ghash("int"), ghash("int32_t")) or kidx != 0 or not isinstance(body, tuple) or body[1] != 4:
+            raise SaveError("the save's %s.%s is not one int" % (ONLINE_VARIABLE, name))
+        out.append((body[0], struct.unpack_from("<i", data, body[0])[0]))
+    return out
+
+
+def _one_online(folder, path, decl, write, bdir, log):
+    """One save: (status, line). status: kept | set | would-set | refused | failed."""
+    try:
+        before = _read(path)
+        (co, chara), (so, costume) = online_slots(before, decl)
+    except (OSError, SaveError) as e:
+        return "refused", "save %s: not changed -- %s" % (masked(folder), e)
+    if chara not in PATCH_ONLY_CHARAS:
+        return "kept", "save %s: online character pl%03d, the Steam game has it; not changed" % (masked(folder), chara)
+    who = "%s (pl%03d), costume %d" % (PATCH_ONLY_CHARAS[chara], chara, costume)
+    b = bytearray(before)
+    struct.pack_into("<i", b, co, VANILLA_ONLINE_CHARA)
+    struct.pack_into("<i", b, so, 0)
+    after = bytes(b)
+    if not write:
+        return "would-set", "save %s: online character %s; a vanilla start would set pl%03d, costume 0" % (
+            masked(folder), who, VANILLA_ONLINE_CHARA)
+    try:
+        bd = os.path.join(bdir, folder)
+        os.makedirs(bd, exist_ok=True)
+        bp = os.path.join(bd, SAVE_NAME)
+        _write_whole(bp, before)
+        if _read(bp) != before:
+            return "failed", "save %s: not changed -- its backup did not read back" % masked(folder)
+        if _read(path) != before:
+            return "refused", "save %s: not changed -- it changed while being read (is the game running?)" % masked(folder)
+        _write_whole(path, after)
+    except OSError as e:
+        return "failed", "save %s: not changed -- %s" % (masked(folder), e)
+    # the proof: the bytes on disk are the planned ones, they parse, the two values are set, nothing else moved
+    try:
+        got = _read(path)
+        (co2, c2), (so2, s2) = online_slots(got, decl)
+        a, z = sorted((co, so))
+        only_those = (len(got) == len(before) and got[:a] == before[:a] and got[a + 4:z] == before[a + 4:z] and
+                      got[z + 4:] == before[z + 4:])
+        ok = (got == after and (co2, so2) == (co, so) and (c2, s2) == (VANILLA_ONLINE_CHARA, 0) and only_those)
+    except (OSError, SaveError) as e:
+        ok, why = False, str(e)
+    else:
+        why = "the bytes read back are not the planned ones"
+    if ok:
+        return "set", "save %s: online character %s -> pl%03d, costume 0 (read back and checked)" % (
+            masked(folder), who, VANILLA_ONLINE_CHARA)
+    try:
+        _write_whole(path, before)
+        back = _read(path) == before
+    except OSError:
+        back = False
+    log("[save_unlock] the check after writing failed: %s" % why)
+    return "failed", ("save %s: the check after writing failed (%s); %s" % (
+        masked(folder), why, "the original was put back" if back else
+        "PUT THE BACKUP BACK BY HAND: %s" % os.path.join(bdir, folder, SAVE_NAME)))
+
+
+def vanilla_online(game_path, appdata=None, backup_dir=None, log=print, write=True):
+    """At a vanilla start (module docstring, THE ONLINE CHARACTER): every save whose online character only the patch
+    has gets pl000, costume 0. (ok, text, results). Never raises; a save it cannot read is left as it is."""
+    try:
+        if exe_locked(game_path):
+            return False, "The game is running: no save was changed.", []
+        try:
+            decl = Declaration(_read(os.path.join(game_path, "Script", "define.bin")))
+        except (OSError, SaveError) as e:
+            return False, "Script\\define.bin: %s. No save was changed." % e, []
+        saves = save_files(appdata)
+        if not saves:
+            return True, "No save yet.", []
+        stamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%d-%H%M%SZ")
+        bdir = backup_dir or os.path.join(backup_root(), stamp + "_online")
+        results = [_one_online(f, p, decl, write, bdir, log) for f, p in saves]
+        lines = [line for _s, line in results]
+        if any(s == "set" for s, _l in results):
+            lines.append("A backup of each changed save: %s" % bdir)
+        return all(s in ("kept", "set", "would-set") for s, _l in results), "\n".join(lines), results
+    except Exception as e:                       # an extra of the vanilla start: it never stops one
+        return False, "The online character was not checked: %s: %s" % (type(e).__name__, e), []
+
+
 def _game_from_config(base_dir):
     try:
         with open(os.path.join(base_dir, "Json", "config.json"), encoding="utf-8") as f:
@@ -489,11 +619,14 @@ if __name__ == "__main__":
     import argparse
     base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     ap = argparse.ArgumentParser()
-    ap.add_argument("what", choices=["status", "unlock"])
+    ap.add_argument("what", choices=["status", "unlock", "online", "online-reset"])
     ap.add_argument("--game", default="")
     ap.add_argument("--chara", default="pl002")
     a = ap.parse_args()
     game = a.game or _game_from_config(base)
-    ok_, text, _r = (unlock if a.what == "unlock" else status)(base, game, a.chara)
+    if a.what.startswith("online"):
+        ok_, text, _r = vanilla_online(game, write=(a.what == "online-reset"))
+    else:
+        ok_, text, _r = (unlock if a.what == "unlock" else status)(base, game, a.chara)
     print(text)
     sys.exit(0 if ok_ else 1)

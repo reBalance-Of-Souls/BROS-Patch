@@ -1039,9 +1039,16 @@ def finalize(base_dir, game_path, log=print):
 def run(base_dir, game_path, parent=None, title="Bleach Rebirth of Souls: Vanilla", log=print, ask=None,
         label="Vanilla", keep=()):
     """The revert with a progress window (launcher/update_window's) when tkinter is there. Returns True when the
-    game may start: the proof passed, or it failed and ask(title, text) -- the launcher's dialog -- said start
-    anyway. A running game (the exe locked) is always False. label: the version the messages name. keep: a vanilla
-    plus version's own plugin state (its vanilla_plus.json "keep", PLUGIN_STATE names), left where it is."""
+    game may start: the proof passed; or it failed only on stock files (patch_left() names nothing); or it failed
+    on the patch itself and ask(title, text) -- the launcher's dialog -- said start anyway. A running game (the exe
+    locked) is always False. label: the version the messages name. keep: a vanilla plus version's own plugin state
+    (its vanilla_plus.json "keep", PLUGIN_STATE names), left where it is.
+
+    The report is not shown (Berg, 2026-11-28: the window "is nothing more than a log (it scares players)"): it is in
+    the launcher's log and in Json\\vanilla_report.txt. A stock file with no proven copy to restore it from (a model
+    an older install changed, say) does not keep the game from being Steam's game to play online. Only the patch
+    still being in the game folder -- a file of ours (the loader, a plugin, a switch) or an exe that is not Steam's
+    -- is asked about, in a few lines."""
     if exe_locked(game_path):
         msg = "The game is running: close it, then start %s again. Nothing was changed." % label
         log("[vanilla] " + msg)
@@ -1086,12 +1093,39 @@ def run(base_dir, game_path, parent=None, title="Bleach Rebirth of Souls: Vanill
             return bool(ask(title, "The vanilla revert failed: %r\n\nThe game folder may not be stock." % (box["e"],),
                             True))
         return False
-    ok, text, _data = box["r"]
+    ok, text, data = box["r"]
     if ok:
         return True
+    if not data:                                 # revert()'s own refusal: the exe locked since the check above
+        if ask:
+            ask(title, text, True)
+        return False
+    bad = list(data.get("proof_failed") or [])
+    left = patch_left(bad)
+    if not left:
+        log("[vanilla] %d stock file(s) not proven (no Steam copy here to restore them from): the game starts; the "
+            "report: Json\\vanilla_report.txt" % len(bad))
+        return True
+    log("[vanilla] the patch is still in the game folder: %s" % ", ".join(rel for rel, _w in left[:8]))
     if ask:
-        return bool(ask(title, text, True))
+        return bool(ask(title, patch_left_text(left, label), True))
     return False
+
+
+def patch_left(bad):
+    """The proof's failures that leave the PATCH running (run()): a file of ours still in the game folder, or an exe
+    that is not Steam's. [(path, what is wrong)]."""
+    return [(rel, why) for rel, why in bad if why == "still in the game folder" or _key(rel) == _key(EXE_NAME)]
+
+
+def patch_left_text(left, label="Vanilla"):
+    lines = ["%s: the patch could not be fully removed from the game folder:" % label, ""]
+    lines += ["  %s -- %s" % (rel, why) for rel, why in left[:8]]
+    if len(left) > 8:
+        lines.append("  ... and %d more (Json\\vanilla_report.txt)" % (len(left) - 8))
+    lines += ["", "Started now, the game would still run parts of the patch. Close anything that may hold these files "
+              "(the game, a second launcher) and start %s again, or let Steam verify the game's files." % label]
+    return "\n".join(lines)
 
 
 if __name__ == "__main__":

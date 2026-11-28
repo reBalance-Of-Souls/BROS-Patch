@@ -1841,15 +1841,25 @@ try:
                 return
             # Vanilla: the game folder as Steam ships it -- every stock file proven against Steam's own list, every
             # file of ours removed, the logs moved out -- BEFORE the player's own choices below (the performance mods,
-            # the reworks) are applied. Not proven: the player is told what and why, and decides. A running game is
-            # never started over (launcher/vanilla_revert.py, V1.5 delivery B.1). A vanilla plus version the same,
-            # before its own loader goes in (below).
+            # the reworks) are applied. Not proven on stock files only: the game starts, the report goes to the log
+            # and Json\vanilla_report.txt (2026-11-28: the report window scared players). The patch itself still in
+            # the folder: the player is asked. A running game is never started over (launcher/vanilla_revert.py, V1.5
+            # delivery B.1). A vanilla plus version the same, before its own loader goes in (below).
             if vanilla_data and _vanilla_revert:
                 # (2026-11-14) a vanilla plus version keeps its own plugins' state (its vanilla_plus.json "keep")
                 _vr_kw = {} if vanilla else {"title": f"{gameVersion}: the Steam game's files", "label": gameVersion,
                                              "keep": _vplus.keep}
                 if not _vanilla_revert.run(BASE_DIR, game_path, parent=window, ask=_install_check_dialog, **_vr_kw):
                     return
+                # The online character a patched version left in the player's save (Zangetsu picked on V2.0): the
+                # Steam game cannot go online with it, and the player was stuck until Ranked's character select. Only
+                # a character the patch alone has is changed: to Ichigo (pl000), costume 0, with a backup first
+                # (launcher/save_unlock.py; Berg 2026-11-28: "just switch you to pl000 selected online when you switch
+                # to vanilla"). Never stops the start.
+                if _save_unlock:
+                    _ok, _text, _res = _save_unlock.vanilla_online(game_path)
+                    if not _ok or any(_s != "kept" for _s, _l in _res):
+                        print("[vanilla] " + _text.replace("\n", "\n[vanilla] "))
 
 
 
