@@ -14,8 +14,15 @@ exceptions
 --------------------------------------------------------------------------------------------------------------------
   Without a DevToken (BalanceLeadTools/DevToken.txt) -- a player's checkout, which must equal origin/main:
       git config core.longpaths true
+      git remote add origin <the public patch>        NEW 2026-11-28: only when the checkout has no origin
       git ls-remote origin refs/heads/main            NEW: asks the remote first
-      git fetch                                       only when the remote has a commit origin/main lacks
+      git fetch --filter=blob:none origin             only when the remote has a commit origin/main lacks; NEW
+                                                      2026-11-28: the history only, the files come in the next step
+      the files from the newest GitHub release        NEW 2026-11-28: the files origin/main needs that this clone
+                                                      lacks, from the release's download network (THE FILES, FROM
+                                                      A RELEASE below)
+      git fetch origin --stdin, in batches            NEW 2026-11-28: whatever the release did not have (THE FILES,
+                                                      IN BATCHES below)
       git lfs fetch origin <origin/main>              NEW: only when that commit needs LFS objects this clone lacks
       git reset --hard origin/main
       git clean -fd -e Json
@@ -62,6 +69,31 @@ No table at the remote, or a table for another commit (a push made without that 
 update downloads at once, in its window, as before. LFS objects a checkout still lacks when there is no commit to
 fetch (a download stopped halfway) are asked about with their exact size.
 
+THE FILES, IN BATCHES (2026-11-28)
+----------------------------------
+The V2.0 update reached many players at about 0.5 MB/s, and git downloads a whole update as ONE request: 1.4 to 5 GB
+that a dropped connection throws away whole ("early EOF", "unexpected disconnect while reading sideband packet"), so
+every retry started from zero. Now the fetch takes the history only (commits and folders, about 1 MB; a clone from
+the first installers, which holds every file's history, becomes a blobless one like the installer's), and the files
+the new commit needs come after it in requests of about 16 MB, three at once (a connection throttled per download
+still adds up). A failed request is retried after a pause, split in two; MAX_FAILS failures in a row end the update
+-- a failed update, as before -- and everything that arrived is kept, so the next start goes on from there. The
+sizes come from GitHub's API (one request; without it every file counts as 1 MB and the window counts files).
+Each batch is a pack of its own: one multi-pack-index over them keeps git fast, and git's automatic repack of the
+whole patch (GBs, rewritten in the background once a clone has 50 packs) is switched off for the clone.
+A checkout with no origin (seen 2026-11-27, "'origin' does not appear to be a git repository") gets it back, pointing
+at the public patch, and its branch follows origin/main again.
+
+THE FILES, FROM A RELEASE (2026-11-28)
+--------------------------------------
+Before the batches, launcher/release_files.py brings every missing file the repository's newest GitHub release has
+(published by .github/workflows/release-files.yml): GitHub's download network instead of its git servers, byte
+ranges four at a time, a dropped request resumed where it stopped, each file checked against its git object id and
+handed to git as a pack of its own (marked as origin's, like git's own). A release made for an older commit still
+serves every file the update did not change; the batches bring the rest. No release, no manifest, no answer from
+GitHub, or trouble along the way: printed, and the batches bring everything, as without it. Cancel and a full disk
+end the update.
+
 NO CONSOLE
 ----------
 hide_console() at a script's first line hides its console window. The main launcher always did that, once its window
@@ -77,6 +109,8 @@ display or without tkinter, pull() still runs every step, with no window, as bef
 
 from __future__ import annotations
 
+import collections
+import json
 import os
 import re
 import subprocess
@@ -84,6 +118,14 @@ import sys
 import tempfile
 import threading
 import time
+
+try:                                    # the release download (THE FILES, FROM A RELEASE)
+    from launcher import release_files
+except ImportError:
+    try:
+        import release_files            # run as a script from launcher/
+    except ImportError:
+        release_files = None
 
 DEVTOKEN = os.path.join("BalanceLeadTools", "DevToken.txt")
 
@@ -386,6 +428,7 @@ class Progress:
         self.cancel = threading.Event()
         self.cancellable = False
         self.proc = None
+        self.procs = set()             # the batch downloads running at once (THE FILES, IN BATCHES)
 
     def set(self, phase=None, detail=None, done=None, total=None, cancellable=None):
         with self.lock:
@@ -404,14 +447,30 @@ class Progress:
         with self.lock:
             return self.phase, self.detail, self.done, self.total, self.cancellable
 
+    def add_proc(self, p):
+        with self.lock:
+            self.procs.add(p)
+        if self.cancel.is_set():
+            _terminate(p)
+
+    def drop_proc(self, p):
+        with self.lock:
+            self.procs.discard(p)
+
     def request_cancel(self):
         self.cancel.set()
-        p = self.proc
-        if p is not None and p.poll() is None:
-            try:
-                p.terminate()
-            except Exception:
-                pass
+        with self.lock:
+            running = list(self.procs)
+        for p in [self.proc] + running:
+            _terminate(p)
+
+
+def _terminate(p):
+    if p is not None and p.poll() is None:
+        try:
+            p.terminate()
+        except Exception:
+            pass
 
 
 def _stream(base, args, prog, on_piece=None, env=None):
@@ -529,6 +588,212 @@ def _lfs_fetch(base, remote, commit, missing, prog):
             pass
 
 
+# ------------------------------------------------------------------------------------------------ the files, in batches
+PUBLIC_REPO_URL = "https://github.com/reBalance-Of-Souls/BROS-Patch.git"
+BATCH_BYTES = 16 * 1024 * 1024   # about 16 MB a request: a dropped connection costs one batch, not the update
+BATCH_FILES = 200                # and at most this many files in one request
+WORKERS = 3                      # requests at once
+MAX_FAILS = 12                   # failed requests in a row before the update gives up (what arrived is kept)
+UNKNOWN_SIZE = 1 << 20           # a file GitHub's API did not size counts as 1 MB for the batches
+# A download slower than 1 KB/s for a whole minute counts as dropped: it is retried, not waited on forever.
+NET = ["-c", "http.lowSpeedLimit=1000", "-c", "http.lowSpeedTime=60"]
+# The batch requests: no negotiation (a request names its files), no automatic gc or maintenance while three of them
+# write packs side by side, every batch kept as a pack (fewer than 100 objects would otherwise be unpacked loose).
+_BATCH_CFG = ["-c", "fetch.negotiationAlgorithm=noop", "-c", "gc.auto=0", "-c", "maintenance.auto=false",
+              "-c", "fetch.unpackLimit=1"]
+
+
+def ensure_origin(base, url=PUBLIC_REPO_URL):
+    """A player's checkout downloads from origin; one without it gets it back, pointing at the public patch.
+    True when it was added."""
+    if _git(base, ["remote", "get-url", "origin"]).returncode == 0:
+        return False
+    return _git(base, ["remote", "add", "origin", url]).returncode == 0
+
+
+def missing_files(base, commit):
+    """The object ids of commit's files this clone lacks (a blobless clone's), listed without downloading anything;
+    None when git cannot tell."""
+    r = _git(base, ["rev-list", "--objects", "--missing=print", "--no-walk", commit])
+    if r.returncode:
+        return None
+    return [ln[1:].strip() for ln in r.stdout.splitlines() if ln.startswith("?") and len(ln.strip()) > 1]
+
+
+def _github_slug(url):
+    m = re.search(r"github\.com[/:]([^/]+)/([^/]+?)(?:\.git)?/?$", url or "")
+    return (m.group(1), m.group(2)) if m else None
+
+
+def github_sizes(base, commit, timeout=30):
+    """{blob id: size} of commit's files from GitHub's API -- one request, sizes only -- or {} when it cannot be had
+    (another host, no API access, a rate limit): the batches then count files."""
+    slug = _github_slug(_git(base, ["remote", "get-url", "origin"]).stdout.strip())
+    tree = _git(base, ["rev-parse", "--verify", "--quiet", commit + "^{tree}"]).stdout.strip()
+    if not slug or not tree:
+        return {}
+    try:
+        import urllib.request
+        req = urllib.request.Request(
+            "https://api.github.com/repos/%s/%s/git/trees/%s?recursive=1" % (slug[0], slug[1], tree),
+            headers={"User-Agent": "BROS-launcher", "Accept": "application/vnd.github+json"})
+        with urllib.request.urlopen(req, timeout=timeout) as r:
+            data = json.loads(r.read().decode("utf-8"))
+        return {e["sha"]: int(e.get("size") or 0) for e in data.get("tree", []) if e.get("type") == "blob"}
+    except Exception:
+        return {}
+
+
+def make_batches(oids, sizes, limit=BATCH_BYTES, max_files=BATCH_FILES):
+    """oids in order, cut into requests of about limit bytes (a file bigger than limit is a request of its own)."""
+    batches, cur, cur_bytes = [], [], 0
+    for o in oids:
+        s = sizes.get(o, UNKNOWN_SIZE)
+        if cur and (cur_bytes + s > limit or len(cur) >= max_files):
+            batches.append(cur)
+            cur, cur_bytes = [], 0
+        cur.append(o)
+        cur_bytes += s
+    if cur:
+        batches.append(cur)
+    return batches
+
+
+def _fetch_batch(base, batch, prog):
+    """One request: git fetch origin --stdin with the batch's ids, one per line (LF: git keeps a CR as part of the
+    id). Returns (exit code, git's stderr)."""
+    cmd = ["git", "-C", base] + NET + _BATCH_CFG + ["fetch", "origin", "--no-tags", "--recurse-submodules=no",
+                                                    "--filter=blob:none", "--stdin"]
+    try:
+        p = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                             **_NO_WINDOW)
+    except OSError as e:
+        return 127, "fatal: could not run git: %s" % e
+    prog.add_proc(p)
+    try:
+        _out, err = p.communicate("".join(o + "\n" for o in batch).encode("ascii"))
+    finally:
+        prog.drop_proc(p)
+    return p.returncode, _decode(err)
+
+
+def fetch_files(base, oids, prog, sizes=None, workers=WORKERS, limit=BATCH_BYTES, max_files=BATCH_FILES,
+                max_fails=MAX_FAILS, fetch=None, pause=None):
+    """Download oids (files this blobless clone lacks) from origin in batches -- THE FILES, IN BATCHES in the
+    docstring. Raises Cancelled (the window's Cancel) or subprocess.CalledProcessError (max_fails failed requests in a
+    row); what arrived before either stays. fetch / pause: the request and the wait, replaceable for the tests."""
+    sizes = sizes or {}
+    fetch = fetch or _fetch_batch
+    pause = pause or (lambda s: prog.cancel.wait(s))       # wakes at once on Cancel
+    queue = collections.deque(make_batches(oids, sizes, limit, max_files))
+    total_n = len(oids)
+    total_b = sum(sizes.get(o, UNKNOWN_SIZE) for o in oids)
+    st = {"bytes": 0, "files": 0, "fails": 0, "err": "", "stop": False}
+    lock = threading.Lock()
+
+    def report():
+        if sizes:
+            prog.set(phase="Downloading the update", done=st["bytes"], total=total_b,
+                     detail="%s of %s MB" % (mb(st["bytes"]), mb(total_b)))
+        else:
+            prog.set(phase="Downloading the update", done=st["files"], total=total_n,
+                     detail="%d of %d files" % (st["files"], total_n))
+
+    def worker():
+        while True:
+            with lock:
+                if st["stop"] or prog.cancel.is_set() or not queue:
+                    return
+                batch = queue.popleft()
+            rc, err = fetch(base, batch, prog)
+            if prog.cancel.is_set():
+                return
+            with lock:
+                if rc == 0:
+                    st["files"] += len(batch)
+                    st["bytes"] += sum(sizes.get(o, UNKNOWN_SIZE) for o in batch)
+                    st["fails"] = 0
+                    report()
+                    continue
+                st["fails"] += 1
+                st["err"] = err
+                fails = st["fails"]
+                if fails >= max_fails:
+                    st["stop"] = True
+                    return
+                if len(batch) > 1:                          # again, in two smaller requests
+                    half = len(batch) // 2
+                    queue.appendleft(batch[half:])
+                    queue.appendleft(batch[:half])
+                else:
+                    queue.appendleft(batch)
+            print("[update] a request of %d file(s) failed (%d in a row): %s"
+                  % (len(batch), fails, (err.strip().splitlines() or ["?"])[-1]))
+            prog.set(detail="The connection dropped; trying again (%d of %d)..." % (fails, max_fails))
+            pause(min(60, 5 * fails))
+
+    prog.set(phase="Downloading the update", cancellable=True)
+    report()
+    threads = [threading.Thread(target=worker, daemon=True) for _ in range(max(1, min(workers, len(queue))))]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    if prog.cancel.is_set():
+        raise Cancelled("The update was cancelled.")
+    if st["stop"]:
+        raise subprocess.CalledProcessError(
+            1, ["git", "-C", base, "fetch", "origin", "--stdin"], "",
+            "error: the download failed %d times in a row. %d of %d files arrived and are kept: the next start goes "
+            "on from there.\n%s" % (st["fails"], st["files"], total_n, st["err"].strip()[-1500:]))
+    return st["files"]
+
+
+def _tidy_packs(base):
+    """After a batched download: one index over its many packs keeps git fast, and the automatic repack that would
+    rewrite the whole patch once there are 50 packs is switched off for this clone."""
+    _git(base, ["config", "gc.autoPackLimit", "0"])
+    _git(base, ["multi-pack-index", "write"], timeout=600)
+
+
+def _release_download(base, oids, prog):
+    """release_files.fetch -- THE FILES, FROM A RELEASE. Returns the object ids it brought; every trouble but Cancel
+    and a full disk is printed and left to the batches."""
+    try:
+        return release_files.fetch(base, oids, prog=prog)
+    except release_files.Cancelled:
+        raise Cancelled("The update was cancelled.")
+    except release_files.DiskFull as e:
+        raise subprocess.CalledProcessError(1, ["git", "-C", base, "fetch", "origin"], "",
+                                            "error: not enough free disk space for the update: %s" % e)
+    except release_files.Unavailable as e:
+        print("[update] no release to download from (%s): git brings the files" % e)
+    except Exception as e:
+        print("[update] the release download stopped (%s: %s): git brings the files" % (type(e).__name__, e))
+    return set()
+
+
+def _download_files(base, commit, prog, show):
+    """commit's missing files, when there are any: from the newest release, then in git's batches whatever it did not
+    have. Returns how many arrived."""
+    oids = missing_files(base, commit)
+    if not oids:
+        return 0
+    show()
+    prog.set(phase="Preparing the download", detail="", done=0, total=0, cancellable=True)
+    n = 0
+    if release_files is not None:
+        got = _release_download(base, oids, prog)
+        if got:
+            n += len(got)
+            left = missing_files(base, commit)
+            oids = left if left is not None else [o for o in oids if o not in got]
+    if oids:
+        n += fetch_files(base, oids, prog, sizes=github_sizes(base, commit))
+    _tidy_packs(base)
+    return n
+
+
 # ------------------------------------------------------------------------------------------------ the steps
 class _Plan:
     """What the remote has and the checkout lacks, decided before any window."""
@@ -576,15 +841,20 @@ def _plan(base, dev):
 
 
 def _steps_player(base, plan, prog, show):
-    """Without a DevToken: today's fetch / reset --hard / clean / pull, every failure raised."""
+    """Without a DevToken: today's fetch / reset --hard / clean / pull, every failure raised -- the fetch now the
+    history only, and the files in batches after it (THE FILES, IN BATCHES)."""
     if plan is not None and plan.need_fetch:
         show()
         prog.set(phase="Downloading the update", detail="", done=0, total=0, cancellable=True)
-        _check(_stream(base, ["-c", "fetch.unpackLimit=1", "fetch", "--progress"], prog,
-                       _git_progress_feeder(prog)))
+        _check(_stream(base, NET + ["-c", "fetch.unpackLimit=1", "fetch", "--filter=blob:none", "--progress",
+                                    "origin"], prog, _git_progress_feeder(prog)))
         plan.target = _rev(base, "refs/remotes/origin/main")
         if plan.target and lfs_available(base):
             plan.lfs = lfs_missing(base, plan.target)
+    # The files the commit needs: after the fetch above, or left over from a start whose download stopped halfway.
+    target = (plan.target if plan is not None else None) or _rev(base, "refs/remotes/origin/main")
+    if target:
+        _download_files(base, target, prog, show)
     if plan is not None and plan.lfs:
         show()
         _check(_lfs_fetch(base, "origin", plan.target, plan.lfs, prog))
@@ -593,6 +863,9 @@ def _steps_player(base, plan, prog, show):
         prog.set(phase="Updating files", detail="", done=0, total=0, cancellable=False)
     _check(_git(base, ["reset", "--hard", "origin/main"]))
     _check(_git(base, ["clean", "-fd", "-e", "Json"]))
+    if _upstream(base) is None:
+        # a checkout whose origin was put back has lost its branch's link to it too, and "git pull" needs one
+        _git(base, ["branch", "--set-upstream-to=origin/main"])
     r = _git(base, ["pull"])
     if r.returncode:
         raise subprocess.CalledProcessError(r.returncode, r.args, r.stdout, r.stderr)
@@ -657,6 +930,8 @@ def pull(base_dir, parent=None, title=None):
     update window is then modal over it); without one the window is the process's own, made only if needed."""
     dev = is_dev(base_dir)
     _git(base_dir, ["config", "core.longpaths", "true"])
+    if not dev and ensure_origin(base_dir):
+        print("[update] this checkout had no origin: it points at %s again" % PUBLIC_REPO_URL)
     plan, failed = _plan(base_dir, dev)
     if plan is None and not dev and failed is not None:
         # The remote did not answer: for a player that is today's failed fetch.
